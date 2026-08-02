@@ -151,7 +151,8 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\V1', 'filter' => 'apia
     $routes->delete('prontuarios/vacinas/(:num)', 'Prontuarios::deleteVacina/$1');
     $routes->delete('prontuarios/pesos/(:num)', 'Prontuarios::deletePeso/$1');
     $routes->get('prontuarios/pacientes/(:num)/imagens/(:any)', 'Prontuarios::viewImagem/$1/$2');
-    $routes->put('prontuarios/pacientes/(:num)/anamnese', 'Prontuarios::saveAnamnese/$1');
+    // POST (não PUT): PHP só popula $_POST/$_FILES em multipart/form-data para POST.
+    $routes->post('prontuarios/pacientes/(:num)/anamnese', 'Prontuarios::saveAnamnese/$1');
     $routes->put('prontuarios/pacientes/(:num)/odontograma', 'Prontuarios::saveOdontograma/$1');
     $routes->post('prontuarios/pacientes/(:num)/evolucoes', 'Prontuarios::addEvolucao/$1');
     $routes->post('prontuarios/pacientes/(:num)/vacinas', 'Prontuarios::addVacina/$1');

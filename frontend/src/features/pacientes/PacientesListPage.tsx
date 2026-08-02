@@ -1,6 +1,6 @@
-import { Cake, Calendar, Clock, PawPrint, Pencil, Plus, Trash2, Users } from 'lucide-react'
+import { Cake, Calendar, ClipboardList, Clock, PawPrint, Pencil, Plus, Trash2, Users } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiError } from '../../lib/api'
 import { createPaciente, deletePaciente, fetchPacientes, fetchPacientesPainel, updatePaciente } from './api'
 import { PacienteFormModal } from './PacienteFormModal'
@@ -38,6 +38,7 @@ function formatDate(value: string): string {
 }
 
 export function PacientesListPage() {
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [status, setStatus] = useState<PacienteStatusFiltro>(
@@ -229,6 +230,14 @@ export function PacientesListPage() {
                   </div>
 
                   <div className="record-card__actions">
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      aria-label="Ver prontuário"
+                      onClick={() => navigate(`/prontuarios/${paciente.paciente_id}`)}
+                    >
+                      <ClipboardList size={16} />
+                    </button>
                     <button
                       type="button"
                       className="icon-btn"

@@ -18,6 +18,17 @@ export interface Paciente {
   pet_resp_nome?: string | null
   pet_resp_tel?: string | null
   pet_resp_cpf?: string | null
+  // presentes na ficha completa do prontuário (GET prontuarios/pacientes/:id)
+  paciente_endereco?: string | null
+  paciente_conheceu?: string | null
+  paciente_doenca_sist?: string | null
+  paciente_condicoes?: string | null
+  paciente_caracteristicas?: string | null
+  paciente_alergia_med?: string | null
+  paciente_medicamentos?: string | null
+  paciente_saude_obs?: string | null
+  paciente_queixa?: string | null
+  paciente_habitos?: string | null
 }
 
 export interface PacienteStats {
