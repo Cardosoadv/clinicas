@@ -1,0 +1,437 @@
+.agenda-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.agenda-layout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.agenda-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.agenda-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .agenda-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Mini calendário ---------- */
+
+.mini-calendar {
+  background: #fff;
+  border: 1px solid #e7e3da;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.mini-calendar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.mini-calendar__header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1c2333;
+  text-transform: capitalize;
+}
+
+.mini-calendar__nav {
+  display: flex;
+  gap: 4px;
+}
+
+.mini-calendar__nav button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #e7e3da;
+  border-radius: 6px;
+  background: #fff;
+  color: #6b7385;
+  cursor: pointer;
+}
+
+.mini-calendar__nav button:hover {
+  background: #f6f4ef;
+}
+
+.mini-calendar__weekdays,
+.mini-calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.mini-calendar__weekdays span {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: #6b7385;
+  padding-bottom: 6px;
+}
+
+.mini-calendar__day {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #1c2333;
+  cursor: pointer;
+}
+
+.mini-calendar__day:hover:not(:disabled) {
+  background: #f6f4ef;
+}
+
+.mini-calendar__day:disabled {
+  color: #cfcabd;
+  cursor: default;
+}
+
+.mini-calendar__day--outside {
+  visibility: hidden;
+}
+
+.mini-calendar__day--today {
+  border: 1px solid #c99a3f;
+  font-weight: 600;
+}
+
+.mini-calendar__day--selected {
+  background: #131c31;
+  color: #fff;
+  font-weight: 600;
+}
+
+.mini-calendar__dot {
+  position: absolute;
+  bottom: 4px;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #c99a3f;
+}
+
+.mini-calendar__day--selected .mini-calendar__dot {
+  background: #fff;
+}
+
+/* ---------- Cartões de estatística da agenda ---------- */
+
+.agenda-stat-pills {
+  display: flex;
+  gap: 12px;
+}
+
+.agenda-stat-pill {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #e7e3da;
+  border-radius: 10px;
+  color: #c99a3f;
+}
+
+.agenda-stat-pill div {
+  display: flex;
+  flex-direction: column;
+}
+
+.agenda-stat-pill strong {
+  font-size: 18px;
+  color: #1c2333;
+  line-height: 1.2;
+}
+
+.agenda-stat-pill span {
+  font-size: 11px;
+  color: #6b7385;
+}
+
+/* ---------- Próximas 48h ---------- */
+
+.upcoming-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 0;
+  border-top: 1px solid #f0eee7;
+  font-size: 13px;
+}
+
+.upcoming-item:first-of-type {
+  border-top: none;
+}
+
+.upcoming-item__info strong {
+  color: #1c2333;
+}
+
+.upcoming-item__servico {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #6b7385;
+}
+
+.upcoming-item__time {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #fdeceb;
+  color: #b8341f;
+}
+
+/* ---------- Cabeçalho do dia ---------- */
+
+.agenda-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 18px;
+  background: #fff;
+  border: 1px solid #e7e3da;
+  border-radius: 10px;
+}
+
+.agenda-day-header h3 {
+  margin: 0 0 2px;
+  font-size: 16px;
+  color: #1c2333;
+  text-transform: capitalize;
+}
+
+.agenda-day-header__actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---------- Timeline ---------- */
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e7e3da;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.timeline__row {
+  display: flex;
+  border-top: 1px solid #f0eee7;
+}
+
+.timeline__row:first-child {
+  border-top: none;
+}
+
+.timeline__hour {
+  flex-shrink: 0;
+  width: 64px;
+  padding: 14px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7385;
+  text-align: right;
+}
+
+.timeline__slot {
+  flex: 1;
+  padding: 8px 12px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  border-left: 1px solid #f0eee7;
+  transition: background 0.15s;
+}
+
+.timeline__slot--dragover {
+  background: #fbf6e9;
+}
+
+.timeline__slot--lunch {
+  color: #a39c8a;
+  font-size: 12px;
+  font-style: italic;
+  gap: 6px;
+}
+
+.timeline__empty {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  border: 1px dashed #e7e3da;
+  border-radius: 8px;
+  background: transparent;
+  color: #8a8470;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.timeline__empty:hover {
+  border-color: #c99a3f;
+  color: #92660f;
+}
+
+.timeline__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.timeline__add-more {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: #8a8470;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.timeline__add-more:hover {
+  color: #92660f;
+}
+
+/* ---------- Cartão de agendamento ---------- */
+
+.appointment-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border-left: 3px solid #1c5fb8;
+  background: #f4f7fd;
+  cursor: grab;
+}
+
+.appointment-card:active {
+  cursor: grabbing;
+}
+
+.appointment-card--pendente {
+  border-left-color: #92660f;
+  background: #fdf8ee;
+}
+
+.appointment-card--confirmado {
+  border-left-color: #1c5fb8;
+  background: #f4f7fd;
+}
+
+.appointment-card--concluido {
+  border-left-color: #1a7a3d;
+  background: #f2f9f4;
+}
+
+.appointment-card--cancelado {
+  border-left-color: #b8341f;
+  background: #fdf3f2;
+  opacity: 0.7;
+}
+
+.appointment-card__main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+}
+
+.appointment-card__pet {
+  font-weight: 600;
+  color: #1c2333;
+}
+
+.appointment-card__tutor,
+.appointment-card__servicos {
+  color: #6b7385;
+  font-size: 12px;
+}
+
+.appointment-card__side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.appointment-card__time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7385;
+}
+
+.appointment-card__status {
+  border: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+/* ---------- Checklist de serviços (modal) ---------- */
+
+.servico-checklist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 10px 12px;
+  border: 1px solid #e7e3da;
+  border-radius: 7px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.servico-checklist__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #1c2333;
+  cursor: pointer;
+}

@@ -1,0 +1,283 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Repositories;
+
+use App\Models\AgendamentosModel;
+
+class AgendamentosRepository extends BaseRepository
+{
+    /**
+     * Busca um agendamento por ID com os nomes dos serviços concatenados.
+     *
+     * @param int $id
+     * @return array|null
+     */
+    public function findById(int $id): ?array
+    {
+        return $this->model
+            ->select('agendamentos.*')
+            ->select("GROUP_CONCAT(CONCAT(IFNULL(servicos.ser_icone, '🐾'), ' ', servicos.ser_nome) SEPARATOR ', ') as age_servico")
+            ->join('agendamento_servicos', 'agendamento_servicos.age_id = agendamentos.age_id', 'left')
+            ->join('servicos', 'servicos.ser_id = agendamento_servicos.ser_id', 'left')
+            ->where('agendamentos.age_id', $id)
+            ->groupBy('agendamentos.age_id')
+            ->first();
+    }
+
+    /**
+     * @param AgendamentosModel|null $model
+     */
+    public function __construct(?AgendamentosModel $model = null)
+    {
+        $this->model = $model ?? new AgendamentosModel();
+    }
+
+    /**
+     * Search for appointments based on a term.
+     *
+     * @param string $term
+     * @return array
+     */
+    public function search(string $term): array
+    {
+        return $this->model
+            ->select('agendamentos.*, pacientes.paciente_nome, pacientes.paciente_avatar, clientes.nome as tutor_nome')
+            ->select("GROUP_CONCAT(CONCAT(IFNULL(servicos.ser_icone, '🐾'), ' ', servicos.ser_nome) SEPARATOR ', ') as age_servico")
+            ->select("GROUP_CONCAT(servicos.ser_id) as age_servico_ids")
+            ->join('pacientes', 'pacientes.paciente_id = agendamentos.paciente_id')
+            ->join('clientes', 'clientes.id = pacientes.cliente_id', 'left')
+            ->join('agendamento_servicos', 'agendamento_servicos.age_id = agendamentos.age_id', 'left')
+            ->join('servicos', 'servicos.ser_id = agendamento_servicos.ser_id', 'left')
+            ->groupStart()
+                ->like('pacientes.paciente_nome', $term)
+                ->orLike('servicos.ser_nome', $term)
+            ->groupEnd()
+            ->groupBy('agendamentos.age_id')
+            ->findAll(20);
+    }
+
+    /**
+     * Get appointments for a specific date
+     *
+     * @param string $date
+     * @return array
+     */
+    public function getByDate(string $date): array
+    {
+        return $this->model
+            ->select('agendamentos.*, pacientes.paciente_nome, pacientes.paciente_avatar, pacientes.paciente_sexo, clientes.nome as tutor_nome')
+            ->select("GROUP_CONCAT(CONCAT(IFNULL(servicos.ser_icone, '🐾'), ' ', servicos.ser_nome) SEPARATOR ', ') as age_servico")
+            ->select("GROUP_CONCAT(servicos.ser_id) as age_servico_ids")
+            ->join('pacientes', 'pacientes.paciente_id = agendamentos.paciente_id')
+            ->join('clientes', 'clientes.id = pacientes.cliente_id', 'left')
+            ->join('agendamento_servicos', 'agendamento_servicos.age_id = agendamentos.age_id', 'left')
+            ->join('servicos', 'servicos.ser_id = agendamento_servicos.ser_id', 'left')
+            ->where('age_data', $date)
+            ->groupBy('agendamentos.age_id')
+            ->orderBy('age_hora', 'ASC')
+            ->findAll();
+    }
+
+    /**
+     * Get upcoming appointments for the next X hours
+     *
+     * @param int $hours
+     * @return array
+     */
+    public function getUpcoming(int $hours = 48): array
+    {
+        $now = date('Y-m-d');
+        $end = date('Y-m-d', strtotime("+$hours hours"));
+
+        return $this->model
+            ->select('agendamentos.*, pacientes.paciente_nome, pacientes.paciente_avatar, clientes.nome as tutor_nome')
+            ->select("GROUP_CONCAT(CONCAT(IFNULL(servicos.ser_icone, '🐾'), ' ', servicos.ser_nome) SEPARATOR ', ') as age_servico")
+            ->select("GROUP_CONCAT(servicos.ser_id) as age_servico_ids")
+            ->join('pacientes', 'pacientes.paciente_id = agendamentos.paciente_id')
+            ->join('clientes', 'clientes.id = pacientes.cliente_id', 'left')
+            ->join('agendamento_servicos', 'agendamento_servicos.age_id = agendamentos.age_id', 'left')
+            ->join('servicos', 'servicos.ser_id = agendamento_servicos.ser_id', 'left')
+            ->where('age_data >=', $now)
+            ->where('age_data <=', $end)
+            ->groupBy('agendamentos.age_id')
+            ->orderBy('age_data', 'ASC')
+            ->orderBy('age_hora', 'ASC')
+            ->findAll(10);
+    }
+
+    /**
+     * Get agenda stats.
+     *
+     * Note: We use separate count queries here to leverage indexes on
+     * 'age_data' and 'age_status', avoiding a full table scan that
+     * conditional aggregation would require.
+     *
+     * @return array
+     */
+    public function getStats(): array
+    {
+        $today = date('Y-m-d');
+
+        $hoje      = $this->model->where('age_data', $today)->countAllResults();
+        $pendentes = $this->model->where('age_status', 'pendente')->countAllResults();
+
+        return [
+            'hoje'      => $hoje,
+            'pendentes' => $pendentes
+        ];
+    }
+
+    /**
+     * Get counts for each service type for the month
+     *
+     * @param string $month
+     * @param string $year
+     * @return array
+     */
+    public function getServiceStats(int|string $month, int|string $year): array
+    {
+        $month = str_pad((string)$month, 2, '0', STR_PAD_LEFT);
+        $start = "{$year}-{$month}-01";
+        $end = date('Y-m-t', strtotime($start));
+
+        return $this->model
+            ->select('agendamento_servicos.ser_id as service_id, CONCAT(IFNULL(servicos.ser_icone, \'🐾\'), \' \', servicos.ser_nome) as service, COUNT(agendamento_servicos.id) as count')
+            ->join('agendamento_servicos', 'agendamento_servicos.age_id = agendamentos.age_id')
+            ->join('servicos', 'servicos.ser_id = agendamento_servicos.ser_id', 'left')
+            ->where('age_data >=', $start)
+            ->where('age_data <=', $end)
+            ->groupBy('agendamento_servicos.ser_id')
+            ->orderBy('count', 'DESC')
+            ->findAll(5);
+    }
+
+    /**
+     * Get unique days with appointments for a given month
+     *
+     * @param string $year
+     * @param string $month
+     * @return array
+     */
+    public function getDaysWithAppts(int|string $year, int|string $month): array
+    {
+        $month = str_pad((string)$month, 2, '0', STR_PAD_LEFT);
+        $start = "{$year}-{$month}-01";
+        $end = date('Y-m-t', strtotime($start));
+        return $this->model
+            ->select('DISTINCT(age_data)')
+            ->where('age_data >=', $start)
+            ->where('age_data <=', $end)
+            ->findAll();
+    }
+
+    /**
+     * Busca todos os agendamentos de um pet, incluindo os nomes dos serviços.
+     *
+     * @param int $petId
+     * @return array
+     */
+    public function findByPet(int $petId): array
+    {
+        return $this->model
+            ->select('agendamentos.*')
+            ->select("GROUP_CONCAT(CONCAT(IFNULL(servicos.ser_icone, '🐾'), ' ', servicos.ser_nome) SEPARATOR ', ') as age_servico")
+            ->join('agendamento_servicos', 'agendamento_servicos.age_id = agendamentos.age_id', 'left')
+            ->join('servicos', 'servicos.ser_id = agendamento_servicos.ser_id', 'left')
+            ->where('paciente_id', $petId)
+            ->groupBy('agendamentos.age_id')
+            ->orderBy('age_data', 'DESC')
+            ->findAll();
+    }
+
+    /**
+     * Busca detalhes de um agendamento com dados do pet e tutor.
+     *
+     * @param int $id
+     * @return array|null
+     */
+    public function findWithTutor(int $id): ?array
+    {
+        return $this->model
+            ->select('agendamentos.*, pacientes.paciente_nome, clientes.id as cliente_id, clientes.nome as tutor_nome, clientes.telefones')
+            ->select("GROUP_CONCAT(CONCAT(IFNULL(servicos.ser_icone, '🐾'), ' ', servicos.ser_nome) SEPARATOR ', ') as age_servico")
+            ->join('pacientes', 'pacientes.paciente_id = agendamentos.paciente_id')
+            ->join('clientes', 'clientes.id = pacientes.cliente_id')
+            ->join('agendamento_servicos', 'agendamento_servicos.age_id = agendamentos.age_id', 'left')
+            ->join('servicos', 'servicos.ser_id = agendamento_servicos.ser_id', 'left')
+            ->where('agendamentos.age_id', $id)
+            ->groupBy('agendamentos.age_id')
+            ->first();
+    }
+
+    /**
+     * Retorna agendamentos concluídos nas últimas 48 horas para pós-consulta.
+     *
+     * @return array
+     */
+    public function getPostCareCandidates(): array
+    {
+        $twoDaysAgo = date('Y-m-d', strtotime('-2 days'));
+        $today = date('Y-m-d');
+
+        return $this->model
+            ->select('agendamentos.*, pacientes.paciente_nome, pacientes.paciente_avatar')
+            ->select("GROUP_CONCAT(CONCAT(IFNULL(servicos.ser_icone, '🐾'), ' ', servicos.ser_nome) SEPARATOR ', ') as age_servico")
+            ->join('pacientes', 'pacientes.paciente_id = agendamentos.paciente_id')
+            ->join('agendamento_servicos', 'agendamento_servicos.age_id = agendamentos.age_id', 'left')
+            ->join('servicos', 'servicos.ser_id = agendamento_servicos.ser_id', 'left')
+            ->where('age_status', 'concluido')
+            ->where('age_data >=', $twoDaysAgo)
+            ->where('age_data <=', $today)
+            ->groupBy('agendamentos.age_id')
+            ->orderBy('age_data', 'DESC')
+            ->findAll(5);
+    }
+
+    /**
+     * Sync services for an appointment
+     *
+     * @param int $ageId
+     * @param array $serviceIds
+     * @return void
+     */
+    public function syncServices(int $ageId, array $serviceIds): void
+    {
+        $db = \Config\Database::connect();
+        $db->table('agendamento_servicos')->where('age_id', $ageId)->delete();
+
+        if (!empty($serviceIds)) {
+            $data = [];
+            foreach ($serviceIds as $serId) {
+                if (!empty($serId)) {
+                    $data[] = [
+                        'age_id' => $ageId,
+                        'ser_id' => (int) $serId,
+                    ];
+                }
+            }
+            if (!empty($data)) {
+                $db->table('agendamento_servicos')->insertBatch($data);
+            }
+        }
+    }
+
+    /**
+     * Get service IDs for an appointment
+     *
+     * @param int $ageId
+     * @return array
+     */
+    public function getServiceIds(int $ageId): array
+    {
+        $db = \Config\Database::connect();
+        $results = $db->table('agendamento_servicos')
+            ->select('ser_id')
+            ->where('age_id', $ageId)
+            ->get()
+            ->getResultArray();
+
+        return array_column($results, 'ser_id');
+    }
+}

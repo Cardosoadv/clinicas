@@ -1,0 +1,44 @@
+.pacote-item-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 70px 100px auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.pacote-item-row select,
+.pacote-item-row input {
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  border: 1px solid #e7e3da;
+}
+
+.pacote-detalhes-section {
+  margin-top: 16px;
+}
+
+.pacote-detalhes-section h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #1c2333;
+}
+
+.pacote-detalhes-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.pacote-detalhes-table th,
+.pacote-detalhes-table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid #f0eee7;
+  color: #6b7385;
+}
+
+.pacote-detalhes-table th {
+  font-weight: 600;
+  color: #1c2333;
+}

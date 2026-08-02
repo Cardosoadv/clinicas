@@ -1,0 +1,77 @@
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.template-card {
+  background: #fff;
+  border: 1px solid #e7e4db;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.template-card__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #25a969;
+}
+
+.template-card__header h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #24222b;
+}
+
+.template-card__header p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #6b7385;
+}
+
+.template-card textarea {
+  width: 100%;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 10px;
+  border: 1px solid #e7e4db;
+  border-radius: 8px;
+}
+
+.template-card__placeholders {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.template-card__tag {
+  border: 1px solid #e7e4db;
+  background: #f7f5ef;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  color: #6b7385;
+  cursor: pointer;
+}
+
+.template-card__tag:hover {
+  background: #efece2;
+}
+
+.template-card__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.template-card__footer .btn--primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
