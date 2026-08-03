@@ -1,0 +1,372 @@
+/* Header */
+.prontuario-header__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.prontuario-header__title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.prontuario-header__title-row h2 {
+  margin: 0;
+}
+
+.prontuario-header__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.prontuario-avatar {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.prontuario-avatar-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #e7e4db;
+}
+
+/* Layout: submenu + content */
+.prontuario-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.prontuario-submenu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #fff;
+  border: 1px solid #e7e4db;
+  border-radius: 12px;
+  padding: 10px;
+  position: sticky;
+  top: 16px;
+}
+
+.prontuario-submenu__link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #4a4a52;
+  text-decoration: none;
+}
+
+.prontuario-submenu__link:hover {
+  background: #f7f5ef;
+}
+
+.prontuario-submenu__link--active {
+  background: #eaf7f0;
+  color: #1a7a3d;
+  font-weight: 600;
+}
+
+.prontuario-content {
+  min-width: 0;
+}
+
+.prontuario-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.prontuario-success {
+  color: #1a7a3d;
+  font-size: 13px;
+  margin: 0 0 10px;
+}
+
+@media (max-width: 860px) {
+  .prontuario-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .prontuario-submenu {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+}
+
+/* Picker screen */
+.prontuario-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.prontuario-picker-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #e7e4db;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  position: relative;
+}
+
+.prontuario-picker-card:hover {
+  border-color: #c9c4b4;
+  background: #f7f5ef;
+}
+
+.prontuario-picker-card__info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.prontuario-picker-card__info strong {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prontuario-picker-card__info span {
+  font-size: 11px;
+  color: #6b7385;
+}
+
+.prontuario-picker-card__icon {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  color: #c9c4b4;
+}
+
+/* Anamnese */
+.prontuario-anamnese__avatar-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 14px;
+}
+
+.prontuario-anamnese__emoji {
+  width: 42px;
+  height: 42px;
+  font-size: 20px;
+  border-radius: 10px;
+  border: 1px solid #e7e4db;
+  background: #fff;
+  cursor: pointer;
+}
+
+.prontuario-anamnese__emoji:hover {
+  background: #f7f5ef;
+}
+
+.prontuario-anamnese__emoji--active {
+  border-color: #25a969;
+  background: #eaf7f0;
+}
+
+.prontuario-alert {
+  border: 1px solid #f3d38a;
+  background: #fdf3e3;
+}
+
+.prontuario-alert h3 {
+  color: #92660f;
+}
+
+/* Historico timeline */
+.prontuario-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.prontuario-timeline__item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-left: 2px solid #e7e4db;
+  padding-left: 16px;
+  margin-left: 5px;
+  position: relative;
+}
+
+.prontuario-timeline__dot {
+  position: absolute;
+  left: -6px;
+  top: 14px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #25a969;
+}
+
+.prontuario-timeline__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.prontuario-timeline__header span {
+  color: #6b7385;
+}
+
+.prontuario-timeline__item p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #4a4a52;
+}
+
+/* Peso chart */
+.prontuario-peso-chart {
+  width: 100%;
+  height: 220px;
+}
+
+/* Prescricoes */
+.prontuario-prescricao__itens-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.prontuario-prescricao__item-row {
+  padding: 12px;
+  border: 1px solid #e7e4db;
+  border-radius: 10px;
+  background: #fdfbf6;
+}
+
+.prontuario-prescricao__itens {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prontuario-prescricao__item-card {
+  padding: 10px;
+  border: 1px solid #e7e4db;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.prontuario-prescricao__item-card span {
+  font-size: 12px;
+  color: #6b7385;
+}
+
+/* Evolucao */
+.prontuario-evolucao__templates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.prontuario-evolucao__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prontuario-evolucao__item {
+  padding: 12px;
+  border: 1px solid #e7e4db;
+  border-radius: 10px;
+}
+
+.prontuario-evolucao__item-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.prontuario-evolucao__item-header span {
+  color: #6b7385;
+  white-space: nowrap;
+}
+
+.prontuario-evolucao__item p {
+  margin: 8px 0;
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+.prontuario-evolucao__item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #6b7385;
+}
+
+/* Imagens */
+.prontuario-imagens__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.prontuario-imagens__thumb {
+  display: block;
+  border: 1px solid #e7e4db;
+  border-radius: 10px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+}
+
+.prontuario-imagens__thumb img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.prontuario-imagens__thumb span {
+  display: block;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+/* Calculadora */
+.prontuario-calc__result {
+  text-align: center;
+  padding: 16px;
+  border: 1px dashed #e7e4db;
+  border-radius: 10px;
+  margin: 10px 0;
+}
+
+.prontuario-calc__result strong {
+  font-size: 24px;
+  color: #25a969;
+}
+
+.prontuario-calc__result p {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #6b7385;
+}

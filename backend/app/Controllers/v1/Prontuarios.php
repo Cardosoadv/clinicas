@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers\V1;
 
 use App\Controllers\BaseController;
+use App\Repositories\EquipeRepository;
 use App\Services\PrescricoesService;
 use App\Services\ProntuariosService;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -17,10 +18,27 @@ use Exception;
 class Prontuarios extends BaseController
 {
     protected ProntuariosService $service;
+    protected EquipeRepository $equipeRepo;
 
-    public function __construct(?ProntuariosService $service = null)
+    public function __construct(?ProntuariosService $service = null, ?EquipeRepository $equipeRepo = null)
     {
-        $this->service = $service ?? new ProntuariosService();
+        $this->service    = $service ?? new ProntuariosService();
+        $this->equipeRepo = $equipeRepo ?? new EquipeRepository();
+    }
+
+    /**
+     * Resolve o equ_id (equipe) do usuário autenticado, usado como veterinario_id
+     * nas tabelas de evolução/prescrição. auth()->id() retorna o ID do usuário
+     * Shield, que é uma tabela distinta de `equipe` (ligadas por `equipe.user_id`).
+     */
+    private function resolveVeterinarioId(): ?int
+    {
+        if (!function_exists('auth') || !auth()->id()) {
+            return null;
+        }
+
+        $membro = $this->equipeRepo->findByUserId((int) auth()->id());
+        return $membro['equ_id'] ?? null;
     }
 
     /**
@@ -138,8 +156,8 @@ class Prontuarios extends BaseController
             return $this->apiValidationError($this->validator->getErrors());
         }
 
-        if (empty($data['veterinario_id']) && function_exists('auth')) {
-            $data['veterinario_id'] = auth()->id();
+        if (empty($data['veterinario_id'])) {
+            $data['veterinario_id'] = $this->resolveVeterinarioId();
         }
 
         $result = $this->service->addEvolucao($petId, $data);
@@ -163,8 +181,8 @@ class Prontuarios extends BaseController
             return $this->apiValidationError($this->validator->getErrors());
         }
 
-        if (empty($data['veterinario_id']) && function_exists('auth')) {
-            $data['veterinario_id'] = auth()->id();
+        if (empty($data['veterinario_id'])) {
+            $data['veterinario_id'] = $this->resolveVeterinarioId();
         }
 
         $result = $this->service->editEvolucao($evolucaoId, $data);
@@ -329,9 +347,7 @@ class Prontuarios extends BaseController
             $data['itens'] = json_decode($data['itens'], true);
         }
 
-        if (function_exists('auth')) {
-            $data['veterinario_id'] = auth()->id();
-        }
+        $data['veterinario_id'] = $this->resolveVeterinarioId();
 
         $result = (new PrescricoesService())->createPrescricao($data);
         return $this->apiResponse($result, 201);

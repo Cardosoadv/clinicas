@@ -49,6 +49,7 @@ class PrescricoesService extends BaseService
                     'frequencia'        => $item['frequencia'] ?? null,
                     'duracao'           => $item['duracao'] ?? null,
                     'via_administracao' => $item['via_administracao'] ?? null,
+                    'particao'          => $item['particao'] ?? null,
                 ]);
             }
 

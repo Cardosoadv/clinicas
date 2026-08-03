@@ -3,6 +3,7 @@ import {
   BookOpen,
   Boxes,
   CalendarDays,
+  ClipboardList,
   LayoutDashboard,
   PackageCheck,
   PawPrint,
@@ -37,6 +38,7 @@ export const navSections: NavSection[] = [
       { label: 'Agenda', path: '/agenda', icon: CalendarDays },
       { label: 'Pacientes', path: '/pacientes', icon: PawPrint },
       { label: 'Clientes', path: '/clientes', icon: Users },
+      { label: 'Prontuários', path: '/prontuarios', icon: ClipboardList },
     ],
   },
   {

@@ -12,6 +12,15 @@ import { FaturamentoPage } from './features/faturamento/FaturamentoPage'
 import { LojasListPage } from './features/lojas/LojasListPage'
 import { PacientesListPage } from './features/pacientes/PacientesListPage'
 import { PacotesListPage } from './features/pacotes/PacotesListPage'
+import { AnamneseSection } from './features/prontuarios/sections/AnamneseSection'
+import { EvolucaoSection } from './features/prontuarios/sections/EvolucaoSection'
+import { HistoricoSection } from './features/prontuarios/sections/HistoricoSection'
+import { ImagensSection } from './features/prontuarios/sections/ImagensSection'
+import { PesoSection } from './features/prontuarios/sections/PesoSection'
+import { PrescricoesSection } from './features/prontuarios/sections/PrescricoesSection'
+import { VacinasSection } from './features/prontuarios/sections/VacinasSection'
+import { ProntuarioListPage } from './features/prontuarios/ProntuarioListPage'
+import { ProntuarioLayout } from './features/prontuarios/ProntuarioLayout'
 import { RelatoriosPage } from './features/relatorios/RelatoriosPage'
 import { ServicosListPage } from './features/servicos/ServicosListPage'
 import { AdminLayout } from './layouts/AdminLayout'
@@ -31,6 +40,17 @@ function App() {
             <Route path="/clientes/:id" element={<ClienteDetailPage />} />
             <Route path="/pacientes" element={<PacientesListPage />} />
             <Route path="/agenda" element={<AgendaPage />} />
+            <Route path="/prontuarios" element={<ProntuarioListPage />} />
+            <Route path="/prontuarios/:id" element={<ProntuarioLayout />}>
+              <Route index element={<Navigate to="anamnese" replace />} />
+              <Route path="anamnese" element={<AnamneseSection />} />
+              <Route path="historico" element={<HistoricoSection />} />
+              <Route path="vacinas" element={<VacinasSection />} />
+              <Route path="peso" element={<PesoSection />} />
+              <Route path="prescricoes" element={<PrescricoesSection />} />
+              <Route path="evolucao" element={<EvolucaoSection />} />
+              <Route path="imagens" element={<ImagensSection />} />
+            </Route>
             <Route path="/servicos" element={<ServicosListPage />} />
             <Route path="/pacotes" element={<PacotesListPage />} />
             <Route path="/estoque" element={<EstoqueListPage />} />
