@@ -1,4 +1,5 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL
+/** URL base da API, carregada em runtime pelo /config.js (ver public/config.js). */
+export const BASE_URL = window.APP_CONFIG.API_BASE_URL
 
 /** Envelope padrão devolvido pela API: {status, message, data, ...}. */
 export interface ApiEnvelope<T = unknown> {

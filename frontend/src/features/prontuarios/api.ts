@@ -1,4 +1,4 @@
-import { api, type ApiEnvelope } from '../../lib/api'
+import { api, BASE_URL, type ApiEnvelope } from '../../lib/api'
 import type { Paciente } from '../pacientes/types'
 import type {
   AnamneseFormValues,
@@ -97,9 +97,9 @@ export function addImagem(pacienteId: number, titulo: string, dataExame: string,
 }
 
 export function pacienteAvatarUrl(pacienteId: number, filename: string): string {
-  return `${import.meta.env.VITE_API_BASE_URL}/pacientes/${pacienteId}/avatar/${filename}`
+  return `${BASE_URL}/pacientes/${pacienteId}/avatar/${filename}`
 }
 
 export function imagemUrl(pacienteId: number, filename: string): string {
-  return `${import.meta.env.VITE_API_BASE_URL}/prontuarios/pacientes/${pacienteId}/imagens/${filename}`
+  return `${BASE_URL}/prontuarios/pacientes/${pacienteId}/imagens/${filename}`
 }

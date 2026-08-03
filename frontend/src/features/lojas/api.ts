@@ -1,4 +1,4 @@
-import { api, type ApiEnvelope } from '../../lib/api'
+import { api, BASE_URL, type ApiEnvelope } from '../../lib/api'
 import type { Loja, LojaFormValues } from './types'
 
 export function fetchLojas(): Promise<ApiEnvelope<Loja[]>> {
@@ -29,5 +29,5 @@ export function deleteLoja(id: number): Promise<ApiEnvelope> {
 }
 
 export function lojaLogoUrl(id: number, filename: string): string {
-  return `${import.meta.env.VITE_API_BASE_URL}/lojas/${id}/logo/${filename}`
+  return `${BASE_URL}/lojas/${id}/logo/${filename}`
 }

@@ -1,4 +1,4 @@
-import { api, type ApiEnvelope } from '../../lib/api'
+import { api, BASE_URL, type ApiEnvelope } from '../../lib/api'
 import type {
   CobrancaFormValues,
   DashboardData,
@@ -68,7 +68,7 @@ export function uploadComprovante(id: number, file: File): Promise<ApiEnvelope> 
 }
 
 export function comprovanteUrl(id: number, filename: string): string {
-  return `${import.meta.env.VITE_API_BASE_URL}/faturamento/despesas/${id}/comprovante/${filename}`
+  return `${BASE_URL}/faturamento/despesas/${id}/comprovante/${filename}`
 }
 
 export function fetchNotas(): Promise<ApiEnvelope<Nota[]>> {
