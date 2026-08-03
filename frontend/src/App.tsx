@@ -8,7 +8,11 @@ import { ClientesListPage } from './features/clientes/ClientesListPage'
 import { ConfiguracoesPage } from './features/configuracoes/ConfiguracoesPage'
 import { EquipeListPage } from './features/equipe/EquipeListPage'
 import { EstoqueListPage } from './features/estoque/EstoqueListPage'
-import { FaturamentoPage } from './features/faturamento/FaturamentoPage'
+import { FaturamentoLayout } from './features/faturamento/FaturamentoLayout'
+import { CobrancasSection } from './features/faturamento/sections/CobrancasSection'
+import { DashboardSection as FaturamentoDashboardSection } from './features/faturamento/sections/DashboardSection'
+import { DespesasSection } from './features/faturamento/sections/DespesasSection'
+import { NotasSection } from './features/faturamento/sections/NotasSection'
 import { LojasListPage } from './features/lojas/LojasListPage'
 import { PacientesListPage } from './features/pacientes/PacientesListPage'
 import { PacotesListPage } from './features/pacotes/PacotesListPage'
@@ -56,7 +60,13 @@ function App() {
             <Route path="/estoque" element={<EstoqueListPage />} />
             <Route path="/equipe" element={<EquipeListPage />} />
             <Route path="/lojas" element={<LojasListPage />} />
-            <Route path="/faturamento" element={<FaturamentoPage />} />
+            <Route path="/faturamento" element={<FaturamentoLayout />}>
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<FaturamentoDashboardSection />} />
+              <Route path="cobrancas" element={<CobrancasSection />} />
+              <Route path="despesas" element={<DespesasSection />} />
+              <Route path="notas" element={<NotasSection />} />
+            </Route>
             <Route path="/relatorios/extrato" element={<RelatoriosPage />} />
             <Route path="/relatorios/dre" element={<RelatoriosPage />} />
             <Route path="/relatorios/livro-caixa" element={<RelatoriosPage />} />
