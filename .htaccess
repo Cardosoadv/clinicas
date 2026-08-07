@@ -1,0 +1,23 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # 1. Redireciona requisições da API para o entrypoint do backend
+    RewriteRule ^(api/.*)$ backend/public/index.php/$1 [L,QSA]
+    
+    # 2. Redireciona acessos diretos à pasta backend para o seu public
+    RewriteCond %{REQUEST_URI} /backend/ [NC]
+    RewriteRule ^backend/(.*)$ backend/public/$1 [L]
+    
+    # 3. Se a requisição NÃO contém frontend/dist/, api/ ou backend/ reescreve internamente para lá
+    RewriteCond %{REQUEST_URI} !/frontend/dist/
+    RewriteCond %{REQUEST_URI} !/backend/
+    RewriteCond %{REQUEST_URI} !/api/
+    RewriteRule ^(.*)$ frontend/dist/$1 [L]
+    
+    # 4. Tratamento para SPA (Vue/React Router):
+    # Se o arquivo ou diretório físico não for encontrado dentro de frontend/dist,
+    # faz o fallback para o index.html
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ frontend/dist/index.html [L]
+</IfModule>

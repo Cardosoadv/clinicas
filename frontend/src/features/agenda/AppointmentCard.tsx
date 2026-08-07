@@ -1,7 +1,7 @@
 import { Clock } from 'lucide-react'
 import type { DragEvent } from 'react'
 import type { Agendamento, AgendamentoStatus } from './types'
-
+import { PacienteAvatar } from '../../components/PacienteAvatar'
 interface AppointmentCardProps {
   agendamento: Agendamento
   onClick: () => void
@@ -43,7 +43,9 @@ export function AppointmentCard({ agendamento, onClick, onStatusChange }: Appoin
     >
       <div className="appointment-card__main">
         <span className="appointment-card__pet">
-          {agendamento.paciente_avatar || '🐾'} {agendamento.paciente_nome}
+          <PacienteAvatar avatar={agendamento.paciente_avatar} pacienteId={agendamento.paciente_id} alt={agendamento.paciente_nome} />
+          {' '}
+          {agendamento.paciente_nome}
         </span>
         {agendamento.tutor_nome && <span className="appointment-card__tutor">({agendamento.tutor_nome})</span>}
         {agendamento.age_servico && <span className="appointment-card__servicos">{agendamento.age_servico}</span>}

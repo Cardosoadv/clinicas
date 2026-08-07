@@ -1324,3 +1324,5 @@ CorreÁ„o do tamanho da tela e overflow horizontal em dispositivos mÛveis.
  # #   2 0 2 6 - 0 7 - 2 7   -   I n s e r Á „ o   d e   Õ n d i c e s 
  -   I n s e r i d o s   o s   Ì n d i c e s   ( c h a v e s   p r i m · r i a s ,   c h a v e s   e s t r a n g e i r a s ,   A U T O _ I N C R E M E N T   e   Ì n d i c e s )   e x t r a Ì d o s   d o   a r q u i v o   p e t y s . s q l   n a s   n o v a s   m i g r a t i o n s ,   j ·   r e f l e t i n d o   a s   m o d i f i c a Á ı e s   d e   n o m e n c l a t u r a   d e   p a c i e n t e s .  
  
+## 2026-08-07 - Configura√ß√£o de Roteamento (htaccess)
+- Cria√ß√£o do arquivo .htaccess na raiz do projeto para direcionar o tr√°fego adequadamente para o frontend (diret√≥rio rontend/dist), ignorando as rotas da API/backend.
