@@ -5,15 +5,6 @@ import './index.css'
 import './styles/shared.css'
 import App from './App.tsx'
 
-declare global {
-  interface Window {
-    APP_CONFIG: {
-      API_BASE_URL: string;
-      BASE_PATH: string;
-    };
-  }
-}
-
 // Mesmo subcaminho de deploy do <base href> em index.html
 const basePath = window.APP_CONFIG?.BASE_PATH || '/clinicas';
 

@@ -8,7 +8,12 @@
     RewriteCond %{REQUEST_URI} /backend/ [NC]
     RewriteRule ^backend/(.*)$ backend/public/$1 [L]
     
-    # 3. Se a requisição NÃO contém frontend/dist/, api/ ou backend/ reescreve internamente para lá
+    # 3. Garante que o config.js do frontend seja servido corretamente, mesmo
+    # se solicitado a partir de rotas aninhadas do React Router
+    RewriteCond %{REQUEST_URI} !/frontend/dist/config\.js$ [NC]
+    RewriteRule config\.js$ frontend/dist/config.js [L]
+
+    # 4. Se a requisição NÃO contém frontend/dist/, api/ ou backend/ reescreve internamente para lá
     RewriteCond %{REQUEST_URI} !/frontend/dist/
     RewriteCond %{REQUEST_URI} !/backend/
     RewriteCond %{REQUEST_URI} !/api/

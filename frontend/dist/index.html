@@ -2,19 +2,21 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <!-- Caminho onde o build compilado é servido pelo .htaccess da raiz do projeto
-         (ver /.htaccess e BrowserRouter basename em src/main.tsx). Ajuste os dois
-         juntos caso o subcaminho de deploy mude. -->
-    <base href="/clinicas/" />
+    <!-- O caminho de deploy é injetado dinamicamente usando a constante BASE_PATH 
+         do arquivo config.js. Em produção, edite apenas o config.js! -->
+    <script src="config.js"></script>
+    <script>
+      // Injeta a tag base antes de carregar os assets do Vite
+      var basePath = (window.APP_CONFIG && window.APP_CONFIG.BASE_PATH) || '/';
+      document.write('<base href="' + basePath + (basePath.endsWith('/') ? '' : '/') + '" />');
+    </script>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Casa dos Pets</title>
-    <script type="module" crossorigin src="/clinicas/assets/index-D9MhubMG.js"></script>
-    <link rel="stylesheet" crossorigin href="/clinicas/assets/index-Cp1kZOfD.css">
+    <script type="module" crossorigin src="./assets/index-oM6XjuPR.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Cp1kZOfD.css">
   </head>
   <body>
-    <div id="root"></div>
-    <!-- Config de runtime (não processada pelo Vite) — precisa carregar antes do bundle. -->
-    <script src="config.js"></script>
+    <div id="root"></div>
   </body>
 </html>
