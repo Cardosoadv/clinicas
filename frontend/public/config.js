@@ -5,4 +5,5 @@
 // só editando este arquivo, sem rodar `npm run build` de novo.
 window.APP_CONFIG = {
   API_BASE_URL: 'http://localhost/clinicas/api/v1',
+  BASE_PATH: '/clinicas',
 }

@@ -5,10 +5,21 @@ import './index.css'
 import './styles/shared.css'
 import App from './App.tsx'
 
-// Mesmo subcaminho de deploy do <base href> em index.html e do .htaccess da raiz do projeto.
+declare global {
+  interface Window {
+    APP_CONFIG: {
+      API_BASE_URL: string;
+      BASE_PATH: string;
+    };
+  }
+}
+
+// Mesmo subcaminho de deploy do <base href> em index.html
+const basePath = window.APP_CONFIG?.BASE_PATH || '/clinicas';
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter basename="/clinicas">
+    <BrowserRouter basename={basePath}>
       <App />
     </BrowserRouter>
   </StrictMode>,

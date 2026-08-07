@@ -1,4 +1,5 @@
 import { CreditCard, Receipt, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
+import { PacienteAvatar } from '../../../components/PacienteAvatar'
 import { useFaturamento } from '../FaturamentoContext'
 import type { Cobranca, Despesa } from '../types'
 
@@ -24,37 +25,37 @@ export function DashboardSection() {
 
   return (
     <>
-      <div className="stat-pills">
-        <div className="agenda-stat-pill">
-          <TrendingUp size={18} />
+      <div className="faturamento-stat-pills">
+        <div className="faturamento-stat-pill">
+          <TrendingUp size={24} />
           <div>
             <strong>{formatCurrency(kpis.receitas)}</strong>
             <span>Receitas do mês</span>
           </div>
         </div>
-        <div className="agenda-stat-pill">
-          <TrendingDown size={18} />
+        <div className="faturamento-stat-pill faturamento-stat-pill--despesa">
+          <TrendingDown size={24} />
           <div>
             <strong>{formatCurrency(kpis.despesas)}</strong>
             <span>Despesas do mês</span>
           </div>
         </div>
-        <div className="agenda-stat-pill">
-          <Wallet size={18} />
+        <div className="faturamento-stat-pill faturamento-stat-pill--saldo">
+          <Wallet size={24} />
           <div>
             <strong>{formatCurrency(kpis.saldo)}</strong>
             <span>Saldo do mês</span>
           </div>
         </div>
-        <div className="agenda-stat-pill">
-          <CreditCard size={18} />
+        <div className="faturamento-stat-pill faturamento-stat-pill--areceber">
+          <CreditCard size={24} />
           <div>
             <strong>{formatCurrency(kpis.a_receber)}</strong>
             <span>A receber</span>
           </div>
         </div>
-        <div className="agenda-stat-pill">
-          <Receipt size={18} />
+        <div className="faturamento-stat-pill faturamento-stat-pill--vencidos">
+          <Receipt size={24} />
           <div>
             <strong>{formatCurrency(kpis.vencidos)}</strong>
             <span>Vencidos</span>
@@ -118,9 +119,10 @@ export function DashboardSection() {
             {dashboard.stats.top_pets.length === 0 && <p className="empty-state">Sem dados no período.</p>}
             {dashboard.stats.top_pets.map((pet) => (
               <div className="side-list-item" key={pet.paciente_nome}>
-                <strong>
-                  {pet.paciente_avatar || '🐾'} {pet.paciente_nome}
-                </strong>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <PacienteAvatar avatar={pet.paciente_avatar} pacienteId={pet.paciente_id} />
+                  <strong>{pet.paciente_nome}</strong>
+                </div>
                 <span>
                   {pet.qtd} atendimento{pet.qtd === 1 ? '' : 's'} · {formatCurrency(pet.total)}
                 </span>

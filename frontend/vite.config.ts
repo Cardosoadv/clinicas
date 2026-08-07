@@ -3,10 +3,9 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // Mesmo subcaminho de deploy do <base href> em index.html e do basename do
-  // BrowserRouter em src/main.tsx — sem isso o build emite URLs de asset
-  // absolutas a partir da raiz do domínio, fora do escopo do .htaccess.
-  base: '/clinicas/',
+  // Usar base relativa para que os assets sejam resolvidos em relação
+  // à tag <base href="..."> do index.html (que pode ser editada em prod).
+  base: './',
   plugins: [react()],
   server: {
     // Porta fixa: o backend (Cors.php) autoriza um allowlist explícito de
