@@ -2,7 +2,7 @@
     RewriteEngine On
     
     # 1. Redireciona requisições da API para o entrypoint do backend
-    RewriteRule ^(api/.*)$ backend/public/index.php/$1 [L,QSA]
+    RewriteRule ^(api/.*)$ backend/public/index.php?/$1 [L,QSA]
     
     # 2. Redireciona acessos diretos à pasta backend para o seu public
     RewriteCond %{REQUEST_URI} /backend/ [NC]
