@@ -49,4 +49,18 @@ export const templateDefinitions: TemplateDefinition[] = [
     placeholders: ['{tutor}', '{pet}', '{vacina}', '{data}', '{clinica}'],
     padrao: 'Olá {tutor}, passando para lembrar que o reforço da vacina {vacina} de {pet} está agendado para {data}. Vamos garantir a proteção do seu amiguinho? 💉🐾',
   },
+  {
+    key: 'report_header',
+    titulo: 'Cabeçalho de Relatórios/Receitas',
+    descricao: 'Aparece no topo das impressões (aceita HTML básico ou será centralizado).',
+    placeholders: ['{clinica}', '{telefone}', '{endereco}', '{crmv}'],
+    padrao: '<b>Sua Clínica Veterinária</b><br>Endereço - Telefone',
+  },
+  {
+    key: 'report_footer',
+    titulo: 'Rodapé de Relatórios/Receitas',
+    descricao: 'Aparece no fim das impressões (aceita HTML básico).',
+    placeholders: ['{data}', '{veterinario}', '{crmv}'],
+    padrao: '{data}<br>Assinado por {veterinario}',
+  },
 ]

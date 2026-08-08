@@ -1338,3 +1338,7 @@ Correção do tamanho da tela e overflow horizontal em dispositivos móveis.
 ## [1.0.3] - 2026-08-08
 - CorreÃ§Ã£o das exclusÃµes do deploy.yml para enviar apenas a pasta 'dist' do frontend, bloqueando todas as outras (src, public, arquivos base).
 - VersÃ£o atualizada no package.json (root) e backend/composer.json.
+
+## [1.0.4] - 2026-08-08
+- Criação de template global de impressão (ReportTemplate) e inclusão nas configurações de cabeçalho e rodapé.
+- Integração do template no Modal de Prescrições para possibilitar a impressão da Receita Simples.

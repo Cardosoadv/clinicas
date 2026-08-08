@@ -71,6 +71,9 @@ export interface Prescricao {
 
 export interface PrescricaoDetalhada extends Prescricao {
   itens: PrescricaoItem[]
+  pet_id: number
+  pet_nome: string
+  tutor_nome: string
 }
 
 export interface Odontograma {

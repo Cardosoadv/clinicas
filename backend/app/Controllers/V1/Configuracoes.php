@@ -21,16 +21,25 @@ class Configuracoes extends BaseController
     }
 
     /**
-     * API: Retorna todos os templates de mensagens (WhatsApp, etc).
+     * API: Retorna todos os templates de mensagens (WhatsApp e relatórios).
      */
     public function getTemplates(): ResponseInterface
     {
-        $templates = $this->configRepo->findLike('whatsapp_template');
+        $keys = [
+            'whatsapp_template_agendamento',
+            'whatsapp_template_cobranca',
+            'whatsapp_template_pos_consulta',
+            'whatsapp_template_aniversario',
+            'whatsapp_template_vacina',
+            'report_header',
+            'report_footer'
+        ];
+        $templates = $this->configRepo->findByKeys($keys);
         return $this->apiResponse(['status' => 'success', 'data' => $templates]);
     }
 
     /**
-     * API: Atualiza um template de mensagem.
+     * API: Atualiza um template de mensagem ou relatório.
      */
     public function updateTemplate(): ResponseInterface
     {
@@ -44,6 +53,8 @@ class Configuracoes extends BaseController
             'whatsapp_template_pos_consulta',
             'whatsapp_template_aniversario',
             'whatsapp_template_vacina',
+            'report_header',
+            'report_footer'
         ];
 
         if (empty($key) || !in_array($key, $whitelist, true)) {

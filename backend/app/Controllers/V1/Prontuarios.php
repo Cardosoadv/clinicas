@@ -38,7 +38,7 @@ class Prontuarios extends BaseController
         }
 
         $membro = $this->equipeRepo->findByUserId((int) auth()->id());
-        return $membro['equ_id'] ?? null;
+        return isset($membro['equ_id']) ? (int) $membro['equ_id'] : null;
     }
 
     /**

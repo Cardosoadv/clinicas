@@ -53,6 +53,17 @@ class PrescricoesRepository extends BaseRepository
         $vet = $db->table('equipe')->where('equ_id', $prescricao['veterinario_id'])->get()->getRowArray();
         $prescricao['veterinario_nome'] = $vet['equ_nome'] ?? 'Clínico';
 
+        $pet = $db->table('pacientes')->where('paciente_id', $prescricao['paciente_id'])->get()->getRowArray();
+        $prescricao['pet_id'] = $prescricao['paciente_id'];
+        $prescricao['pet_nome'] = $pet['paciente_nome'] ?? 'Desconhecido';
+
+        if ($pet && !empty($pet['cliente_id'])) {
+            $tutor = $db->table('clientes')->where('id', $pet['cliente_id'])->get()->getRowArray();
+            $prescricao['tutor_nome'] = $tutor['nome'] ?? 'Desconhecido';
+        } else {
+            $prescricao['tutor_nome'] = 'Desconhecido';
+        }
+
         return $prescricao;
     }
 
