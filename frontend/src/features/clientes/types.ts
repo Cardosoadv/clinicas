@@ -16,6 +16,13 @@ export interface Cliente {
   deleted_at: string | null
 }
 
+export interface ClienteDuplicadoGrupo {
+  nome: string
+  telefones: string
+  quantidade: number
+  clientes: Cliente[]
+}
+
 export interface ClienteNota {
   id: number
   cliente_id: number

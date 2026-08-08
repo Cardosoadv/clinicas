@@ -5,6 +5,7 @@ import { LoginPage } from './features/auth/LoginPage'
 import { AgendaPage } from './features/agenda/AgendaPage'
 import { ClienteDetailPage } from './features/clientes/ClienteDetailPage'
 import { ClientesListPage } from './features/clientes/ClientesListPage'
+import { ClientesDuplicadosPage } from './features/clientes/ClientesDuplicadosPage'
 import { ConfiguracoesPage } from './features/configuracoes/ConfiguracoesPage'
 import { EquipeListPage } from './features/equipe/EquipeListPage'
 import { EstoqueListPage } from './features/estoque/EstoqueListPage'
@@ -41,6 +42,7 @@ function App() {
           <Route element={<AdminLayout />}>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/clientes" element={<ClientesListPage />} />
+            <Route path="/clientes/duplicados" element={<ClientesDuplicadosPage />} />
             <Route path="/clientes/:id" element={<ClienteDetailPage />} />
             <Route path="/pacientes" element={<PacientesListPage />} />
             <Route path="/agenda" element={<AgendaPage />} />

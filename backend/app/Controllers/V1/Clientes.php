@@ -163,6 +163,30 @@ class Clientes extends BaseController
         return $this->apiResponse($result, 201);
     }
 
+    /**
+     * API: Lista grupos de clientes duplicados (mesmo nome e telefone).
+     */
+    public function getDuplicados(): ResponseInterface
+    {
+        $data = $this->service->getDuplicados();
+        return $this->apiResponse(['status' => 'success', 'data' => $data]);
+    }
+
+    /**
+     * API: Mescla os clientes informados, mantendo o menor ID.
+     */
+    public function merge(): ResponseInterface
+    {
+        $data = $this->getRequestData();
+        
+        if (empty($data['ids']) || !is_array($data['ids']) || count($data['ids']) < 2) {
+            return $this->apiResponse(['status' => 'error', 'message' => 'É necessário informar ao menos dois IDs para mesclagem.'], 400);
+        }
+
+        $result = $this->service->mergeDuplicados($data['ids']);
+        return $this->apiResponse($result, $result['status'] === 'success' ? 200 : 400);
+    }
+
     private function getValidationRules(): array
     {
         return [

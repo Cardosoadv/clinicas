@@ -1326,3 +1326,7 @@ CorreÁ„o do tamanho da tela e overflow horizontal em dispositivos mÛveis.
  
 ## 2026-08-07 - Configura√ß√£o de Roteamento (htaccess)
 - Cria√ß√£o do arquivo .htaccess na raiz do projeto para direcionar o tr√°fego adequadamente para o frontend (diret√≥rio rontend/dist), ignorando as rotas da API/backend.
+
+## [1.0.1] - 2026-08-08
+- AtualizaÁ„o do README.md para refletir a estrutura atual do projeto (React + CodeIgniter 4).
+- Vers„o atualizada no package.json e backend/composer.json.

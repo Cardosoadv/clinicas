@@ -136,4 +136,112 @@ class ClientesService extends BaseService
             'aniversariantes' => $this->clientesRepo->getBirthdaysByMonth((int) date('m')),
         ];
     }
+
+    /**
+     * Busca todos os grupos de clientes duplicados por nome e telefone.
+     */
+    public function getDuplicados(): array
+    {
+        $db = \Config\Database::connect();
+        
+        $query = $db->query("
+            SELECT nome, telefones, COUNT(*) as qtd
+            FROM clientes
+            WHERE deleted_at IS NULL
+            GROUP BY nome, telefones
+            HAVING qtd > 1
+        ");
+        
+        $grupos = $query->getResultArray();
+        $duplicados = [];
+        
+        foreach ($grupos as $grupo) {
+            $clientes = $db->table('clientes')
+                           ->where('nome', $grupo['nome'])
+                           ->where('telefones', $grupo['telefones'])
+                           ->where('deleted_at IS NULL')
+                           ->orderBy('id', 'ASC')
+                           ->get()
+                           ->getResultArray();
+                           
+            $duplicados[] = [
+                'nome'       => $grupo['nome'],
+                'telefones'  => $grupo['telefones'],
+                'quantidade' => $grupo['qtd'],
+                'clientes'   => $clientes
+            ];
+        }
+        
+        return $duplicados;
+    }
+
+    /**
+     * Realiza a mesclagem de clientes duplicados mantendo o menor ID.
+     * Os campos vazios do menor ID recebem dados dos maiores IDs.
+     * Referências nas tabelas vinculadas são atualizadas.
+     */
+    public function mergeDuplicados(array $ids): array
+    {
+        if (count($ids) < 2) {
+            return $this->error('É necessário ao menos dois IDs para realizar o merge.');
+        }
+
+        $db = \Config\Database::connect();
+        
+        $clientes = $db->table('clientes')
+                       ->whereIn('id', $ids)
+                       ->where('deleted_at IS NULL')
+                       ->orderBy('id', 'ASC')
+                       ->get()
+                       ->getResultArray();
+                       
+        if (count($clientes) < 2) {
+            return $this->error('Os clientes informados não foram encontrados ou já foram mesclados/excluídos.');
+        }
+        
+        $master = $clientes[0];
+        $masterId = $master['id'];
+        
+        $updates = [];
+        $idsToDelete = [];
+        
+        for ($i = 1; $i < count($clientes); $i++) {
+            $dup = $clientes[$i];
+            $idsToDelete[] = $dup['id'];
+            
+            foreach ($dup as $field => $value) {
+                if (in_array($field, ['id', 'created_at', 'updated_at', 'deleted_at'])) {
+                    continue;
+                }
+                // Se no master estiver vazio/nulo, copiamos do duplicado (se tiver algo)
+                if (empty($master[$field]) && !empty($value)) {
+                    $master[$field] = $value;
+                    $updates[$field] = $value;
+                }
+            }
+        }
+        
+        $db->transStart();
+        
+        if (!empty($updates)) {
+            $updates['updated_at'] = date('Y-m-d H:i:s');
+            $db->table('clientes')->where('id', $masterId)->update($updates);
+        }
+        
+        // Atualiza as chaves estrangeiras para apontar para o master
+        $db->table('pacientes')->whereIn('cliente_id', $idsToDelete)->update(['cliente_id' => $masterId]);
+        $db->table('cliente_notas')->whereIn('cliente_id', $idsToDelete)->update(['cliente_id' => $masterId]);
+        $db->table('comunicacoes')->whereIn('cliente_id', $idsToDelete)->update(['cliente_id' => $masterId]);
+        
+        // Soft delete nos clientes duplicados
+        $db->table('clientes')->whereIn('id', $idsToDelete)->update(['deleted_at' => date('Y-m-d H:i:s')]);
+        
+        $db->transComplete();
+        
+        if ($db->transStatus() === false) {
+            return $this->error('Ocorreu um erro ao realizar a mesclagem.');
+        }
+        
+        return $this->success('Clientes mesclados com sucesso.');
+    }
 }

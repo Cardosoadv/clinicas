@@ -82,6 +82,8 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\V1', 'filter' => 'apia
     // Clientes
     $routes->get('clientes', 'Clientes::getAll');
     $routes->get('clientes/painel', 'Clientes::getPainel');
+    $routes->get('clientes/duplicados', 'Clientes::getDuplicados');
+    $routes->post('clientes/merge', 'Clientes::merge');
     $routes->post('clientes/import', 'ClientesImport::upload');
     $routes->get('clientes/(:num)', 'Clientes::getById/$1');
     $routes->post('clientes', 'Clientes::create');
