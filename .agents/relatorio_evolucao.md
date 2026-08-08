@@ -1330,3 +1330,11 @@ CorreÁ„o do tamanho da tela e overflow horizontal em dispositivos mÛveis.
 ## [1.0.1] - 2026-08-08
 - AtualizaÁ„o do README.md para refletir a estrutura atual do projeto (React + CodeIgniter 4).
 - Vers„o atualizada no package.json e backend/composer.json.
+
+## [1.0.2] - 2026-08-08
+- Atualiza√ß√£o do arquivo deploy.yml para incluir exclus√µes baseadas na nova estrutura separada de frontend e backend (backend/vendor, backend/writable, backend/tests, frontend/src e frontend/node_modules).
+- Vers√£o atualizada no package.json (root) e backend/composer.json.
+
+## [1.0.3] - 2026-08-08
+- Corre√ß√£o das exclus√µes do deploy.yml para enviar apenas a pasta 'dist' do frontend, bloqueando todas as outras (src, public, arquivos base).
+- Vers√£o atualizada no package.json (root) e backend/composer.json.
