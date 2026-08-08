@@ -2,6 +2,7 @@ import { FileHeart } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError } from '../../lib/api'
+import { PacienteAvatar } from '../../components/PacienteAvatar'
 import type { Paciente } from '../pacientes/types'
 import { fetchProntuarioPacientes } from './api'
 import './prontuarios.css'
@@ -64,7 +65,7 @@ export function ProntuarioListPage() {
               className="prontuario-picker-card"
               onClick={() => navigate(`/prontuarios/${paciente.paciente_id}`)}
             >
-              <span className="paciente-avatar">{paciente.paciente_avatar || '🐾'}</span>
+              <PacienteAvatar avatar={paciente.paciente_avatar} pacienteId={paciente.paciente_id} alt={paciente.paciente_nome} />
               <div className="prontuario-picker-card__info">
                 <strong>{paciente.paciente_nome}</strong>
                 <span>{paciente.pet_resp_nome || 'Tutor não informado'}</span>

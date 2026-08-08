@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiError } from '../../lib/api'
 import { createPaciente, deletePaciente, fetchPacientes, fetchPacientesPainel, updatePaciente } from './api'
 import { PacienteFormModal } from './PacienteFormModal'
+import { PacienteAvatar } from '../../components/PacienteAvatar'
 import './pacientes.css'
 import {
   emptyPacienteForm,
@@ -206,7 +207,7 @@ export function PacientesListPage() {
                 >
                   <div className="record-card__main">
                     <div className="record-card__title-row">
-                      <span className="paciente-avatar">{paciente.paciente_avatar || '🐾'}</span>
+                      <PacienteAvatar avatar={paciente.paciente_avatar} pacienteId={paciente.paciente_id} alt={paciente.paciente_nome} />
                       <h3>{paciente.paciente_nome}</h3>
                       <span className={`badge ${statusBadgeClass[paciente.paciente_status]}`}>
                         {paciente.paciente_status}

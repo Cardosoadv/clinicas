@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { searchPacientesLookup } from '../features/agenda/api'
 import type { PacienteLookup } from '../features/agenda/types'
 import { useClickOutside } from '../hooks/useClickOutside'
+import { PacienteAvatar } from './PacienteAvatar'
 
 interface PacientePickerProps {
   value: string
@@ -77,8 +78,8 @@ export function PacientePicker({ value, displayName, onChange, error }: Paciente
                 className="cliente-picker__option"
                 onClick={() => handleSelect(paciente)}
               >
-                <span>
-                  {paciente.paciente_avatar || '🐾'} {paciente.paciente_nome}
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <PacienteAvatar avatar={paciente.paciente_avatar} pacienteId={paciente.paciente_id} alt={paciente.paciente_nome} /> {paciente.paciente_nome}
                 </span>
                 <span className="cliente-picker__option-doc">
                   {paciente.pet_resp_nome ? `Tutor: ${paciente.pet_resp_nome}` : ''}

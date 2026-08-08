@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { PacienteAvatar } from '../../components/PacienteAvatar'
 import { formatCNPJ, formatCPF } from '../../lib/document'
 import { ApiError } from '../../lib/api'
 import type { Paciente } from '../pacientes/types'
@@ -268,7 +269,7 @@ export function ClienteDetailPage() {
                   className="cliente-detail__paciente-card"
                   onClick={() => navigate(`/pacientes?search=${encodeURIComponent(paciente.paciente_nome)}`)}
                 >
-                  <span className="paciente-avatar">{paciente.paciente_avatar || '🐾'}</span>
+                  <PacienteAvatar avatar={paciente.paciente_avatar} pacienteId={paciente.paciente_id} alt={paciente.paciente_nome} />
                   <div>
                     <strong>{paciente.paciente_nome}</strong>
                     <span>
