@@ -7,6 +7,7 @@ import type { Servico } from '../servicos/types'
 import { createPacote } from './api'
 import type { ItemFormRow, PacoteFormValues } from './types'
 import { emptyPacoteForm } from './types'
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 
 interface PacoteFormModalProps {
   onClose: () => void
@@ -79,9 +80,11 @@ export function PacoteFormModal({ onClose, onSaved }: PacoteFormModalProps) {
     }
   }
 
+  useEscapeKey(onClose)
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
+      <div className="modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
         <div className="modal__header">
           <h2>Novo Pacote</h2>
           <button type="button" onClick={onClose} aria-label="Fechar">
@@ -177,7 +180,13 @@ export function PacoteFormModal({ onClose, onSaved }: PacoteFormModalProps) {
                       value={item.valor_unitario}
                       onChange={(event) => updateItem(index, 'valor_unitario', event.target.value)}
                     />
-                    <button type="button" className="icon-btn icon-btn--danger" onClick={() => removeItem(index)}>
+                    <button
+                      type="button"
+                      className="icon-btn icon-btn--danger"
+                      aria-label="Remover item"
+                      title="Remover item"
+                      onClick={() => removeItem(index)}
+                    >
                       <Trash2 size={14} />
                     </button>
                   </div>
