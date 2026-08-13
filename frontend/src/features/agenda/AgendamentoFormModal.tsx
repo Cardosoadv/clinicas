@@ -4,6 +4,7 @@ import { ApiError } from '../../lib/api'
 import { fetchEquipeOptions, fetchServicosOptions } from './api'
 import { PacientePicker } from '../../components/PacientePicker'
 import type { AgendamentoFormValues, AgendamentoStatus, EquipeOption, ServicoOption } from './types'
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 
 interface AgendamentoFormModalProps {
   title: string
@@ -83,9 +84,11 @@ export function AgendamentoFormModal({
     }
   }
 
+  useEscapeKey(onClose)
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
+      <div className="modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
         <div className="modal__header">
           <h2>{title}</h2>
           <button type="button" onClick={onClose} aria-label="Fechar">

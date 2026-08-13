@@ -3,6 +3,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { ApiError } from '../../lib/api'
 import { formatCNPJ, formatCPF, isValidCNPJ, isValidCPF } from '../../lib/document'
 import type { ClienteFormValues } from './types'
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 
 interface ClienteFormModalProps {
   title: string
@@ -69,9 +70,11 @@ export function ClienteFormModal({ title, initialValues, onClose, onSubmit }: Cl
     }
   }
 
+  useEscapeKey(onClose)
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
+      <div className="modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
         <div className="modal__header">
           <h2>{title}</h2>
           <button type="button" onClick={onClose} aria-label="Fechar">

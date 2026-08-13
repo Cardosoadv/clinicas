@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthContext'
 import { useClickOutside } from '../hooks/useClickOutside'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import { allNavItems, navSections } from './navConfig'
 import { TopbarSearch } from './TopbarSearch'
 import './AdminLayout.css'
@@ -21,6 +22,11 @@ export function AdminLayout() {
   useEffect(() => {
     setSidebarOpen(false)
   }, [location.pathname])
+
+  useEscapeKey(() => {
+    setSidebarOpen(false)
+    setUserMenuOpen(false)
+  })
 
   const initial = (user?.username ?? user?.email ?? '?').charAt(0).toUpperCase()
 
