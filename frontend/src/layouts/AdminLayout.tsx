@@ -1,6 +1,7 @@
 import { Bell, LogOut, Mail, Menu } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import logo from '../assets/logo.png'
 import { useAuth } from '../features/auth/AuthContext'
 import { useClickOutside } from '../hooks/useClickOutside'
 import { useEscapeKey } from '../hooks/useEscapeKey'
@@ -34,8 +35,7 @@ export function AdminLayout() {
     <div className="admin-shell">
       <aside className={`admin-sidebar${sidebarOpen ? ' admin-sidebar--open' : ''}`}>
         <div className="admin-sidebar__brand">
-          <span className="admin-sidebar__brand-name">Casa dos Pets</span>
-          <span className="admin-sidebar__brand-sub">Painel administrativo</span>
+          <img src={logo} alt="Beatriz Cardoso - Médica Veterinária" className="admin-sidebar__brand-logo" />
         </div>
 
         <nav className="admin-sidebar__nav">
