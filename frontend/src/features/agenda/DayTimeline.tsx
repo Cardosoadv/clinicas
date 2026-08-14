@@ -9,6 +9,7 @@ interface DayTimelineProps {
   onEdit: (agendamento: Agendamento) => void
   onReschedule: (agendamento: Agendamento, newHour: string) => void
   onStatusChange: (agendamento: Agendamento, status: AgendamentoStatus) => void
+  onFaturar: (agendamento: Agendamento) => void
 }
 
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 8) // 08h às 19h
@@ -18,7 +19,7 @@ function hourLabel(hour: number): string {
   return `${String(hour).padStart(2, '0')}:00`
 }
 
-export function DayTimeline({ appointments, onCreateAt, onEdit, onReschedule, onStatusChange }: DayTimelineProps) {
+export function DayTimeline({ appointments, onCreateAt, onEdit, onReschedule, onStatusChange, onFaturar }: DayTimelineProps) {
   const [dragOverHour, setDragOverHour] = useState<number | null>(null)
 
   const byHour = new Map<number, Agendamento[]>()
@@ -78,6 +79,7 @@ export function DayTimeline({ appointments, onCreateAt, onEdit, onReschedule, on
                         agendamento={agendamento}
                         onClick={() => onEdit(agendamento)}
                         onStatusChange={(status) => onStatusChange(agendamento, status)}
+                        onFaturar={() => onFaturar(agendamento)}
                       />
                     ))}
                     <button type="button" className="timeline__add-more" onClick={() => onCreateAt(hourLabel(hour))}>

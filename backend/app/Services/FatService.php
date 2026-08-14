@@ -278,6 +278,17 @@ class FatService extends BaseService
     }
 
     /**
+     * Busca a cobrança mais recente vinculada a um agendamento.
+     *
+     * @param int $agendamentoId
+     * @return array|null
+     */
+    public function findByAgendamento(int $agendamentoId): ?array
+    {
+        return $this->cobrancaRepo->findByAgendamento($agendamentoId);
+    }
+
+    /**
      * Cria uma nova cobrança
      *
      * @param array $data

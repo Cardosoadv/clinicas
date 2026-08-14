@@ -265,4 +265,50 @@ final class AgendaServiceTest extends CIUnitTestCase
         $this->assertSame('error', $result['status']);
         $this->assertSame('Falhou', $result['message']);
     }
+
+    public function testBillAppointmentUpdatesExistingCobrancaInsteadOfCreatingDuplicate(): void
+    {
+        $this->agendamentosRepository->method('findById')->willReturn([
+            'paciente_id' => 1,
+            'age_servico' => 'Banho',
+            'age_data'    => '2026-08-10',
+        ]);
+        $this->agendamentosRepository->method('getServiceIds')->willReturn([7]);
+        $this->fatService->method('findByAgendamento')->with(5)->willReturn(['id' => 42, 'status' => 'Pago']);
+
+        $this->fatService->expects($this->never())->method('createCobranca');
+        $this->fatService->expects($this->once())
+            ->method('updateCobranca')
+            ->with(42, $this->callback(static function (array $d): bool {
+                return $d['agendamento_id'] === 5 && $d['valor'] === 150;
+            }))
+            ->willReturn(['status' => 'success']);
+
+        $this->agendamentosRepository->expects($this->once())
+            ->method('update')
+            ->with(5, ['age_faturado' => 1, 'age_status' => 'concluido']);
+
+        $result = $this->service->billAppointment(5, ['forma_pagamento' => 'Dinheiro', 'valor' => 150]);
+
+        $this->assertSame('success', $result['status']);
+        $this->assertSame(42, $result['id']);
+    }
+
+    public function testBillAppointmentDoesNotReconsumePacoteWhenEditingExistingCobranca(): void
+    {
+        $this->agendamentosRepository->method('findById')->willReturn([
+            'paciente_id' => 1,
+            'age_servico' => 'Banho',
+            'age_data'    => '2026-08-10',
+        ]);
+        $this->agendamentosRepository->method('getServiceIds')->willReturn([7]);
+        $this->fatService->method('findByAgendamento')->willReturn(['id' => 42, 'status' => 'Pago']);
+        $this->fatService->method('updateCobranca')->willReturn(['status' => 'success']);
+
+        $this->pacoteService->expects($this->never())->method('consumir');
+
+        $result = $this->service->billAppointment(5, ['forma_pagamento' => 'Pacote', 'pacote_id' => 3, 'valor' => 100]);
+
+        $this->assertSame('success', $result['status']);
+    }
 }

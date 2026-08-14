@@ -414,6 +414,53 @@
   font: inherit;
 }
 
+.appointment-card__bill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 6px;
+  border: 1px solid #d8d2c4;
+  background: #fff;
+  color: #6b7385;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.appointment-card__bill-btn:hover {
+  background: #f4f1ea;
+  color: #1c2333;
+}
+
+.appointment-card__bill-btn--done {
+  border-color: #bfe3c8;
+  background: #eafaf0;
+  color: #1f7a44;
+}
+
+.appointment-card__bill-btn--done:hover {
+  background: #dcf3e3;
+}
+
+.faturar-modal__resumo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e7e3da;
+  border-radius: 7px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+.faturar-modal__resumo p {
+  margin: 2px 0 0;
+  color: #6b7385;
+}
+
 /* ---------- Checklist de serviços (modal) ---------- */
 
 .servico-checklist {

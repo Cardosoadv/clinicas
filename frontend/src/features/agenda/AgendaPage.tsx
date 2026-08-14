@@ -3,8 +3,10 @@ import { useEffect, useState } from 'react'
 import { ApiError } from '../../lib/api'
 import {
   createAgendamento,
+  faturarAgendamento,
   fetchDayData,
   fetchMonthDays,
+  fetchServicosOptions,
   fetchUpcoming,
   rescheduleAgendamento,
   updateAgendamento,
@@ -12,6 +14,7 @@ import {
 } from './api'
 import { AgendamentoFormModal } from './AgendamentoFormModal'
 import { DayTimeline } from './DayTimeline'
+import { FaturarModal } from './FaturarModal'
 import { formatLongDate, todayKey } from './dateUtils'
 import { MiniCalendar } from './MiniCalendar'
 import './agenda.css'
@@ -22,9 +25,15 @@ import {
   type AgendamentoFormValues,
   type AgendamentoStatus,
   type AgendaStats,
+  type FaturarFormValues,
+  type ServicoOption,
 } from './types'
 
-type ModalState = { mode: 'create'; hora: string } | { mode: 'edit'; agendamento: Agendamento } | null
+type ModalState =
+  | { mode: 'create'; hora: string }
+  | { mode: 'edit'; agendamento: Agendamento }
+  | { mode: 'faturar'; agendamento: Agendamento }
+  | null
 
 export function AgendaPage() {
   const [selectedDate, setSelectedDate] = useState(todayKey())
@@ -37,6 +46,7 @@ export function AgendaPage() {
   const [upcoming, setUpcoming] = useState<Agendamento[]>([])
   const [isLoadingDay, setIsLoadingDay] = useState(true)
   const [dayError, setDayError] = useState<string | null>(null)
+  const [servicosOptions, setServicosOptions] = useState<ServicoOption[]>([])
 
   const [modal, setModal] = useState<ModalState>(null)
 
@@ -76,6 +86,12 @@ export function AgendaPage() {
 
   useEffect(() => {
     loadUpcoming()
+  }, [])
+
+  useEffect(() => {
+    fetchServicosOptions()
+      .then((res) => setServicosOptions(res.data ?? []))
+      .catch(() => setServicosOptions([]))
   }, [])
 
   function refreshAll() {
@@ -120,6 +136,12 @@ export function AgendaPage() {
     } catch {
       setAppointments(previous)
     }
+  }
+
+  async function handleFaturar(agendamento: Agendamento, values: FaturarFormValues) {
+    await faturarAgendamento(agendamento.age_id, values)
+    setModal(null)
+    refreshAll()
   }
 
   async function handleStatusChange(agendamento: Agendamento, status: AgendamentoStatus) {
@@ -240,12 +262,13 @@ export function AgendaPage() {
               onEdit={(agendamento) => setModal({ mode: 'edit', agendamento })}
               onReschedule={handleReschedule}
               onStatusChange={handleStatusChange}
+              onFaturar={(agendamento) => setModal({ mode: 'faturar', agendamento })}
             />
           )}
         </div>
       </div>
 
-      {modal && (
+      {modal && (modal.mode === 'create' || modal.mode === 'edit') && (
         <AgendamentoFormModal
           title={modalTitle}
           initialValues={modalInitialValues}
@@ -254,6 +277,15 @@ export function AgendaPage() {
           onSubmit={(values) =>
             modal.mode === 'edit' ? handleUpdate(modal.agendamento.age_id, values) : handleCreate(values)
           }
+        />
+      )}
+
+      {modal && modal.mode === 'faturar' && (
+        <FaturarModal
+          agendamento={modal.agendamento}
+          servicosOptions={servicosOptions}
+          onClose={() => setModal(null)}
+          onSubmit={(values) => handleFaturar(modal.agendamento, values)}
         />
       )}
     </div>

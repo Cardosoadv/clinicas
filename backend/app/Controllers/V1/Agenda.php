@@ -114,6 +114,15 @@ class Agenda extends BaseController
     }
 
     /**
+     * API: Retorna a cobrança já lançada para um agendamento, se houver.
+     */
+    public function getFaturamento(int $id): ResponseInterface
+    {
+        $data = $this->service->getBilling($id);
+        return $this->apiResponse(['status' => 'success', 'data' => $data]);
+    }
+
+    /**
      * API: Realiza o faturamento de um agendamento.
      */
     public function faturar(int $id): ResponseInterface

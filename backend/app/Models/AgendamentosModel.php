@@ -46,7 +46,9 @@ class AgendamentosModel extends Model
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
 
-    protected array $casts = [];
+    protected array $casts = [
+        'age_faturado' => 'integer',
+    ];
     protected array $castHandlers = [];
 
     // Dates

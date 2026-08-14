@@ -1,10 +1,12 @@
 import { api, type ApiEnvelope } from '../../lib/api'
+import type { Cobranca } from '../faturamento/types'
 import type {
   Agendamento,
   AgendamentoFormValues,
   AgendamentoStatus,
   DayData,
   EquipeOption,
+  FaturarFormValues,
   PacienteLookup,
   ServicoOption,
 } from './types'
@@ -57,4 +59,21 @@ export function rescheduleAgendamento(id: number, data: string, hora: string): P
 
 export function updateAgendamentoStatus(id: number, status: AgendamentoStatus): Promise<ApiEnvelope> {
   return api.patch(`/agendamentos/${id}/status`, { status })
+}
+
+function toFaturarPayload(values: FaturarFormValues): Record<string, unknown> {
+  return {
+    ...values,
+    valor: Number(values.valor),
+    desconto: values.desconto ? Number(values.desconto) : 0,
+    pacote_id: values.pacote_id ? Number(values.pacote_id) : null,
+  }
+}
+
+export function faturarAgendamento(id: number, values: FaturarFormValues): Promise<ApiEnvelope> {
+  return api.post(`/agendamentos/${id}/faturar`, toFaturarPayload(values))
+}
+
+export function fetchFaturamento(id: number): Promise<ApiEnvelope<Cobranca | null>> {
+  return api.get<Cobranca | null>(`/agendamentos/${id}/faturamento`)
 }
