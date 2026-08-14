@@ -84,6 +84,14 @@
   gap: 16px;
 }
 
+/* .modal__footer is designed for use inside .modal__form, which already
+   provides spacing via flex gap. Here it sits directly inside .side-card,
+   so the save/register button needs its own top margin or it touches the
+   field above it. */
+.prontuario-section .modal__footer {
+  margin-top: 16px;
+}
+
 .prontuario-success {
   color: #1a7a3d;
   font-size: 13px;
@@ -120,7 +128,6 @@
   cursor: pointer;
   text-align: left;
   font: inherit;
-  position: relative;
 }
 
 .prontuario-picker-card:hover {
@@ -149,9 +156,7 @@
 }
 
 .prontuario-picker-card__icon {
-  position: absolute;
-  top: 12px;
-  right: 12px;
+  flex-shrink: 0;
   color: #c9c4b4;
 }
 
@@ -246,7 +251,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 10px;
+  margin: 10px 0;
 }
 
 .prontuario-prescricao__item-row {
@@ -254,6 +259,10 @@
   border: 1px solid #e7e4db;
   border-radius: 10px;
   background: #fdfbf6;
+}
+
+.prontuario-prescricao__item-row .btn--ghost {
+  margin-top: 10px;
 }
 
 .prontuario-prescricao__itens {

@@ -27,3 +27,19 @@
 *   Audit manual confirmou a aplicação correta de atributos ARIA em elementos gerados dinamicamente e estáticos.
 *   Extração de CSS validada, removendo dependência de estilos inline em componentes críticos.
 *   Testes de unidade executados (com notas sobre falhas de ambiente conhecidas que não afetam a lógica de UI implementada).
+
+## 2026-08-14 - [Revisão visual do Prontuário (React) — botões encostados]
+
+**Contexto:** A UI de produção agora é o React (`frontend/src/features/prontuarios/`); as views legadas em `backend/app/Views` (alvo do trabalho de 04-12 acima) não são mais o alvo primário, conforme a diretriz atual deste skill. Esta entrada cobre apenas o app React.
+
+**Learning:** `.modal__footer` foi desenhado para viver dentro de `.modal__form` (que aplica `gap: 20px` via flex column). As 6 seções de prontuário (`Anamnese`, `Vacinas`, `Peso`, `Prescrições`, `Evolução`, `Imagens`) reaproveitam `.modal__footer` soltas dentro de `.side-card`, um container sem `gap` — por isso o botão de salvar/registrar ficava encostado no campo/textarea logo acima, exatamente como capturado nas screenshots do usuário (`Histórico de Saúde` → `Salvar Alterações`, `Observações` → `Registrar Vacina`). Reaproveitar uma classe de "footer de modal" fora de um modal exige repor manualmente o espaçamento que antes vinha do pai.
+
+**Action (frontend/src/features/prontuarios/prontuarios.css):**
+*   Adicionada regra escopada `.prontuario-section .modal__footer { margin-top: 16px; }` — corrige o espaçamento nas 6 seções sem alterar `.modal__footer` global (que continua correto dentro dos modais reais em outras features).
+*   `.prontuario-picker-card__icon` (ícone `FileHeart` no card de seleção de paciente) usava `position: absolute; top/right: 12px`, sobrepondo o badge de status que ocupa o mesmo canto em fluxo normal. Convertido para item flex normal (removido `position: absolute` do ícone e `position: relative` agora desnecessário do card), deixando o `gap: 12px` do container espaçar os dois elementos.
+*   Em Prescrições, o botão "Adicionar Item" ficava colado no último item da lista (`.prontuario-prescricao__itens-form` só tinha `margin-top`, sem `margin-bottom`) e o botão "Remover Item" ficava colado no grid de campos acima dele dentro de `.prontuario-prescricao__item-row`. Adicionado `margin-bottom` ao primeiro e uma regra `.prontuario-prescricao__item-row .btn--ghost { margin-top: 10px; }` para o segundo.
+
+**Verification Note:**
+*   `npx tsc -b --noEmit` limpo (mudanças foram só CSS).
+*   Sem ferramenta de screenshot/browser disponível neste ambiente para confirmar visualmente no navegador — a correção foi validada por leitura de CSS/layout (matemática de flexbox e comparação com as screenshots fornecidas pelo usuário), não por captura de tela real. Recomenda-se conferência visual rápida ao vivo.
+*   Demais telas do prontuário (Histórico, Peso, Imagens, `CalculadoraModal`, `PrescricaoDetalhesModal`) revisadas e não apresentam o mesmo problema — os modais reais já usam `.modal__form` com `gap`, então não precisaram de ajuste.
