@@ -1,5 +1,6 @@
 import { Calculator, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 
 interface CalculadoraModalProps {
   pesoAtual: number | null
@@ -28,9 +29,11 @@ export function CalculadoraModal({ pesoAtual, onClose, onCopyToEvolucao }: Calcu
       ? `Cálculo de dosagem: ${peso}kg × ${dose}mg/kg ÷ ${concentracao}mg/${apresentacao} = ${resultado.toFixed(2)}${apresentacao}`
       : ''
 
+  useEscapeKey(onClose)
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
+      <div className="modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
         <div className="modal__header">
           <h2>
             <Calculator size={18} style={{ verticalAlign: 'text-bottom', marginRight: 6 }} />

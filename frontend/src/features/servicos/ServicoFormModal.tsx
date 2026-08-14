@@ -2,6 +2,7 @@ import { X } from 'lucide-react'
 import { useState, type ChangeEvent, type FormEvent } from 'react'
 import { ApiError } from '../../lib/api'
 import type { ServicoFormValues } from './types'
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 
 interface ServicoFormModalProps {
   title: string
@@ -38,9 +39,11 @@ export function ServicoFormModal({ title, initialValues, onClose, onSubmit }: Se
     }
   }
 
+  useEscapeKey(onClose)
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
+      <div className="modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
         <div className="modal__header">
           <h2>{title}</h2>
           <button type="button" onClick={onClose} aria-label="Fechar">

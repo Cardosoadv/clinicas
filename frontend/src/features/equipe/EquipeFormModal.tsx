@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { ApiError } from '../../lib/api'
 import { fetchUnlinkedUsers } from './api'
 import { honorificos, type EquipeFormValues, type MembroEquipe, type UnlinkedUser } from './types'
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 
 interface EquipeFormModalProps {
   title: string
@@ -42,9 +43,11 @@ export function EquipeFormModal({ title, initialValues, editingMembro, onClose, 
     }
   }
 
+  useEscapeKey(onClose)
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
+      <div className="modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
         <div className="modal__header">
           <h2>{title}</h2>
           <button type="button" onClick={onClose} aria-label="Fechar">

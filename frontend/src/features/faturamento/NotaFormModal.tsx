@@ -4,6 +4,7 @@ import { PacientePicker } from '../../components/PacientePicker'
 import { ApiError } from '../../lib/api'
 import type { NotaFormValues } from './types'
 import { emptyNotaForm } from './types'
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 
 interface NotaFormModalProps {
   onClose: () => void
@@ -38,9 +39,11 @@ export function NotaFormModal({ onClose, onSubmit }: NotaFormModalProps) {
     }
   }
 
+  useEscapeKey(onClose)
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
+      <div className="modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
         <div className="modal__header">
           <h2>Nova Nota</h2>
           <button type="button" onClick={onClose} aria-label="Fechar">

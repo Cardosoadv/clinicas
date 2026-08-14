@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PacienteAvatar } from '../components/PacienteAvatar'
 import { useAuth } from '../features/auth/AuthContext'
+import { handleActivationKeyDown } from '../lib/a11y'
 import { ApiError } from '../lib/api'
 import { fetchHomeDashboard } from './dashboard.api'
 import './dashboard.css'
@@ -101,7 +102,15 @@ export function DashboardPage() {
             </h3>
             {dashboard.hoje.length === 0 && <p className="empty-state">Nenhum agendamento para hoje.</p>}
             {dashboard.hoje.map((item) => (
-              <div className="dash-agenda-item" key={item.age_id} onClick={() => navigate('/agenda')}>
+              <div
+                className="dash-agenda-item"
+                key={item.age_id}
+                role="button"
+                tabIndex={0}
+                aria-label={`Ver agendamento de ${item.paciente_nome} na agenda`}
+                onClick={() => navigate('/agenda')}
+                onKeyDown={handleActivationKeyDown(() => navigate('/agenda'))}
+              >
                 <div className="dash-agenda-item__main">
                   <PacienteAvatar avatar={item.paciente_avatar} pacienteId={item.paciente_id} alt={item.paciente_nome} />
                   <div className="dash-agenda-item__info">
@@ -125,7 +134,15 @@ export function DashboardPage() {
             </h3>
             {dashboard.upcoming.length === 0 && <p className="empty-state">Nenhum agendamento futuro.</p>}
             {dashboard.upcoming.map((item) => (
-              <div className="dash-agenda-item" key={item.age_id} onClick={() => navigate('/agenda')}>
+              <div
+                className="dash-agenda-item"
+                key={item.age_id}
+                role="button"
+                tabIndex={0}
+                aria-label={`Ver agendamento de ${item.paciente_nome} na agenda`}
+                onClick={() => navigate('/agenda')}
+                onKeyDown={handleActivationKeyDown(() => navigate('/agenda'))}
+              >
                 <div className="dash-agenda-item__main">
                   <PacienteAvatar avatar={item.paciente_avatar} pacienteId={item.paciente_id} alt={item.paciente_nome} />
                   <div className="dash-agenda-item__info">
@@ -190,7 +207,16 @@ export function DashboardPage() {
             </h3>
             {dashboard.alertasEstoque.length === 0 && <p className="empty-state">Estoque em dia.</p>}
             {dashboard.alertasEstoque.map((produto) => (
-              <div className="dash-list-item--stacked" style={{ cursor: 'pointer' }} key={produto.id} onClick={() => navigate('/estoque')}>
+              <div
+                className="dash-list-item--stacked"
+                style={{ cursor: 'pointer' }}
+                key={produto.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`Ver ${produto.nome} no estoque`}
+                onClick={() => navigate('/estoque')}
+                onKeyDown={handleActivationKeyDown(() => navigate('/estoque'))}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                   <strong>{produto.nome}</strong>
                   <span className="badge badge--danger">

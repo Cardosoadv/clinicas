@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { fetchPrescricao } from './api'
 import type { PrescricaoDetalhada } from './types'
 import { ReportTemplate } from '../../components/ReportTemplate'
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 
 interface PrescricaoDetalhesModalProps {
   prescricaoId: number
@@ -27,9 +28,11 @@ export function PrescricaoDetalhesModal({ prescricaoId, onClose }: PrescricaoDet
       .finally(() => setIsLoading(false))
   }, [prescricaoId])
 
+  useEscapeKey(onClose)
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
+      <div className="modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
         <div className="modal__header">
           <h2>
             <Pill size={18} style={{ verticalAlign: 'text-bottom', marginRight: 6 }} />
