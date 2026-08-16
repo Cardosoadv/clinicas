@@ -93,6 +93,7 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\V1', 'filter' => 'apia
 
     // Lojas
     $routes->get('lojas', 'Lojas::getAll');
+    $routes->get('lojas/principal', 'Lojas::getPrincipal');
     $routes->get('lojas/(:num)/logo/(:any)', 'Lojas::viewLogo/$1/$2');
     $routes->get('lojas/(:num)', 'Lojas::getById/$1');
     $routes->post('lojas', 'Lojas::create');
