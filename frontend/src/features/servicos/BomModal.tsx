@@ -93,6 +93,7 @@ export function BomModal({ servico, onClose, onSaved }: BomModalProps) {
                 {itens.map((item, index) => (
                   <div className="bom-row" key={index}>
                     <select
+                      aria-label="Produto"
                       value={item.produto_id}
                       onChange={(event) => updateRow(index, 'produto_id', event.target.value)}
                     >
@@ -107,6 +108,7 @@ export function BomModal({ servico, onClose, onSaved }: BomModalProps) {
                       type="number"
                       min="0"
                       step="0.01"
+                      aria-label="Quantidade"
                       value={item.quantidade}
                       onChange={(event) => updateRow(index, 'quantidade', event.target.value)}
                     />
