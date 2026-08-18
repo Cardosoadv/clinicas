@@ -198,7 +198,8 @@
   cursor: pointer;
 }
 
-.topbar-search__result:hover {
+.topbar-search__result:hover,
+.topbar-search__result--active {
   background: var(--content-bg);
 }
 
