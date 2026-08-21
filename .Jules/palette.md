@@ -1,3 +1,6 @@
+## 2025-08-21 - Custom Role Button Keyboard Support
+**Learning:** Elements styled as buttons with `role="button"` and `tabIndex={0}` must handle both `Enter` and `Space` (`' '`) keys with `event.preventDefault()` to allow keyboard users to activate them without causing page scroll.
+**Action:** When adding keyboard interactions to non-button elements with `role="button"`, handle both `Enter` and `' '` key events.
 ## 2025-05-18 - Topbar Search Dropdown ARIA Combobox & Keyboard Navigation
 **Learning:** Fast global search components like `TopbarSearch` need complete ARIA combobox pattern attributes (`role="combobox"`, `aria-expanded`, `aria-controls`, `aria-activedescendant`) and keyboard handlers (`ArrowUp`/`ArrowDown`/`Enter`) so screen reader and keyboard-only users can navigate options without losing input focus.
 **Action:** When creating or editing search dropdowns or autocomplete inputs, always implement active index tracking with `ArrowDown`/`ArrowUp` key handling and `role="listbox"` / `role="option"` markup.

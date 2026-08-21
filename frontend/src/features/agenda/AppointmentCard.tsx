@@ -39,7 +39,10 @@ export function AppointmentCard({ agendamento, onClick, onStatusChange, onFatura
       role="button"
       tabIndex={0}
       onKeyDown={(event) => {
-        if (event.key === 'Enter') onClick()
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onClick()
+        }
       }}
     >
       <div className="appointment-card__main">
@@ -59,6 +62,7 @@ export function AppointmentCard({ agendamento, onClick, onStatusChange, onFatura
         </span>
         <select
           className={`badge ${statusBadgeClass[agendamento.age_status]} appointment-card__status`}
+          aria-label="Status do agendamento"
           value={agendamento.age_status}
           onClick={(event) => event.stopPropagation()}
           onChange={(event) => onStatusChange(event.target.value as AgendamentoStatus)}
@@ -73,6 +77,7 @@ export function AppointmentCard({ agendamento, onClick, onStatusChange, onFatura
           type="button"
           className={`appointment-card__bill-btn${Number(agendamento.age_faturado) === 1 ? ' appointment-card__bill-btn--done' : ''}`}
           title={Number(agendamento.age_faturado) === 1 ? 'Editar faturamento' : 'Faturar atendimento'}
+          aria-label={Number(agendamento.age_faturado) === 1 ? 'Editar faturamento' : 'Faturar atendimento'}
           onClick={(event) => {
             event.stopPropagation()
             onFaturar()
