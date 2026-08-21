@@ -5,6 +5,11 @@ export function fetchLojas(): Promise<ApiEnvelope<Loja[]>> {
   return api.get<Loja[]>('/lojas')
 }
 
+/** Loja usada como identidade visual do sistema (nome, endereço, logo). */
+export function fetchLojaPrincipal(): Promise<ApiEnvelope<Loja | null>> {
+  return api.get<Loja | null>('/lojas/principal')
+}
+
 function buildFormData(values: LojaFormValues, logoFile: File | null): FormData {
   const formData = new FormData()
   for (const [key, value] of Object.entries(values)) {

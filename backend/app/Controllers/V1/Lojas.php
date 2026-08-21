@@ -30,6 +30,16 @@ class Lojas extends BaseController
     }
 
     /**
+     * API: Retorna a loja usada como identidade visual do sistema (nome,
+     * endereço e logo exibidos na barra lateral e nos relatórios impressos).
+     */
+    public function getPrincipal(): ResponseInterface
+    {
+        $loja = $this->service->getPrincipal();
+        return $this->apiResponse(['status' => 'success', 'data' => $loja]);
+    }
+
+    /**
      * API: Busca os detalhes de uma loja específica pelo ID.
      */
     public function getById(int $id): ResponseInterface

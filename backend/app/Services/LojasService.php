@@ -18,6 +18,14 @@ class LojasService extends BaseService
     }
 
     /**
+     * Loja usada como identidade visual do sistema (nome, endereço, logo).
+     */
+    public function getPrincipal(): ?array
+    {
+        return $this->repository->findPrincipal();
+    }
+
+    /**
      * Cria uma loja e processa o upload da logo.
      * 
      * @param array $data

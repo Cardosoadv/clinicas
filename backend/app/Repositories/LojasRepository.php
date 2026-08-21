@@ -15,4 +15,13 @@ class LojasRepository extends BaseRepository
     {
         $this->model = $model ?? new LojasModel();
     }
+
+    /**
+     * Retorna a loja usada como identidade visual do sistema (nome, endereço,
+     * logo exibidos no topo/relatórios): a loja ativa mais antiga cadastrada.
+     */
+    public function findPrincipal(): ?array
+    {
+        return $this->model->where('status', 'Ativo')->orderBy('id', 'asc')->first();
+    }
 }
