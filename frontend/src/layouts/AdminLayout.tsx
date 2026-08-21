@@ -82,6 +82,7 @@ function AdminLayoutContent() {
             className="admin-icon-btn admin-topbar__menu-btn"
             onClick={() => setSidebarOpen((v) => !v)}
             aria-label="Alternar menu"
+            aria-expanded={sidebarOpen}
           >
             <Menu size={20} />
           </button>
@@ -91,10 +92,10 @@ function AdminLayoutContent() {
           <TopbarSearch />
 
           <div className="admin-topbar__actions">
-            <button type="button" className="admin-icon-btn" aria-label="Notificações">
+            <button type="button" className="admin-icon-btn" aria-label="Notificações" title="Notificações">
               <Bell size={18} />
             </button>
-            <button type="button" className="admin-icon-btn" aria-label="Mensagens">
+            <button type="button" className="admin-icon-btn" aria-label="Mensagens" title="Mensagens">
               <Mail size={18} />
             </button>
 
@@ -104,14 +105,17 @@ function AdminLayoutContent() {
                 className="admin-avatar"
                 onClick={() => setUserMenuOpen((v) => !v)}
                 aria-label="Menu do usuário"
+                aria-expanded={userMenuOpen}
+                aria-haspopup="menu"
+                title="Menu do usuário"
               >
                 {initial}
               </button>
 
               {userMenuOpen && (
-                <div className="admin-user-menu__dropdown">
+                <div className="admin-user-menu__dropdown" role="menu">
                   <p className="admin-user-menu__email">{user?.email}</p>
-                  <button type="button" onClick={() => void logout()}>
+                  <button type="button" role="menuitem" onClick={() => void logout()}>
                     <LogOut size={16} />
                     Sair
                   </button>
