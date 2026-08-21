@@ -24,6 +24,7 @@ export function TopbarSearch() {
   const [pacienteResults, setPacienteResults] = useState<Paciente[] | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1)
 
   const containerRef = useClickOutside<HTMLDivElement>(() => setIsOpen(false))
 
@@ -33,6 +34,7 @@ export function TopbarSearch() {
       setClienteResults(null)
       setPacienteResults(null)
       setIsLoading(false)
+      setSelectedIndex(-1)
       return
     }
 
@@ -49,6 +51,7 @@ export function TopbarSearch() {
         .then(([clientes, pacientes]) => {
           setClienteResults(clientes)
           setPacienteResults(pacientes)
+          setSelectedIndex(-1)
         })
         .finally(() => setIsLoading(false))
     }, 300)
@@ -72,6 +75,7 @@ export function TopbarSearch() {
     setClienteResults(null)
     setPacienteResults(null)
     setIsOpen(false)
+    setSelectedIndex(-1)
   }
 
   const results: SearchResult[] = [
@@ -89,6 +93,8 @@ export function TopbarSearch() {
     })),
   ]
 
+  const visibleResults = results.slice(0, 8)
+
   function handleSelect(result: SearchResult) {
     if (result.kind === 'cliente') {
       goToClientesSearch(result.nome)
@@ -100,10 +106,24 @@ export function TopbarSearch() {
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === 'Escape') {
       setIsOpen(false)
+      setSelectedIndex(-1)
       event.currentTarget.blur()
+    } else if (event.key === 'ArrowDown') {
+      if (!isOpen) setIsOpen(true)
+      if (visibleResults.length > 0) {
+        event.preventDefault()
+        setSelectedIndex((prev) => (prev < visibleResults.length - 1 ? prev + 1 : 0))
+      }
+    } else if (event.key === 'ArrowUp') {
+      if (visibleResults.length > 0) {
+        event.preventDefault()
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : visibleResults.length - 1))
+      }
     } else if (event.key === 'Enter' && query.trim()) {
       event.preventDefault()
-      if (results.length > 0) {
+      if (selectedIndex >= 0 && selectedIndex < visibleResults.length) {
+        handleSelect(visibleResults[selectedIndex])
+      } else if (results.length > 0) {
         handleSelect(results[0])
       } else {
         goToClientesSearch(query.trim())
@@ -120,6 +140,15 @@ export function TopbarSearch() {
         type="search"
         placeholder="Buscar cliente ou paciente..."
         aria-label="Buscar cliente ou paciente"
+        role="combobox"
+        aria-expanded={showDropdown}
+        aria-autocomplete="list"
+        aria-controls="topbar-search-listbox"
+        aria-activedescendant={
+          selectedIndex >= 0 && visibleResults[selectedIndex]
+            ? `topbar-search-option-${visibleResults[selectedIndex].kind}-${visibleResults[selectedIndex].id}`
+            : undefined
+        }
         value={query}
         onChange={(event) => {
           setQuery(event.target.value)
@@ -137,6 +166,7 @@ export function TopbarSearch() {
             setQuery('')
             setClienteResults(null)
             setPacienteResults(null)
+            setSelectedIndex(-1)
           }}
         >
           <X size={14} />
@@ -144,17 +174,20 @@ export function TopbarSearch() {
       )}
 
       {showDropdown && (
-        <div className="topbar-search__dropdown">
+        <div className="topbar-search__dropdown" id="topbar-search-listbox" role="listbox">
           {isLoading && <p className="topbar-search__hint">Buscando...</p>}
 
           {!isLoading && results.length === 0 && <p className="topbar-search__hint">Nenhum resultado encontrado.</p>}
 
           {!isLoading &&
-            results.slice(0, 8).map((result) => (
+            visibleResults.map((result, idx) => (
               <button
                 key={`${result.kind}-${result.id}`}
+                id={`topbar-search-option-${result.kind}-${result.id}`}
+                role="option"
+                aria-selected={selectedIndex === idx}
                 type="button"
-                className="topbar-search__result"
+                className={`topbar-search__result${selectedIndex === idx ? ' topbar-search__result--active' : ''}`}
                 onClick={() => handleSelect(result)}
               >
                 <span className="topbar-search__result-name">
