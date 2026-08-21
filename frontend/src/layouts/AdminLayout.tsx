@@ -1,8 +1,9 @@
 import { Bell, LogOut, Mail, Menu } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import logo from '../assets/logo.png'
+import fallbackLogo from '../assets/logo.png'
 import { useAuth } from '../features/auth/AuthContext'
+import { LojaPrincipalProvider, useLojaPrincipal, useLojaPrincipalLogoUrl } from '../features/lojas/LojaPrincipalContext'
 import { useClickOutside } from '../hooks/useClickOutside'
 import { useEscapeKey } from '../hooks/useEscapeKey'
 import { allNavItems, navSections } from './navConfig'
@@ -10,8 +11,22 @@ import { TopbarSearch } from './TopbarSearch'
 import './AdminLayout.css'
 
 export function AdminLayout() {
+  return (
+    <LojaPrincipalProvider>
+      <AdminLayoutContent />
+    </LojaPrincipalProvider>
+  )
+}
+
+function AdminLayoutContent() {
   const { user, logout } = useAuth()
+  const { loja } = useLojaPrincipal()
+  const logoUrl = useLojaPrincipalLogoUrl()
   const location = useLocation()
+
+  useEffect(() => {
+    document.title = loja?.nome || 'Clínicas'
+  }, [loja])
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
@@ -35,7 +50,7 @@ export function AdminLayout() {
     <div className="admin-shell">
       <aside className={`admin-sidebar${sidebarOpen ? ' admin-sidebar--open' : ''}`}>
         <div className="admin-sidebar__brand">
-          <img src={logo} alt="Beatriz Cardoso - Médica Veterinária" className="admin-sidebar__brand-logo" />
+          <img src={logoUrl ?? fallbackLogo} alt={loja?.nome ?? 'Logo da clínica'} className="admin-sidebar__brand-logo" />
         </div>
 
         <nav className="admin-sidebar__nav">
