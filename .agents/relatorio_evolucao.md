@@ -1342,3 +1342,15 @@ CorreÁ„o do tamanho da tela e overflow horizontal em dispositivos mÛveis.
 ## [1.0.4] - 2026-08-08
 - CriaÁ„o de template global de impress„o (ReportTemplate) e inclus„o nas configuraÁıes de cabeÁalho e rodapÈ.
 - IntegraÁ„o do template no Modal de PrescriÁıes para possibilitar a impress„o da Receita Simples.
+
+## [1.0.5] - 2026-08-21
+- Inclus√£o dos campos de endere√ßo (rua, numero, complemento, bairro, cep) e documentos (rg, nascimento) no formul√°rio de clientes React (ClienteFormModal.tsx).
+- Integra√ß√£o da API externa ViaCEP (https://viacep.com.br/ws/{cep}/json/) com busca din√¢mica por CEP (8 d√≠gitos), tratamento de erros, estado de carregamento e autopreenchimento dos campos de rua, bairro, cidade, estado e complemento.
+- Redesign visual do modal de clientes com se√ß√µes destacadas por √≠cones (Dados Pessoais, Contato, Endere√ßo, Observa√ß√µes), grid responsivo e melhor experi√™ncia de usu√°rio.
+- Atualiza√ß√£o da tela de detalhes do cliente (ClienteDetailPage.tsx) para exibir o endere√ßo completo formatado.
+- Vers√£o atualizada no package.json (root) e backend/composer.json para 1.0.5.
+
+ # #   [ 1 . 0 . 6 ]   -   2 0 2 6 - 0 8 - 2 1 
+ -   D u p l i c a c a o   d a   e t a p a   d e   d e p l o y   v i a   F T P   n o   a r q u i v o   . g i t h u b / w o r k f l o w s / d e p l o y . y m l   p a r a   s u p o r t a r   s i n c r o n i z a c a o   e m   d u a s   p a s t a s   d e   d e s t i n o   n a   H o s t i n g e r . 
+ -   V e r s a o   a t u a l i z a d a   n o   p a c k a g e . j s o n   e   b a c k e n d / c o m p o s e r . j s o n   p a r a   1 . 0 . 6 .  
+ 
