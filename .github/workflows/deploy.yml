@@ -21,7 +21,7 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        server-dir: /biacardoso/ # Pasta de destino 1 na Hostinger
+        server-dir: /public_html/biacardoso/ # Pasta de destino 1 na Hostinger
         # Defina abaixo os arquivos e pastas que o GitHub NÃO deve tocar no servidor:
         exclude: |
           **/.git*
@@ -50,7 +50,7 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        server-dir: /casadospets/ # Pasta de destino 2 na Hostinger (Altere SEGUNDO_SITE para o nome desejado)
+        server-dir: /public_html/casadospets/ # Pasta de destino 2 na Hostinger (Altere SEGUNDO_SITE para o nome desejado)
         # Defina abaixo os arquivos e pastas que o GitHub NÃO deve tocar no servidor:
         exclude: |
           **/.git*
