@@ -104,6 +104,7 @@ function AdminLayoutContent() {
                 className="admin-avatar"
                 onClick={() => setUserMenuOpen((v) => !v)}
                 aria-label="Menu do usuário"
+                aria-expanded={userMenuOpen}
               >
                 {initial}
               </button>
