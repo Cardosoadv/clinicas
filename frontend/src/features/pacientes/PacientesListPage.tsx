@@ -235,6 +235,7 @@ export function PacientesListPage() {
                       type="button"
                       className="icon-btn"
                       aria-label="Ver prontuário"
+                      title="Ver prontuário"
                       onClick={() => navigate(`/prontuarios/${paciente.paciente_id}`)}
                     >
                       <ClipboardList size={16} />
@@ -243,6 +244,7 @@ export function PacientesListPage() {
                       type="button"
                       className="icon-btn"
                       aria-label="Editar paciente"
+                      title="Editar paciente"
                       onClick={() => setModal({ mode: 'edit', paciente })}
                     >
                       <Pencil size={16} />
@@ -251,6 +253,7 @@ export function PacientesListPage() {
                       type="button"
                       className="icon-btn icon-btn--danger"
                       aria-label="Excluir paciente"
+                      title="Excluir paciente"
                       onClick={() => void handleDelete(paciente)}
                     >
                       <Trash2 size={16} />
