@@ -58,17 +58,32 @@ export function CalculadoraModal({ pesoAtual, onClose, onCopyToEvolucao }: Calcu
 
         <div className="modal__form">
           <div className="form-grid">
-            <label className="form-field">
+            <label htmlFor="calc-peso" className="form-field">
               Peso do Pet (kg)
-              <input type="number" min="0" step="0.001" value={peso} onChange={(event) => setPeso(event.target.value)} />
+              <input
+                id="calc-peso"
+                type="number"
+                min="0"
+                step="0.001"
+                value={peso}
+                onChange={(event) => setPeso(event.target.value)}
+              />
             </label>
-            <label className="form-field">
+            <label htmlFor="calc-dose" className="form-field">
               Dosagem (mg/kg)
-              <input type="number" min="0" step="0.01" value={dose} onChange={(event) => setDose(event.target.value)} />
+              <input
+                id="calc-dose"
+                type="number"
+                min="0"
+                step="0.01"
+                value={dose}
+                onChange={(event) => setDose(event.target.value)}
+              />
             </label>
-            <label className="form-field">
+            <label htmlFor="calc-concentracao" className="form-field">
               Concentração (mg/{apresentacao})
               <input
+                id="calc-concentracao"
                 type="number"
                 min="0"
                 step="0.01"
@@ -76,9 +91,13 @@ export function CalculadoraModal({ pesoAtual, onClose, onCopyToEvolucao }: Calcu
                 onChange={(event) => setConcentracao(event.target.value)}
               />
             </label>
-            <label className="form-field">
+            <label htmlFor="calc-apresentacao" className="form-field">
               Apresentação
-              <select value={apresentacao} onChange={(event) => setApresentacao(event.target.value as Apresentacao)}>
+              <select
+                id="calc-apresentacao"
+                value={apresentacao}
+                onChange={(event) => setApresentacao(event.target.value as Apresentacao)}
+              >
                 <option value="ml">Líquido (ml)</option>
                 <option value="cp">Comprimido (cp)</option>
               </select>
