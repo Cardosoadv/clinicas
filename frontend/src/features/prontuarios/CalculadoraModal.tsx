@@ -16,6 +16,7 @@ export function CalculadoraModal({ pesoAtual, onClose, onCopyToEvolucao }: Calcu
   const [concentracao, setConcentracao] = useState('')
   const [apresentacao, setApresentacao] = useState<Apresentacao>('ml')
   const [copied, setCopied] = useState(false)
+  const [copiedEvolucao, setCopiedEvolucao] = useState(false)
 
   const resultado = useMemo(() => {
     const pesoNum = Number(peso)
@@ -39,6 +40,13 @@ export function CalculadoraModal({ pesoAtual, onClose, onCopyToEvolucao }: Calcu
     } catch {
       // Fallback if clipboard API is restricted
     }
+  }
+
+  function handleCopyToEvolucao() {
+    if (!resumo) return
+    onCopyToEvolucao(resumo)
+    setCopiedEvolucao(true)
+    setTimeout(() => setCopiedEvolucao(false), 2000)
   }
 
   useEscapeKey(onClose)
@@ -116,9 +124,11 @@ export function CalculadoraModal({ pesoAtual, onClose, onCopyToEvolucao }: Calcu
               type="button"
               className="btn btn--primary"
               disabled={resultado === null}
-              onClick={() => onCopyToEvolucao(resumo)}
+              onClick={handleCopyToEvolucao}
+              aria-label={copiedEvolucao ? 'Resultado copiado para evolução' : 'Copiar resultado e colar na evolução clínica'}
             >
-              Copiar para Evolução
+              {copiedEvolucao ? <Check size={16} /> : null}
+              {copiedEvolucao ? 'Copiado para Evolução!' : 'Copiar para Evolução'}
             </button>
           </div>
         </div>
