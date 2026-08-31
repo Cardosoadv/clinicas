@@ -319,7 +319,8 @@
   color: #1c2333;
 }
 
-.cliente-picker__option:hover {
+.cliente-picker__option:hover,
+.cliente-picker__option--active {
   background: #f6f4ef;
 }
 
