@@ -1,0 +1,44 @@
+.paciente-avatar {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.paciente-avatar-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.paciente-avatar-img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.paciente-avatar-zoom {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px) scale(0.95);
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 3px solid #fff;
+  box-shadow: 0 8px 24px rgba(20, 25, 40, 0.2);
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
+}
+
+.paciente-avatar-wrapper:hover .paciente-avatar-zoom {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(5px) scale(1);
+}

@@ -4,5 +4,6 @@
 // um ambiente já buildado (inclusive o dist/ versionado neste repositório)
 // só editando este arquivo, sem rodar `npm run build` de novo.
 window.APP_CONFIG = {
-  API_BASE_URL: 'http://localhost:8080/api/v1',
+  API_BASE_URL: 'http://localhost/clinicas/api/v1',
+  BASE_PATH: '/clinicas',
 }

@@ -74,6 +74,20 @@ class FatCobrancaRepository extends BaseRepository
     }
 
     /**
+     * Busca a cobrança mais recente vinculada a um agendamento.
+     *
+     * @param int $agendamentoId
+     * @return array|null
+     */
+    public function findByAgendamento(int $agendamentoId): ?array
+    {
+        return $this->model
+            ->where('agendamento_id', $agendamentoId)
+            ->orderBy('id', 'DESC')
+            ->first();
+    }
+
+    /**
      * Busca detalhes de uma cobrança com dados do pet e tutor.
      *
      * @param int $id

@@ -73,6 +73,11 @@ class Pets extends BaseController
     {
         $data = $this->getRequestData();
 
+        // Ensure empty dates are treated as null
+        if (isset($data['paciente_nascimento']) && trim((string)$data['paciente_nascimento']) === '') {
+            $data['paciente_nascimento'] = null;
+        }
+
         if (!$this->validateData($data, $this->getValidationRules())) {
             return $this->apiValidationError($this->validator->getErrors());
         }
@@ -97,6 +102,11 @@ class Pets extends BaseController
     public function update(int $id): ResponseInterface
     {
         $data = $this->getRequestData();
+
+        // Ensure empty dates are treated as null
+        if (isset($data['paciente_nascimento']) && trim((string)$data['paciente_nascimento']) === '') {
+            $data['paciente_nascimento'] = null;
+        }
 
         if (!$this->validateData($data, $this->getValidationRules())) {
             return $this->apiValidationError($this->validator->getErrors());

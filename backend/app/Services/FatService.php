@@ -222,7 +222,7 @@ class FatService extends BaseService
         $end = date('Y-m-t', strtotime($start));
 
         return $this->cobrancaRepo->getModel()
-            ->select('pacientes.paciente_nome, pacientes.paciente_avatar, COUNT(fat_cobrancas.id) as qtd, SUM(fat_cobrancas.valor) as total')
+            ->select('pacientes.paciente_id, pacientes.paciente_nome, pacientes.paciente_avatar, COUNT(fat_cobrancas.id) as qtd, SUM(fat_cobrancas.valor) as total')
             ->join('pacientes', 'pacientes.paciente_id = fat_cobrancas.paciente_id')
             ->where('fat_cobrancas.data_servico >=', $start)
             ->where('fat_cobrancas.data_servico <=', $end)
@@ -275,6 +275,17 @@ class FatService extends BaseService
             'points'    => $data,
             'max_value' => $max_value > 0 ? $max_value : 1000
         ];
+    }
+
+    /**
+     * Busca a cobrança mais recente vinculada a um agendamento.
+     *
+     * @param int $agendamentoId
+     * @return array|null
+     */
+    public function findByAgendamento(int $agendamentoId): ?array
+    {
+        return $this->cobrancaRepo->findByAgendamento($agendamentoId);
     }
 
     /**

@@ -40,6 +40,25 @@ class Agenda extends BaseController
     }
 
     /**
+     * API: Lista agendamentos com filtros opcionais (status, período, serviço,
+     * veterinário responsável e busca livre) para a visão geral em cards.
+     */
+    public function index(): ResponseInterface
+    {
+        $filters = [
+            'status'         => (string) ($this->request->getGet('status') ?? ''),
+            'data_inicio'    => (string) ($this->request->getGet('data_inicio') ?? ''),
+            'data_fim'       => (string) ($this->request->getGet('data_fim') ?? ''),
+            'servico_id'     => $this->request->getGet('servico_id') ?? '',
+            'veterinario_id' => $this->request->getGet('veterinario_id') ?? '',
+            'search'         => (string) ($this->request->getGet('search') ?? ''),
+        ];
+
+        $data = $this->service->listAppointments($filters);
+        return $this->apiResponse(['status' => 'success', 'data' => $data]);
+    }
+
+    /**
      * API: Cria um novo agendamento (ou série recorrente).
      */
     public function create(): ResponseInterface
@@ -111,6 +130,15 @@ class Agenda extends BaseController
 
         $result = $this->service->updateStatus($id, strtolower((string) $data['status']));
         return $this->apiResponse($result);
+    }
+
+    /**
+     * API: Retorna a cobrança já lançada para um agendamento, se houver.
+     */
+    public function getFaturamento(int $id): ResponseInterface
+    {
+        $data = $this->service->getBilling($id);
+        return $this->apiResponse(['status' => 'success', 'data' => $data]);
     }
 
     /**

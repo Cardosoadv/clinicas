@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { PacienteAvatar } from '../../components/PacienteAvatar'
 import { formatCNPJ, formatCPF } from '../../lib/document'
 import { ApiError } from '../../lib/api'
 import type { Paciente } from '../pacientes/types'
@@ -209,7 +210,10 @@ export function ClienteDetailPage() {
             <div className="cliente-detail__fields">
               <div>
                 <span className="cliente-detail__field-label">Documento</span>
-                <span>{isJuridica ? formatCNPJ(cliente.cnpj ?? '') : cliente.cpf ? formatCPF(cliente.cpf) : '—'}</span>
+                <span>
+                  {isJuridica ? formatCNPJ(cliente.cnpj ?? '') : cliente.cpf ? formatCPF(cliente.cpf) : '—'}
+                  {cliente.rg ? ` (RG: ${cliente.rg})` : ''}
+                </span>
               </div>
               {isJuridica && (
                 <div>
@@ -233,10 +237,23 @@ export function ClienteDetailPage() {
               </div>
               <div>
                 <span className="cliente-detail__field-label">
-                  <MapPin size={13} /> Localização
+                  <MapPin size={13} /> Endereço / Localização
                 </span>
                 <span>
-                  {[cliente.cidade, cliente.estado].filter(Boolean).join(' / ') || '—'}
+                  {(() => {
+                    const addressParts: string[] = []
+                    if (cliente.rua) {
+                      let r = cliente.rua
+                      if (cliente.numero) r += `, ${cliente.numero}`
+                      if (cliente.complemento) r += ` - ${cliente.complemento}`
+                      addressParts.push(r)
+                    }
+                    if (cliente.bairro) addressParts.push(`Bairro ${cliente.bairro}`)
+                    const loc = [cliente.cidade, cliente.estado].filter(Boolean).join('/')
+                    if (loc) addressParts.push(loc)
+                    if (cliente.cep) addressParts.push(`CEP: ${cliente.cep}`)
+                    return addressParts.length > 0 ? addressParts.join(' · ') : '—'
+                  })()}
                 </span>
               </div>
               <div>
@@ -268,7 +285,7 @@ export function ClienteDetailPage() {
                   className="cliente-detail__paciente-card"
                   onClick={() => navigate(`/pacientes?search=${encodeURIComponent(paciente.paciente_nome)}`)}
                 >
-                  <span className="paciente-avatar">{paciente.paciente_avatar || '🐾'}</span>
+                  <PacienteAvatar avatar={paciente.paciente_avatar} pacienteId={paciente.paciente_id} alt={paciente.paciente_nome} />
                   <div>
                     <strong>{paciente.paciente_nome}</strong>
                     <span>

@@ -22,6 +22,7 @@ use CodeIgniter\Model;
  * @property string|null $observacoes
  * @property int|null $pacote_id
  * @property int|null $servico_id
+ * @property int|null $agendamento_id
  * @property string $created_at
  * @property string $updated_at
  * @property string|null $deleted_at
@@ -46,7 +47,8 @@ class FatCobrancaModel extends Model
         'status',
         'observacoes',
         'pacote_id',
-        'servico_id'
+        'servico_id',
+        'agendamento_id',
     ];
 
     protected bool $allowEmptyInserts = false;

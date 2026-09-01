@@ -1,15 +1,32 @@
 import { Bell, LogOut, Mail, Menu } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import fallbackLogo from '../assets/logo.png'
 import { useAuth } from '../features/auth/AuthContext'
+import { LojaPrincipalProvider, useLojaPrincipal, useLojaPrincipalLogoUrl } from '../features/lojas/LojaPrincipalContext'
 import { useClickOutside } from '../hooks/useClickOutside'
+import { useEscapeKey } from '../hooks/useEscapeKey'
 import { allNavItems, navSections } from './navConfig'
 import { TopbarSearch } from './TopbarSearch'
 import './AdminLayout.css'
 
 export function AdminLayout() {
+  return (
+    <LojaPrincipalProvider>
+      <AdminLayoutContent />
+    </LojaPrincipalProvider>
+  )
+}
+
+function AdminLayoutContent() {
   const { user, logout } = useAuth()
+  const { loja } = useLojaPrincipal()
+  const logoUrl = useLojaPrincipalLogoUrl()
   const location = useLocation()
+
+  useEffect(() => {
+    document.title = loja?.nome || 'Clínicas'
+  }, [loja])
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
@@ -22,14 +39,18 @@ export function AdminLayout() {
     setSidebarOpen(false)
   }, [location.pathname])
 
+  useEscapeKey(() => {
+    setSidebarOpen(false)
+    setUserMenuOpen(false)
+  })
+
   const initial = (user?.username ?? user?.email ?? '?').charAt(0).toUpperCase()
 
   return (
     <div className="admin-shell">
       <aside className={`admin-sidebar${sidebarOpen ? ' admin-sidebar--open' : ''}`}>
         <div className="admin-sidebar__brand">
-          <span className="admin-sidebar__brand-name">Casa dos Pets</span>
-          <span className="admin-sidebar__brand-sub">Painel administrativo</span>
+          <img src={logoUrl ?? fallbackLogo} alt={loja?.nome ?? 'Logo da clínica'} className="admin-sidebar__brand-logo" />
         </div>
 
         <nav className="admin-sidebar__nav">
@@ -61,6 +82,7 @@ export function AdminLayout() {
             className="admin-icon-btn admin-topbar__menu-btn"
             onClick={() => setSidebarOpen((v) => !v)}
             aria-label="Alternar menu"
+            aria-expanded={sidebarOpen}
           >
             <Menu size={20} />
           </button>
@@ -70,10 +92,10 @@ export function AdminLayout() {
           <TopbarSearch />
 
           <div className="admin-topbar__actions">
-            <button type="button" className="admin-icon-btn" aria-label="Notificações">
+            <button type="button" className="admin-icon-btn" aria-label="Notificações" title="Notificações">
               <Bell size={18} />
             </button>
-            <button type="button" className="admin-icon-btn" aria-label="Mensagens">
+            <button type="button" className="admin-icon-btn" aria-label="Mensagens" title="Mensagens">
               <Mail size={18} />
             </button>
 
@@ -83,14 +105,17 @@ export function AdminLayout() {
                 className="admin-avatar"
                 onClick={() => setUserMenuOpen((v) => !v)}
                 aria-label="Menu do usuário"
+                aria-expanded={userMenuOpen}
+                aria-haspopup="menu"
+                title="Menu do usuário"
               >
                 {initial}
               </button>
 
               {userMenuOpen && (
-                <div className="admin-user-menu__dropdown">
+                <div className="admin-user-menu__dropdown" role="menu">
                   <p className="admin-user-menu__email">{user?.email}</p>
-                  <button type="button" onClick={() => void logout()}>
+                  <button type="button" role="menuitem" onClick={() => void logout()}>
                     <LogOut size={16} />
                     Sair
                   </button>

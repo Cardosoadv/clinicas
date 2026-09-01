@@ -62,6 +62,17 @@ class AgendaService extends BaseService
     }
 
     /**
+     * Lista agendamentos com filtros opcionais (status, período, serviço, veterinário e busca).
+     *
+     * @param array $filters
+     * @return array
+     */
+    public function listAppointments(array $filters): array
+    {
+        return $this->agendamentosRepository->getFiltered($filters);
+    }
+
+    /**
      * Busca pets para lookup
      *
      * @param string $term
@@ -230,7 +241,11 @@ class AgendaService extends BaseService
             $billingData['pacote_id'] = null;
         }
 
-        if ($billingData['forma_pagamento'] === 'Pacote') {
+        // Se já existe uma cobrança para este agendamento, é uma edição: não deve
+        // criar uma cobrança duplicada nem consumir o pacote de novo.
+        $existingCobranca = $this->fatService->findByAgendamento($id);
+
+        if ($billingData['forma_pagamento'] === 'Pacote' && !$existingCobranca) {
             // Usar o primeiro serviço do agendamento para o consumo do pacote
             $this->pacoteService->consumir((int)$billingData['pacote_id'], $primaryServiceId, (float)$billingData['valor']);
         }
@@ -240,8 +255,11 @@ class AgendaService extends BaseService
         $billingData['servico'] = $appointment['age_servico'] ?? 'Serviços Diversos';
         $billingData['servico_id'] = $primaryServiceId; // Pass primary service ID to avoid redundant or failed lookups
         $billingData['data_servico'] = $appointment['age_data'];
-        
-        $result = $this->fatService->createCobranca($billingData);
+        $billingData['agendamento_id'] = $id;
+
+        $result = $existingCobranca
+            ? $this->fatService->updateCobranca((int)$existingCobranca['id'], $billingData)
+            : $this->fatService->createCobranca($billingData);
 
         if ($result['status'] === 'success') {
             // Mark as billed
@@ -249,9 +267,21 @@ class AgendaService extends BaseService
                 'age_faturado' => 1,
                 'age_status' => 'concluido'
             ]);
-            return $this->success("Faturamento realizado com sucesso!", ['id' => $result['id'] ?? null]);
+            $message = $existingCobranca ? "Faturamento atualizado com sucesso!" : "Faturamento realizado com sucesso!";
+            return $this->success($message, ['id' => $existingCobranca['id'] ?? $result['id'] ?? null]);
         }
 
         return $result;
+    }
+
+    /**
+     * Retorna a cobrança vinculada a um agendamento, se houver.
+     *
+     * @param int $id
+     * @return array|null
+     */
+    public function getBilling(int $id): ?array
+    {
+        return $this->fatService->findByAgendamento($id);
     }
 }

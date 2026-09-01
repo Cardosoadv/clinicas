@@ -1,0 +1,16 @@
+{
+  "name": "clinicas",
+  "version": "1.0.6",
+  "description": "Sistema de Gestão Veterinária",
+  "private": true,
+  "scripts": {
+    "setup": "npm --prefix frontend install && composer --working-dir=backend install",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "serve": "php backend/spark serve",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build": "npm --prefix frontend run build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

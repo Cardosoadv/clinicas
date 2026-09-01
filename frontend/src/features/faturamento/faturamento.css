@@ -1,3 +1,56 @@
+/* ---------- Cartões de estatística (Dashboard) ---------- */
+.faturamento-stat-pills {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.faturamento-stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e7e4db;
+  border-radius: 12px;
+  color: #1a7a3d;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.faturamento-stat-pill--despesa {
+  color: #b8341f;
+}
+
+.faturamento-stat-pill--saldo {
+  color: #c99a3f;
+}
+
+.faturamento-stat-pill--areceber {
+  color: #1c5fb8;
+}
+
+.faturamento-stat-pill--vencidos {
+  color: #b8341f;
+}
+
+.faturamento-stat-pill div {
+  display: flex;
+  flex-direction: column;
+}
+
+.faturamento-stat-pill strong {
+  font-size: 20px;
+  color: #1c2333;
+  line-height: 1.2;
+}
+
+.faturamento-stat-pill span {
+  font-size: 12px;
+  color: #6b7385;
+  margin-top: 2px;
+}
+
 .mini-chart {
   display: flex;
   align-items: flex-end;

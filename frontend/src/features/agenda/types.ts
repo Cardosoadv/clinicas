@@ -1,3 +1,5 @@
+import type { Cobranca } from '../faturamento/types'
+
 export type AgendamentoStatus = 'pendente' | 'confirmado' | 'cancelado' | 'concluido'
 
 export interface Agendamento {
@@ -29,6 +31,15 @@ export interface Agendamento {
 export interface AgendaStats {
   hoje: number
   pendentes: number
+}
+
+export interface AgendamentosFiltro {
+  status: AgendamentoStatus | ''
+  data_inicio: string
+  data_fim: string
+  servico_id: string
+  veterinario_id: string
+  search: string
 }
 
 export interface DayData {
@@ -82,6 +93,51 @@ export interface EquipeOption {
   equ_id: number
   equ_nome: string
   equ_is_veterinario: number
+}
+
+export type FaturarStatus = 'Pendente' | 'Pago' | 'Cancelado'
+
+export interface FaturarFormValues {
+  valor: string
+  desconto: string
+  forma_pagamento: string
+  pacote_id: string
+  parcelas: string
+  vencimento: string
+  status: FaturarStatus
+  observacoes: string
+}
+
+export function emptyFaturarForm(agendamento: Agendamento, servicosOptions: ServicoOption[]): FaturarFormValues {
+  const today = new Date().toISOString().slice(0, 10)
+  const servicoIds = agendamento.age_servico_ids ? agendamento.age_servico_ids.split(',').map(Number) : []
+  const valorTotal = servicosOptions
+    .filter((servico) => servicoIds.includes(servico.ser_id))
+    .reduce((sum, servico) => sum + Number(servico.ser_valor), 0)
+
+  return {
+    valor: valorTotal ? String(valorTotal) : '',
+    desconto: '0',
+    forma_pagamento: 'Pix',
+    pacote_id: '',
+    parcelas: '1',
+    vencimento: today,
+    status: 'Pago',
+    observacoes: '',
+  }
+}
+
+export function cobrancaToFaturarForm(cobranca: Cobranca): FaturarFormValues {
+  return {
+    valor: String(cobranca.valor),
+    desconto: String(cobranca.desconto),
+    forma_pagamento: cobranca.forma_pagamento,
+    pacote_id: cobranca.pacote_id ? String(cobranca.pacote_id) : '',
+    parcelas: cobranca.parcelas,
+    vencimento: cobranca.vencimento,
+    status: (cobranca.status === 'Atrasado' ? 'Pendente' : cobranca.status) as FaturarStatus,
+    observacoes: cobranca.observacoes ?? '',
+  }
 }
 
 export function agendamentoToFormValues(agendamento: Agendamento): AgendamentoFormValues {

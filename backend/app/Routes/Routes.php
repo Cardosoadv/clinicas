@@ -44,6 +44,7 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\V1', 'filter' => 'apia
     $routes->put('agendamentos/(:num)', 'Agenda::update/$1');
     $routes->patch('agendamentos/(:num)/status', 'Agenda::updateStatus/$1');
     $routes->post('agendamentos/(:num)/faturar', 'Agenda::faturar/$1');
+    $routes->get('agendamentos/(:num)/faturamento', 'Agenda::getFaturamento/$1');
 
     // Comunicação (links de WhatsApp)
     $routes->get('comunicacao/agendamentos/(:num)/whatsapp', 'Comunicacao::getWhatsappAgendamento/$1');
@@ -92,6 +93,7 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\V1', 'filter' => 'apia
 
     // Lojas
     $routes->get('lojas', 'Lojas::getAll');
+    $routes->get('lojas/principal', 'Lojas::getPrincipal');
     $routes->get('lojas/(:num)/logo/(:any)', 'Lojas::viewLogo/$1/$2');
     $routes->get('lojas/(:num)', 'Lojas::getById/$1');
     $routes->post('lojas', 'Lojas::create');

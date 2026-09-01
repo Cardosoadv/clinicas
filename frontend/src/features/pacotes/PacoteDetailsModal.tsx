@@ -2,6 +2,7 @@ import { X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { fetchPacoteDetalhes } from './api'
 import type { PacoteDetalhes } from './types'
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 
 interface PacoteDetailsModalProps {
   pacoteId: number
@@ -22,9 +23,11 @@ export function PacoteDetailsModal({ pacoteId, onClose }: PacoteDetailsModalProp
       .finally(() => setIsLoading(false))
   }, [pacoteId])
 
+  useEscapeKey(onClose)
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
+      <div className="modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
         <div className="modal__header">
           <h2>Detalhes do Pacote</h2>
           <button type="button" onClick={onClose} aria-label="Fechar">

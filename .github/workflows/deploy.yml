@@ -1,0 +1,76 @@
+name: Deploy Automático Hostinger
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  web-deploy:
+    name: 🎉 Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🚚 Pegando o código mais recente
+      uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+
+    - name: 🚀 Sincronizando arquivos via FTP (Site 1 - biacardoso)
+      uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        server-dir: /public_html/biacardoso/ # Pasta de destino 1 na Hostinger
+        # Defina abaixo os arquivos e pastas que o GitHub NÃO deve tocar no servidor:
+        exclude: |
+          **/.git*
+          **/.env
+          **/.git*/**
+          **/node_modules/**
+          **/.agents/**
+          **/.github/**
+          **/.vscode/**
+          **/.settings/**
+          **/.idea/**
+          backend/vendor/**
+          backend/writable/**
+          backend/tests/**
+          frontend/src/**
+          frontend/public/**
+          frontend/*.json
+          frontend/*.ts
+          frontend/*.js
+          frontend/*.html
+          frontend/.gitignore
+
+    - name: 🚀 Sincronizando arquivos via FTP (Site 2)
+      uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        server-dir: /public_html/casadospets/ # Pasta de destino 2 na Hostinger (Altere SEGUNDO_SITE para o nome desejado)
+        # Defina abaixo os arquivos e pastas que o GitHub NÃO deve tocar no servidor:
+        exclude: |
+          **/.git*
+          **/.env
+          **/.git*/**
+          **/node_modules/**
+          **/.agents/**
+          **/.github/**
+          **/.vscode/**
+          **/.settings/**
+          **/.idea/**
+          backend/vendor/**
+          backend/writable/**
+          backend/tests/**
+          frontend/src/**
+          frontend/public/**
+          frontend/*.json
+          frontend/*.ts
+          frontend/*.js
+          frontend/*.html
+          frontend/.gitignore
+
+

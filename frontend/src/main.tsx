@@ -5,9 +5,12 @@ import './index.css'
 import './styles/shared.css'
 import App from './App.tsx'
 
+// Mesmo subcaminho de deploy do <base href> em index.html
+const basePath = window.APP_CONFIG?.BASE_PATH || '/clinicas';
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={basePath}>
       <App />
     </BrowserRouter>
   </StrictMode>,

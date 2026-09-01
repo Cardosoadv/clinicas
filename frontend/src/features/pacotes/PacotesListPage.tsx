@@ -1,5 +1,6 @@
 import { Eye, Package2, Plus } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { PacienteAvatar } from '../../components/PacienteAvatar'
 import { ApiError } from '../../lib/api'
 import { fetchPacotes } from './api'
 import { PacoteDetailsModal } from './PacoteDetailsModal'
@@ -128,7 +129,7 @@ export function PacotesListPage() {
               <div className="record-card__main">
                 <div className="record-card__title-row">
                   <h3>
-                    {pacote.paciente_avatar || '🐾'} {pacote.nome}
+                    <PacienteAvatar avatar={pacote.paciente_avatar} pacienteId={pacote.paciente_id} alt={pacote.paciente_nome} /> {pacote.nome}
                   </h3>
                   <span className="badge badge--info">{pacote.tipo}</span>
                   <span className={`badge ${statusBadgeClass[pacote.status]}`}>{pacote.status}</span>

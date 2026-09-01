@@ -1,20 +1,11 @@
 .env
-writable/*
-!writable/cache
-!writable/cache/.gitkeep
-!writable/logs
-!writable/logs/.gitkeep
-!writable/session
-!writable/session/.gitkeep
-!writable/debugbar
-!writable/debugbar/.gitkeep
-!writable/uploads
-!writable/uploads/.gitkeep
-!writable/despesas
-!writable/despesas/.gitkeep
-!writable/imagens
-!writable/imagens/.gitkeep
-!writable/imagens/loja
-!writable/imagens/loja/.gitkeep
+
+# writable/: mantém a árvore de diretórios versionada (via .gitkeep),
+# mas ignora todo o conteúdo gerado em runtime (cache, logs, sessões,
+# uploads, imagens/avatares por paciente/loja etc.), em qualquer profundidade.
+writable/**
+!writable/**/
+!writable/**/.gitkeep
+
 vendor/*
 build/

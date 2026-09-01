@@ -144,10 +144,19 @@ export function ClientesListPage() {
           <h2>Clientes &amp; CRM</h2>
           <p className="page-subtitle">Gerenciamento da carteira de clientes da clínica</p>
         </div>
-        <button type="button" className="btn btn--primary" onClick={() => setModal({ mode: 'create' })}>
-          <Plus size={16} />
-          Novo Cliente
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="btn btn--secondary"
+            onClick={() => navigate('/clientes/duplicados')}
+          >
+            Ver Duplicados
+          </button>
+          <button type="button" className="btn btn--primary" onClick={() => setModal({ mode: 'create' })}>
+            <Plus size={16} />
+            Novo Cliente
+          </button>
+        </div>
       </div>
 
       <div className="stat-pills">

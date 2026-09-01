@@ -9,6 +9,7 @@ use App\Repositories\ComunicacaoRepository;
 use App\Repositories\FatCobrancaRepository;
 use App\Repositories\PetsRepository;
 use App\Repositories\ConfigRepository;
+use App\Services\LojasService;
 use Exception;
 
 /**
@@ -31,6 +32,9 @@ class ComunicacaoService extends BaseService
     /** @var ComunicacaoRepository */
     protected ComunicacaoRepository $comunicacaoRepo;
 
+    /** @var LojasService */
+    protected LojasService $lojasService;
+
     /**
      * Injeta as dependências.
      *
@@ -39,19 +43,33 @@ class ComunicacaoService extends BaseService
      * @param PetsRepository|null $petsRepo
      * @param ConfigRepository|null $configRepo
      * @param ComunicacaoRepository|null $comunicacaoRepo
+     * @param LojasService|null $lojasService
      */
     public function __construct(
         ?AgendamentosRepository $ageRepo = null,
         ?FatCobrancaRepository $fatRepo = null,
         ?PetsRepository $petsRepo = null,
         ?ConfigRepository $configRepo = null,
-        ?ComunicacaoRepository $comunicacaoRepo = null
+        ?ComunicacaoRepository $comunicacaoRepo = null,
+        ?LojasService $lojasService = null
     ) {
         $this->ageRepo = $ageRepo ?? new AgendamentosRepository();
         $this->fatRepo = $fatRepo ?? new FatCobrancaRepository();
         $this->petsRepo = $petsRepo ?? new PetsRepository();
         $this->configRepo = $configRepo ?? new ConfigRepository();
         $this->comunicacaoRepo = $comunicacaoRepo ?? new ComunicacaoRepository();
+        $this->lojasService = $lojasService ?? new LojasService();
+    }
+
+    /**
+     * Nome da clínica exibido nas mensagens: vem da loja principal cadastrada
+     * (Configurações > Lojas); cai para o .env/valor genérico se nenhuma loja
+     * estiver cadastrada ainda.
+     */
+    private function nomeClinica(): string
+    {
+        $loja = $this->lojasService->getPrincipal();
+        return (string) ($loja['nome'] ?? (getenv('NomeClinica') ?: 'Petys'));
     }
 
     /**
@@ -95,7 +113,7 @@ class ComunicacaoService extends BaseService
             '{servico}' => $appt['age_servico'],
             '{data}'    => date('d/m/Y', strtotime($appt['age_data'])),
             '{hora}'    => substr($appt['age_hora'], 0, 5),
-            '{clinica}' => (string) (getenv('NomeClinica') ?: 'Petys'),
+            '{clinica}' => $this->nomeClinica(),
         ];
 
         $message = strtr((string) $template, $vars);
@@ -128,7 +146,7 @@ class ComunicacaoService extends BaseService
             '{pet}'     => $cobranca['paciente_nome'],
             '{valor}'   => number_format((float)$cobranca['valor'], 2, ',', '.'),
             '{data}'    => date('d/m/Y', strtotime($cobranca['vencimento'])),
-            '{clinica}' => (string) (getenv('NomeClinica') ?: 'Petys'),
+            '{clinica}' => $this->nomeClinica(),
         ];
 
         $message = strtr((string) $template, $vars);
@@ -160,7 +178,7 @@ class ComunicacaoService extends BaseService
             '{tutor}'   => explode(' ', $appt['tutor_nome'])[0],
             '{pet}'     => $appt['paciente_nome'],
             '{servico}' => $appt['age_servico'],
-            '{clinica}' => (string) (getenv('NomeClinica') ?: 'Petys'),
+            '{clinica}' => $this->nomeClinica(),
         ];
 
         $message = strtr((string) $template, $vars);
@@ -196,7 +214,7 @@ class ComunicacaoService extends BaseService
             '{pet}'     => $vacina['paciente_nome'],
             '{vacina}'  => $vacina['vacina_nome'],
             '{data}'    => date('d/m/Y', strtotime($vacina['data_proxima_dose'])),
-            '{clinica}' => (string) (getenv('NomeClinica') ?: 'Petys'),
+            '{clinica}' => $this->nomeClinica(),
         ];
 
         $message = strtr($template, $vars);
@@ -227,7 +245,7 @@ class ComunicacaoService extends BaseService
         $vars = [
             '{tutor}'   => explode(' ', $pet['pet_resp_nome'])[0],
             '{pet}'     => $pet['paciente_nome'],
-            '{clinica}' => (string) (getenv('NomeClinica') ?: 'Petys'),
+            '{clinica}' => $this->nomeClinica(),
         ];
 
         $message = strtr((string) $template, $vars);

@@ -1324,3 +1324,33 @@ CorreÁ„o do tamanho da tela e overflow horizontal em dispositivos mÛveis.
  # #   2 0 2 6 - 0 7 - 2 7   -   I n s e r Á „ o   d e   Õ n d i c e s 
  -   I n s e r i d o s   o s   Ì n d i c e s   ( c h a v e s   p r i m · r i a s ,   c h a v e s   e s t r a n g e i r a s ,   A U T O _ I N C R E M E N T   e   Ì n d i c e s )   e x t r a Ì d o s   d o   a r q u i v o   p e t y s . s q l   n a s   n o v a s   m i g r a t i o n s ,   j ·   r e f l e t i n d o   a s   m o d i f i c a Á ı e s   d e   n o m e n c l a t u r a   d e   p a c i e n t e s .  
  
+## 2026-08-07 - Configura√ß√£o de Roteamento (htaccess)
+- Cria√ß√£o do arquivo .htaccess na raiz do projeto para direcionar o tr√°fego adequadamente para o frontend (diret√≥rio rontend/dist), ignorando as rotas da API/backend.
+
+## [1.0.1] - 2026-08-08
+- AtualizaÁ„o do README.md para refletir a estrutura atual do projeto (React + CodeIgniter 4).
+- Vers„o atualizada no package.json e backend/composer.json.
+
+## [1.0.2] - 2026-08-08
+- Atualiza√ß√£o do arquivo deploy.yml para incluir exclus√µes baseadas na nova estrutura separada de frontend e backend (backend/vendor, backend/writable, backend/tests, frontend/src e frontend/node_modules).
+- Vers√£o atualizada no package.json (root) e backend/composer.json.
+
+## [1.0.3] - 2026-08-08
+- Corre√ß√£o das exclus√µes do deploy.yml para enviar apenas a pasta 'dist' do frontend, bloqueando todas as outras (src, public, arquivos base).
+- Vers√£o atualizada no package.json (root) e backend/composer.json.
+
+## [1.0.4] - 2026-08-08
+- CriaÁ„o de template global de impress„o (ReportTemplate) e inclus„o nas configuraÁıes de cabeÁalho e rodapÈ.
+- IntegraÁ„o do template no Modal de PrescriÁıes para possibilitar a impress„o da Receita Simples.
+
+## [1.0.5] - 2026-08-21
+- Inclus√£o dos campos de endere√ßo (rua, numero, complemento, bairro, cep) e documentos (rg, nascimento) no formul√°rio de clientes React (ClienteFormModal.tsx).
+- Integra√ß√£o da API externa ViaCEP (https://viacep.com.br/ws/{cep}/json/) com busca din√¢mica por CEP (8 d√≠gitos), tratamento de erros, estado de carregamento e autopreenchimento dos campos de rua, bairro, cidade, estado e complemento.
+- Redesign visual do modal de clientes com se√ß√µes destacadas por √≠cones (Dados Pessoais, Contato, Endere√ßo, Observa√ß√µes), grid responsivo e melhor experi√™ncia de usu√°rio.
+- Atualiza√ß√£o da tela de detalhes do cliente (ClienteDetailPage.tsx) para exibir o endere√ßo completo formatado.
+- Vers√£o atualizada no package.json (root) e backend/composer.json para 1.0.5.
+
+ # #   [ 1 . 0 . 6 ]   -   2 0 2 6 - 0 8 - 2 1 
+ -   D u p l i c a c a o   d a   e t a p a   d e   d e p l o y   v i a   F T P   n o   a r q u i v o   . g i t h u b / w o r k f l o w s / d e p l o y . y m l   p a r a   s u p o r t a r   s i n c r o n i z a c a o   e m   d u a s   p a s t a s   d e   d e s t i n o   n a   H o s t i n g e r . 
+ -   V e r s a o   a t u a l i z a d a   n o   p a c k a g e . j s o n   e   b a c k e n d / c o m p o s e r . j s o n   p a r a   1 . 0 . 6 .  
+ 

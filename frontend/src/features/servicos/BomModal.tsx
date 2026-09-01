@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { ApiError } from '../../lib/api'
 import { fetchProdutoOptions, fetchServicoComProdutos, syncServicoProdutos } from './api'
 import type { BomItem, ProdutoOption, Servico } from './types'
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 
 interface BomModalProps {
   servico: Servico
@@ -57,9 +58,11 @@ export function BomModal({ servico, onClose, onSaved }: BomModalProps) {
     }
   }
 
+  useEscapeKey(onClose)
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
+      <div className="modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
         <div className="modal__header">
           <h2>
             <Package size={18} style={{ verticalAlign: 'middle', marginRight: 8 }} />
@@ -90,6 +93,7 @@ export function BomModal({ servico, onClose, onSaved }: BomModalProps) {
                 {itens.map((item, index) => (
                   <div className="bom-row" key={index}>
                     <select
+                      aria-label="Produto"
                       value={item.produto_id}
                       onChange={(event) => updateRow(index, 'produto_id', event.target.value)}
                     >
@@ -104,10 +108,17 @@ export function BomModal({ servico, onClose, onSaved }: BomModalProps) {
                       type="number"
                       min="0"
                       step="0.01"
+                      aria-label="Quantidade"
                       value={item.quantidade}
                       onChange={(event) => updateRow(index, 'quantidade', event.target.value)}
                     />
-                    <button type="button" className="icon-btn icon-btn--danger" onClick={() => removeRow(index)}>
+                    <button
+                      type="button"
+                      className="icon-btn icon-btn--danger"
+                      aria-label="Remover produto"
+                      title="Remover produto"
+                      onClick={() => removeRow(index)}
+                    >
                       <Trash2 size={14} />
                     </button>
                   </div>

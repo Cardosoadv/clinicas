@@ -1,0 +1,125 @@
+/* Estilos específicos do Dashboard principal (complementam frontend/src/styles/shared.css) */
+
+.dash-agenda-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid #f0eee7;
+  cursor: pointer;
+}
+
+.dash-agenda-item:first-of-type {
+  border-top: none;
+}
+
+.dash-agenda-item__main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.dash-agenda-item__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dash-agenda-item__info strong {
+  font-size: 13px;
+  color: #1c2333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-agenda-item__info span {
+  font-size: 12px;
+  color: #6b7385;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-agenda-item__side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.dash-agenda-item__time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1c2333;
+  white-space: nowrap;
+}
+
+.dash-bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 3fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.dash-bar-row span:first-child {
+  color: #1c2333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-bar-row span:last-child {
+  color: #6b7385;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.dash-bar-row__track {
+  height: 8px;
+  border-radius: 999px;
+  background: #f0eee7;
+  overflow: hidden;
+}
+
+.dash-bar-row__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #c99a3f;
+}
+
+.dash-kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dash-list-item--stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 0;
+  border-top: 1px solid #f0eee7;
+  font-size: 13px;
+}
+
+.dash-list-item--stacked:first-of-type {
+  border-top: none;
+}
+
+.dash-list-item--stacked strong {
+  color: #1c2333;
+}
+
+.dash-list-item--stacked span {
+  color: #6b7385;
+  font-size: 12px;
+}

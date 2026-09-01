@@ -66,7 +66,7 @@ export interface DashboardData {
   stats: {
     por_servico: { servico: string; total: number }[]
     formas_pgto: { forma_pagamento: string; total: number }[]
-    top_pets: { paciente_nome: string; paciente_avatar: string | null; qtd: number; total: number }[]
+    top_pets: { paciente_id: number; paciente_nome: string; paciente_avatar: string | null; qtd: number; total: number }[]
     chart_data: { points: { label: string; receita: number; despesa: number }[]; max_value: number }
   }
   recebiveis: Cobranca[]

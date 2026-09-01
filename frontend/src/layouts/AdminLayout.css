@@ -36,24 +36,15 @@
 
 .admin-sidebar__brand {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
   padding: 4px 24px 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   margin-bottom: 12px;
 }
 
-.admin-sidebar__brand-name {
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
-}
-
-.admin-sidebar__brand-sub {
-  font-size: 12px;
-  color: var(--sidebar-text);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+.admin-sidebar__brand-logo {
+  max-width: 160px;
+  height: auto;
+  border-radius: 8px;
 }
 
 .admin-nav-section {
@@ -207,7 +198,8 @@
   cursor: pointer;
 }
 
-.topbar-search__result:hover {
+.topbar-search__result:hover,
+.topbar-search__result--active {
   background: var(--content-bg);
 }
 

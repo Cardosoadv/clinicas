@@ -8,6 +8,7 @@ import type {
   ClienteTipoFiltro,
   ClientesPainel,
   Comunicacao,
+  ClienteDuplicadoGrupo,
 } from './types'
 
 export function fetchClientes(
@@ -65,3 +66,12 @@ export function updateCliente(id: number, payload: ClienteFormValues): Promise<A
 export function deleteCliente(id: number): Promise<ApiEnvelope> {
   return api.delete(`/clientes/${id}`)
 }
+
+export function fetchClientesDuplicados(): Promise<ApiEnvelope<ClienteDuplicadoGrupo[]>> {
+  return api.get<ClienteDuplicadoGrupo[]>('/clientes/duplicados')
+}
+
+export function mergeClientesDuplicados(ids: number[]): Promise<ApiEnvelope> {
+  return api.post('/clientes/merge', { ids })
+}
+

@@ -1,5 +1,6 @@
-import { Calculator, X } from 'lucide-react'
+import { Calculator, Check, Copy, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 
 interface CalculadoraModalProps {
   pesoAtual: number | null
@@ -14,6 +15,7 @@ export function CalculadoraModal({ pesoAtual, onClose, onCopyToEvolucao }: Calcu
   const [dose, setDose] = useState('')
   const [concentracao, setConcentracao] = useState('')
   const [apresentacao, setApresentacao] = useState<Apresentacao>('ml')
+  const [copied, setCopied] = useState(false)
 
   const resultado = useMemo(() => {
     const pesoNum = Number(peso)
@@ -28,9 +30,22 @@ export function CalculadoraModal({ pesoAtual, onClose, onCopyToEvolucao }: Calcu
       ? `Cálculo de dosagem: ${peso}kg × ${dose}mg/kg ÷ ${concentracao}mg/${apresentacao} = ${resultado.toFixed(2)}${apresentacao}`
       : ''
 
+  async function handleCopyClipboard() {
+    if (!resumo) return
+    try {
+      await navigator.clipboard.writeText(resumo)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Fallback if clipboard API is restricted
+    }
+  }
+
+  useEscapeKey(onClose)
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(event) => event.stopPropagation()}>
+      <div className="modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
         <div className="modal__header">
           <h2>
             <Calculator size={18} style={{ verticalAlign: 'text-bottom', marginRight: 6 }} />
@@ -70,7 +85,7 @@ export function CalculadoraModal({ pesoAtual, onClose, onCopyToEvolucao }: Calcu
             </label>
           </div>
 
-          <div className="prontuario-calc__result">
+          <div className="prontuario-calc__result" role="status" aria-live="polite">
             {resultado !== null ? (
               <>
                 <strong>
@@ -86,6 +101,16 @@ export function CalculadoraModal({ pesoAtual, onClose, onCopyToEvolucao }: Calcu
           <div className="modal__footer">
             <button type="button" className="btn btn--ghost" onClick={onClose}>
               Fechar
+            </button>
+            <button
+              type="button"
+              className="btn btn--ghost"
+              disabled={resultado === null}
+              onClick={() => void handleCopyClipboard()}
+              aria-label="Copiar resultado para a área de transferência"
+            >
+              {copied ? <Check size={16} /> : <Copy size={16} />}
+              {copied ? 'Copiado!' : 'Copiar'}
             </button>
             <button
               type="button"

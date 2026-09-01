@@ -1,16 +1,32 @@
 import { api, type ApiEnvelope } from '../../lib/api'
+import type { Cobranca } from '../faturamento/types'
 import type {
   Agendamento,
   AgendamentoFormValues,
+  AgendamentosFiltro,
   AgendamentoStatus,
   DayData,
   EquipeOption,
+  FaturarFormValues,
   PacienteLookup,
   ServicoOption,
 } from './types'
 
 export function fetchDayData(date: string): Promise<ApiEnvelope<DayData>> {
   return api.get<DayData>(`/agendamentos/dia?date=${date}`)
+}
+
+export function fetchAgendamentos(filtro: AgendamentosFiltro): Promise<ApiEnvelope<Agendamento[]>> {
+  const params = new URLSearchParams()
+  if (filtro.status) params.set('status', filtro.status)
+  if (filtro.data_inicio) params.set('data_inicio', filtro.data_inicio)
+  if (filtro.data_fim) params.set('data_fim', filtro.data_fim)
+  if (filtro.servico_id) params.set('servico_id', filtro.servico_id)
+  if (filtro.veterinario_id) params.set('veterinario_id', filtro.veterinario_id)
+  if (filtro.search) params.set('search', filtro.search)
+
+  const query = params.toString()
+  return api.get<Agendamento[]>(`/agendamentos${query ? `?${query}` : ''}`)
 }
 
 export function fetchUpcoming(): Promise<ApiEnvelope<Agendamento[]>> {
@@ -57,4 +73,21 @@ export function rescheduleAgendamento(id: number, data: string, hora: string): P
 
 export function updateAgendamentoStatus(id: number, status: AgendamentoStatus): Promise<ApiEnvelope> {
   return api.patch(`/agendamentos/${id}/status`, { status })
+}
+
+function toFaturarPayload(values: FaturarFormValues): Record<string, unknown> {
+  return {
+    ...values,
+    valor: Number(values.valor),
+    desconto: values.desconto ? Number(values.desconto) : 0,
+    pacote_id: values.pacote_id ? Number(values.pacote_id) : null,
+  }
+}
+
+export function faturarAgendamento(id: number, values: FaturarFormValues): Promise<ApiEnvelope> {
+  return api.post(`/agendamentos/${id}/faturar`, toFaturarPayload(values))
+}
+
+export function fetchFaturamento(id: number): Promise<ApiEnvelope<Cobranca | null>> {
+  return api.get<Cobranca | null>(`/agendamentos/${id}/faturamento`)
 }

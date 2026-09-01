@@ -3,8 +3,10 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { AuthProvider } from './features/auth/AuthContext'
 import { LoginPage } from './features/auth/LoginPage'
 import { AgendaPage } from './features/agenda/AgendaPage'
+import { AgendamentosOverviewPage } from './features/agenda/AgendamentosOverviewPage'
 import { ClienteDetailPage } from './features/clientes/ClienteDetailPage'
 import { ClientesListPage } from './features/clientes/ClientesListPage'
+import { ClientesDuplicadosPage } from './features/clientes/ClientesDuplicadosPage'
 import { ConfiguracoesPage } from './features/configuracoes/ConfiguracoesPage'
 import { EquipeListPage } from './features/equipe/EquipeListPage'
 import { EstoqueListPage } from './features/estoque/EstoqueListPage'
@@ -41,9 +43,11 @@ function App() {
           <Route element={<AdminLayout />}>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/clientes" element={<ClientesListPage />} />
+            <Route path="/clientes/duplicados" element={<ClientesDuplicadosPage />} />
             <Route path="/clientes/:id" element={<ClienteDetailPage />} />
             <Route path="/pacientes" element={<PacientesListPage />} />
             <Route path="/agenda" element={<AgendaPage />} />
+            <Route path="/agenda/todos" element={<AgendamentosOverviewPage />} />
             <Route path="/prontuarios" element={<ProntuarioListPage />} />
             <Route path="/prontuarios/:id" element={<ProntuarioLayout />}>
               <Route index element={<Navigate to="anamnese" replace />} />

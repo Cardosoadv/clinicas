@@ -110,7 +110,8 @@ class PetsService extends BaseService
                 $clientData[$clientMapping[$key]] = $val;
             } elseif (str_starts_with($key, 'pet_')) {
                 // Campos recebidos com prefixo legado 'pet_' são gravados na coluna 'paciente_' correspondente
-                $petData['paciente_' . substr($key, 4)] = $val;
+                $colName = 'paciente_' . substr($key, 4);
+                $petData[$colName] = (trim((string)$val) === '') ? null : $val;
             } elseif (str_starts_with($key, 'age_')) {
                 $ageData[$key] = $val;
             }
