@@ -59,6 +59,7 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\V1', 'filter' => 'apia
     $routes->delete('pacientes/(:num)', 'Pets::delete/$1');
 
     // Agendamentos
+    $routes->get('agendamentos', 'Agenda::index');
     $routes->get('agendamentos/dia', 'Agenda::getDayData');
     $routes->get('agendamentos/proximos', 'Agenda::getUpcoming');
     $routes->get('agendamentos/buscar-pacientes', 'Agenda::searchPets');

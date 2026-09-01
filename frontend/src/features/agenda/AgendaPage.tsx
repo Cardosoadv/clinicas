@@ -1,5 +1,6 @@
-import { CalendarDays, Clock3, Hourglass, Plus } from 'lucide-react'
+import { CalendarDays, Clock3, Hourglass, LayoutGrid, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { ApiError } from '../../lib/api'
 import {
   createAgendamento,
@@ -171,14 +172,20 @@ export function AgendaPage() {
           <h2>Agendamentos</h2>
           <p className="page-subtitle">Gerencie os horários e atendimentos da clínica</p>
         </div>
-        <button
-          type="button"
-          className="btn btn--primary"
-          onClick={() => setModal({ mode: 'create', hora: '08:00' })}
-        >
-          <Plus size={16} />
-          Novo Agendamento
-        </button>
+        <div className="agenda-header__actions">
+          <Link to="/agenda/todos" className="btn btn--ghost">
+            <LayoutGrid size={16} />
+            Ver todos
+          </Link>
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={() => setModal({ mode: 'create', hora: '08:00' })}
+          >
+            <Plus size={16} />
+            Novo Agendamento
+          </button>
+        </div>
       </div>
 
       <div className="agenda-layout">
@@ -200,13 +207,13 @@ export function AgendaPage() {
                 <span>Hoje</span>
               </div>
             </div>
-            <div className="agenda-stat-pill">
+            <Link to="/agenda/todos?status=pendente" className="agenda-stat-pill agenda-stat-pill--link">
               <Hourglass size={18} />
               <div>
                 <strong>{stats?.pendentes ?? '—'}</strong>
                 <span>Pendentes</span>
               </div>
-            </div>
+            </Link>
           </div>
 
           <div className="side-card">

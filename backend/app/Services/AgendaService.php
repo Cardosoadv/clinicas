@@ -62,6 +62,17 @@ class AgendaService extends BaseService
     }
 
     /**
+     * Lista agendamentos com filtros opcionais (status, período, serviço, veterinário e busca).
+     *
+     * @param array $filters
+     * @return array
+     */
+    public function listAppointments(array $filters): array
+    {
+        return $this->agendamentosRepository->getFiltered($filters);
+    }
+
+    /**
      * Busca pets para lookup
      *
      * @param string $term

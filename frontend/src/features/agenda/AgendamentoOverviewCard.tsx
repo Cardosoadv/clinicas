@@ -1,27 +1,27 @@
-import { Clock, Receipt } from 'lucide-react'
-import type { DragEvent } from 'react'
-import type { Agendamento, AgendamentoStatus } from './types'
-import { statusBadgeClass, statusLabels } from './statusMeta'
+import { CalendarDays, Clock, Receipt, Stethoscope } from 'lucide-react'
 import { PacienteAvatar } from '../../components/PacienteAvatar'
-interface AppointmentCardProps {
+import { formatShortDate } from './dateUtils'
+import { statusBadgeClass, statusLabels } from './statusMeta'
+import type { Agendamento, AgendamentoStatus, EquipeOption } from './types'
+
+interface AgendamentoOverviewCardProps {
   agendamento: Agendamento
+  veterinarioNome?: string
   onClick: () => void
   onStatusChange: (status: AgendamentoStatus) => void
   onFaturar: () => void
 }
 
-/** Card de agendamento na timeline — arrastável (HTML5 drag-and-drop) para reagendar de horário. */
-export function AppointmentCard({ agendamento, onClick, onStatusChange, onFaturar }: AppointmentCardProps) {
-  function handleDragStart(event: DragEvent<HTMLDivElement>) {
-    event.dataTransfer.setData('text/age-id', String(agendamento.age_id))
-    event.dataTransfer.effectAllowed = 'move'
-  }
-
+export function AgendamentoOverviewCard({
+  agendamento,
+  veterinarioNome,
+  onClick,
+  onStatusChange,
+  onFaturar,
+}: AgendamentoOverviewCardProps) {
   return (
     <div
-      className={`appointment-card appointment-card--${agendamento.age_status}`}
-      draggable
-      onDragStart={handleDragStart}
+      className={`agendamento-card agendamento-card--${agendamento.age_status}`}
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -32,23 +32,14 @@ export function AppointmentCard({ agendamento, onClick, onStatusChange, onFatura
         }
       }}
     >
-      <div className="appointment-card__main">
-        <span className="appointment-card__pet">
+      <div className="agendamento-card__header">
+        <span className="agendamento-card__pet">
           <PacienteAvatar avatar={agendamento.paciente_avatar} pacienteId={agendamento.paciente_id} alt={agendamento.paciente_nome} />
           {' '}
           {agendamento.paciente_nome}
         </span>
-        {agendamento.tutor_nome && <span className="appointment-card__tutor">({agendamento.tutor_nome})</span>}
-        {agendamento.age_servico && <span className="appointment-card__servicos">{agendamento.age_servico}</span>}
-      </div>
-
-      <div className="appointment-card__side">
-        <span className="appointment-card__time">
-          <Clock size={12} />
-          {agendamento.age_hora.slice(0, 5)}
-        </span>
         <select
-          className={`badge ${statusBadgeClass[agendamento.age_status]} appointment-card__status`}
+          className={`badge ${statusBadgeClass[agendamento.age_status]} agendamento-card__status`}
           aria-label="Status do agendamento"
           value={agendamento.age_status}
           onClick={(event) => event.stopPropagation()}
@@ -60,6 +51,30 @@ export function AppointmentCard({ agendamento, onClick, onStatusChange, onFatura
             </option>
           ))}
         </select>
+      </div>
+
+      {agendamento.tutor_nome && <p className="agendamento-card__tutor">Tutor: {agendamento.tutor_nome}</p>}
+
+      <div className="agendamento-card__meta">
+        <span>
+          <CalendarDays size={13} />
+          {formatShortDate(agendamento.age_data)}
+        </span>
+        <span>
+          <Clock size={13} />
+          {agendamento.age_hora.slice(0, 5)}
+        </span>
+        {veterinarioNome && (
+          <span>
+            <Stethoscope size={13} />
+            {veterinarioNome}
+          </span>
+        )}
+      </div>
+
+      {agendamento.age_servico && <p className="agendamento-card__servicos">{agendamento.age_servico}</p>}
+
+      <div className="agendamento-card__footer">
         <button
           type="button"
           className={`appointment-card__bill-btn${Number(agendamento.age_faturado) === 1 ? ' appointment-card__bill-btn--done' : ''}`}
@@ -76,4 +91,9 @@ export function AppointmentCard({ agendamento, onClick, onStatusChange, onFatura
       </div>
     </div>
   )
+}
+
+export function findVeterinarioNome(equipe: EquipeOption[], id: number | null): string | undefined {
+  if (!id) return undefined
+  return equipe.find((membro) => membro.equ_id === id)?.equ_nome
 }

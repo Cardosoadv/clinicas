@@ -108,6 +108,61 @@ class AgendamentosRepository extends BaseRepository
     }
 
     /**
+     * Lista agendamentos aplicando filtros opcionais (status, período, serviço,
+     * veterinário responsável e termo de busca livre por paciente/tutor/serviço).
+     *
+     * @param array{status?: string, data_inicio?: string, data_fim?: string, servico_id?: int|string, veterinario_id?: int|string, search?: string} $filters
+     * @return array
+     */
+    public function getFiltered(array $filters = []): array
+    {
+        $builder = $this->model
+            ->select('agendamentos.*, pacientes.paciente_nome, pacientes.paciente_avatar, pacientes.paciente_sexo, clientes.nome as tutor_nome')
+            ->select("GROUP_CONCAT(CONCAT(IFNULL(servicos.ser_icone, '🐾'), ' ', servicos.ser_nome) SEPARATOR ', ') as age_servico")
+            ->select("GROUP_CONCAT(servicos.ser_id) as age_servico_ids")
+            ->join('pacientes', 'pacientes.paciente_id = agendamentos.paciente_id')
+            ->join('clientes', 'clientes.id = pacientes.cliente_id', 'left')
+            ->join('agendamento_servicos', 'agendamento_servicos.age_id = agendamentos.age_id', 'left')
+            ->join('servicos', 'servicos.ser_id = agendamento_servicos.ser_id', 'left');
+
+        if (!empty($filters['status'])) {
+            $builder->where('agendamentos.age_status', $filters['status']);
+        }
+
+        if (!empty($filters['data_inicio'])) {
+            $builder->where('agendamentos.age_data >=', $filters['data_inicio']);
+        }
+
+        if (!empty($filters['data_fim'])) {
+            $builder->where('agendamentos.age_data <=', $filters['data_fim']);
+        }
+
+        if (!empty($filters['veterinario_id'])) {
+            $builder->where('agendamentos.age_veterinario', (int) $filters['veterinario_id']);
+        }
+
+        if (!empty($filters['servico_id'])) {
+            $servicoId = (int) $filters['servico_id'];
+            $builder->where("agendamentos.age_id IN (SELECT age_id FROM agendamento_servicos WHERE ser_id = {$servicoId})", null, false);
+        }
+
+        if (!empty($filters['search'])) {
+            $term = $filters['search'];
+            $builder->groupStart()
+                ->like('pacientes.paciente_nome', $term)
+                ->orLike('clientes.nome', $term)
+                ->orLike('servicos.ser_nome', $term)
+            ->groupEnd();
+        }
+
+        return $builder
+            ->groupBy('agendamentos.age_id')
+            ->orderBy('agendamentos.age_data', 'DESC')
+            ->orderBy('agendamentos.age_hora', 'DESC')
+            ->findAll(300);
+    }
+
+    /**
      * Get agenda stats.
      *
      * Note: We use separate count queries here to leverage indexes on

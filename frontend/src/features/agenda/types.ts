@@ -33,6 +33,15 @@ export interface AgendaStats {
   pendentes: number
 }
 
+export interface AgendamentosFiltro {
+  status: AgendamentoStatus | ''
+  data_inicio: string
+  data_fim: string
+  servico_id: string
+  veterinario_id: string
+  search: string
+}
+
 export interface DayData {
   appointments: Agendamento[]
   stats: AgendaStats
