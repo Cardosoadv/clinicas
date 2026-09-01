@@ -267,7 +267,11 @@ export function DashboardPage() {
                 className="side-list-item"
                 style={{ cursor: 'pointer' }}
                 key={paciente.paciente_id}
+                role="button"
+                tabIndex={0}
+                aria-label={`Ver prontuário de ${paciente.paciente_nome}`}
                 onClick={() => navigate(`/prontuarios/${paciente.paciente_id}`)}
+                onKeyDown={handleActivationKeyDown(() => navigate(`/prontuarios/${paciente.paciente_id}`))}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <PacienteAvatar avatar={paciente.paciente_avatar} pacienteId={paciente.paciente_id} alt={paciente.paciente_nome} />
