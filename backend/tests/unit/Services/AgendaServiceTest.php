@@ -65,6 +65,17 @@ final class AgendaServiceTest extends CIUnitTestCase
         $this->assertSame([['paciente_id' => 1]], $this->service->searchPets('rex'));
     }
 
+    public function testListAppointmentsDelegatesToRepository(): void
+    {
+        $filters = ['status' => 'pendente'];
+        $this->agendamentosRepository->expects($this->once())
+            ->method('getFiltered')
+            ->with($filters)
+            ->willReturn([['age_id' => 1]]);
+
+        $this->assertSame([['age_id' => 1]], $this->service->listAppointments($filters));
+    }
+
     public function testGetMonthDaysWithApptsDelegatesToRepository(): void
     {
         $this->agendamentosRepository->expects($this->once())

@@ -59,3 +59,10 @@ export function formatLongDate(dateKey: string): string {
     new Date(y, m - 1, d),
   )
 }
+
+export function formatShortDate(dateKey: string): string {
+  const [y, m, d] = dateKey.split('-').map(Number)
+  return new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' }).format(
+    new Date(y, m - 1, d),
+  )
+}

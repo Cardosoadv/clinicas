@@ -3,6 +3,7 @@ import type { Cobranca } from '../faturamento/types'
 import type {
   Agendamento,
   AgendamentoFormValues,
+  AgendamentosFiltro,
   AgendamentoStatus,
   DayData,
   EquipeOption,
@@ -13,6 +14,19 @@ import type {
 
 export function fetchDayData(date: string): Promise<ApiEnvelope<DayData>> {
   return api.get<DayData>(`/agendamentos/dia?date=${date}`)
+}
+
+export function fetchAgendamentos(filtro: AgendamentosFiltro): Promise<ApiEnvelope<Agendamento[]>> {
+  const params = new URLSearchParams()
+  if (filtro.status) params.set('status', filtro.status)
+  if (filtro.data_inicio) params.set('data_inicio', filtro.data_inicio)
+  if (filtro.data_fim) params.set('data_fim', filtro.data_fim)
+  if (filtro.servico_id) params.set('servico_id', filtro.servico_id)
+  if (filtro.veterinario_id) params.set('veterinario_id', filtro.veterinario_id)
+  if (filtro.search) params.set('search', filtro.search)
+
+  const query = params.toString()
+  return api.get<Agendamento[]>(`/agendamentos${query ? `?${query}` : ''}`)
 }
 
 export function fetchUpcoming(): Promise<ApiEnvelope<Agendamento[]>> {
