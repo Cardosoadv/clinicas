@@ -150,7 +150,8 @@ export function VacinasSection() {
                     <button
                       type="button"
                       className="icon-btn icon-btn--danger"
-                      aria-label="Excluir vacina"
+                      aria-label={`Excluir vacina ${vacina.vacina_nome}`}
+                      title={`Excluir vacina ${vacina.vacina_nome}`}
                       onClick={() => void handleDelete(vacina)}
                     >
                       <Trash2 size={14} />
