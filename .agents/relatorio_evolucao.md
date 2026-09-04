@@ -1376,3 +1376,7 @@ Correção do tamanho da tela e overflow horizontal em dispositivos móveis.
   - Enriquecimento do backend (FatCobrancaRepository.php e ProntuariosService.php) com metodo findByPet realizando LEFT JOIN com a tabela de agendamentos para carregar age_obs junto aos procedimentos faturados.
   - Atualizacao da tipagem frontend (types.ts) em HistoricoProcedimento para suportar observacoes e age_obs.
   - Versao atualizada no package.json (root) e backend/composer.json para 1.0.9.
+
+## [1.0.10] - 2026-09-04
+- Substituicao do campo livre de Porte por componente select com opcoes padronizadas (Mini, Pequeno, Medio, Grande, Gigante) no modal de cadastro/edicao de pacientes (PacienteFormModal.tsx), mantendo compatibilidade e exibicao dinamica caso o paciente possua outro valor customizado ja cadastrado.
+- Versao atualizada no package.json (root) e backend/composer.json para 1.0.10.

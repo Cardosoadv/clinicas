@@ -124,7 +124,17 @@ export function PacienteFormModal({ title, initialValues, especies, onClose, onS
 
             <label className="form-field">
               Porte
-              <input value={values.paciente_porte} onChange={handleChange('paciente_porte')} placeholder="Pequeno, médio, grande..." />
+              <select value={values.paciente_porte} onChange={handleChange('paciente_porte')}>
+                <option value="">Não informado</option>
+                <option value="Mini">Mini</option>
+                <option value="Pequeno">Pequeno</option>
+                <option value="Médio">Médio</option>
+                <option value="Grande">Grande</option>
+                <option value="Gigante">Gigante</option>
+                {values.paciente_porte && !['', 'Mini', 'Pequeno', 'Médio', 'Grande', 'Gigante'].includes(values.paciente_porte) && (
+                  <option value={values.paciente_porte}>{values.paciente_porte}</option>
+                )}
+              </select>
             </label>
 
             <label className="form-field">
