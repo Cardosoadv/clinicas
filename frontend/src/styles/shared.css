@@ -363,6 +363,44 @@
   }
 }
 
+.agendamento-paciente-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.agendamento-paciente-meta .paciente-endereco-label {
+  margin-top: 0;
+  flex: 1;
+  min-width: 220px;
+}
+
+.paciente-prontuario-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1c5fb8;
+  background: #f0f6ff;
+  border: 1px solid #bcd4f9;
+  border-radius: 6px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.paciente-prontuario-link:hover {
+  background: #e2eeff;
+  border-color: #1c5fb8;
+  color: #0f3f80;
+}
+
 /* ---------- Upload de logo/imagem ---------- */
 
 .logo-upload {
@@ -442,6 +480,33 @@
   margin: 0;
   font-size: 18px;
   color: #1c2333;
+}
+
+.modal__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-header-prontuario-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1c5fb8;
+  background: #f0f5ff;
+  border: 1px solid #c9dcfe;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.modal-header-prontuario-btn:hover {
+  background: #e1edff;
+  border-color: #1c5fb8;
+  color: #0f3f80;
 }
 
 .modal__header button {

@@ -1,5 +1,6 @@
-import { MapPin, X } from 'lucide-react'
+import { ExternalLink, FileText, MapPin, X } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { ApiError } from '../../lib/api'
 import { fetchEquipeOptions, fetchServicosOptions } from './api'
 import { fetchPacienteById } from '../pacientes/api'
@@ -122,9 +123,23 @@ export function AgendamentoFormModal({
       <div className="modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
         <div className="modal__header">
           <h2>{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Fechar">
-            <X size={18} />
-          </button>
+          <div className="modal__header-actions">
+            {values.paciente_id && (
+              <Link
+                to={`/prontuarios/${values.paciente_id}/historico`}
+                className="modal-header-prontuario-btn"
+                title="Abrir histórico do paciente (clique com botão do meio para abrir em nova aba)"
+                onAuxClick={(event) => event.stopPropagation()}
+              >
+                <FileText size={14} />
+                <span>Histórico</span>
+                <ExternalLink size={12} />
+              </Link>
+            )}
+            <button type="button" onClick={onClose} aria-label="Fechar">
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         <form className="modal__form" onSubmit={handleSubmit}>
@@ -158,16 +173,28 @@ export function AgendamentoFormModal({
                 error={pacienteError}
               />
               {values.paciente_id && (
-                <div className="paciente-endereco-label">
-                  <MapPin size={13} className="paciente-endereco-label__icon" />
-                  <span className="paciente-endereco-label__text">
-                    <strong>Endereço:</strong>{' '}
-                    {isLoadingEndereco
-                      ? 'Carregando endereço...'
-                      : pacienteEndereco
-                      ? pacienteEndereco
-                      : 'Não informado'}
-                  </span>
+                <div className="agendamento-paciente-meta">
+                  <div className="paciente-endereco-label">
+                    <MapPin size={13} className="paciente-endereco-label__icon" />
+                    <span className="paciente-endereco-label__text">
+                      <strong>Endereço:</strong>{' '}
+                      {isLoadingEndereco
+                        ? 'Carregando endereço...'
+                        : pacienteEndereco
+                        ? pacienteEndereco
+                        : 'Não informado'}
+                    </span>
+                  </div>
+                  <Link
+                    to={`/prontuarios/${values.paciente_id}`}
+                    className="paciente-prontuario-link"
+                    title="Abrir prontuário do paciente (clique com botão do meio para abrir em nova aba)"
+                    onAuxClick={(event) => event.stopPropagation()}
+                  >
+                    <FileText size={13} />
+                    <span>Ver Prontuário</span>
+                    <ExternalLink size={12} />
+                  </Link>
                 </div>
               )}
             </div>

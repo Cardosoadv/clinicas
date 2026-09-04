@@ -1,6 +1,6 @@
 {
     "name": "clinicas/sistema-de-gestao-clinicas",
-    "version": "1.0.7",
+    "version": "1.0.9",
     "description": "Sistema de gestão para clínicas: agenda, prontuários, faturamento e relatórios financeiros. Desenvolvido em CodeIgniter 4 com padrão MVCRS.",
     "keywords": [
         "clinicas",

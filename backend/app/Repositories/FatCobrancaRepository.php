@@ -102,4 +102,20 @@ class FatCobrancaRepository extends BaseRepository
             ->where('fat_cobrancas.id', $id)
             ->first();
     }
+
+    /**
+     * Busca procedimentos/cobranças de um pet com observações do agendamento vinculado.
+     *
+     * @param int $petId
+     * @return array
+     */
+    public function findByPet(int $petId): array
+    {
+        return $this->model
+            ->select('fat_cobrancas.*, agendamentos.age_obs')
+            ->join('agendamentos', 'agendamentos.age_id = fat_cobrancas.agendamento_id', 'left')
+            ->where('fat_cobrancas.paciente_id', $petId)
+            ->orderBy('fat_cobrancas.data_servico', 'DESC')
+            ->findAll();
+    }
 }

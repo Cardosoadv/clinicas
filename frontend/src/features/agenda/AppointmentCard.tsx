@@ -1,4 +1,5 @@
-import { Clock, Receipt } from 'lucide-react'
+import { Clock, FileText, Receipt } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import type { DragEvent } from 'react'
 import type { Agendamento, AgendamentoStatus } from './types'
 import { statusBadgeClass, statusLabels } from './statusMeta'
@@ -33,11 +34,18 @@ export function AppointmentCard({ agendamento, onClick, onStatusChange, onFatura
       }}
     >
       <div className="appointment-card__main">
-        <span className="appointment-card__pet">
+        <Link
+          to={`/prontuarios/${agendamento.paciente_id}`}
+          className="appointment-card__pet appointment-card__pet--link"
+          title={`Abrir prontuário de ${agendamento.paciente_nome || 'paciente'} (botão do meio abre em nova aba)`}
+          onClick={(event) => event.stopPropagation()}
+          onAuxClick={(event) => event.stopPropagation()}
+          draggable={false}
+        >
           <PacienteAvatar avatar={agendamento.paciente_avatar} pacienteId={agendamento.paciente_id} alt={agendamento.paciente_nome} />
           {' '}
           {agendamento.paciente_nome}
-        </span>
+        </Link>
         {agendamento.tutor_nome && <span className="appointment-card__tutor">({agendamento.tutor_nome})</span>}
         {agendamento.age_servico && <span className="appointment-card__servicos">{agendamento.age_servico}</span>}
       </div>
@@ -47,6 +55,18 @@ export function AppointmentCard({ agendamento, onClick, onStatusChange, onFatura
           <Clock size={12} />
           {agendamento.age_hora.slice(0, 5)}
         </span>
+        <Link
+          to={`/prontuarios/${agendamento.paciente_id}`}
+          className="appointment-card__prontuario-btn"
+          title="Abrir prontuário (clique com botão do meio para abrir em nova aba)"
+          aria-label="Abrir prontuário"
+          onClick={(event) => event.stopPropagation()}
+          onAuxClick={(event) => event.stopPropagation()}
+          draggable={false}
+        >
+          <FileText size={12} />
+          Prontuário
+        </Link>
         <select
           className={`badge ${statusBadgeClass[agendamento.age_status]} appointment-card__status`}
           aria-label="Status do agendamento"

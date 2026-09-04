@@ -1361,3 +1361,18 @@ Correção do tamanho da tela e overflow horizontal em dispositivos móveis.
 - Adicao de endpoint frontend fetchPacienteById em pacientes/api.ts para carregar o endereco dinamicamente caso o agendamento ja venha com paciente pre-selecionado sem endereco em cache.
 - Estilizacao moderna e responsiva da label de endereco (.paciente-endereco-label) com icone MapPin e animacao de fade-in.
 - Versao atualizada no package.json (root) e backend/composer.json para 1.0.7.- Correcao no endpoint de atualizacao de clientes (PUT /clientes/:id): remocao da regra estatica is_unique do ClientesModel que causava falso-positivo de unicidade em updates sem o campo id no payload, sanitizacao de strings vazias para null em colunas opcionais (evitando erros de DATE em nascimento) e validacao explicita de CPF duplicado no ClientesService.
+## [1.0.8] - 2026-09-04
+- Inclusao de links diretos para o prontuario do paciente no agendamento:
+  - No item da timeline (AppointmentCard.tsx): o nome do paciente agora e um link para o prontuario e foi adicionado um botao/link de acesso rapido "Prontuario" ao lado das acoes.
+  - Nos cards da visao geral (AgendamentoOverviewCard.tsx): o nome do paciente e a area de acoes no rodape agora contam com link de acesso rapido ao prontuario.
+  - No modal de agendamento (AgendamentoFormModal.tsx): inclusao do botao de atalho "Prontuario" no cabecalho do modal ao lado do botao de fechar, e link "Ver Prontuario" proximo a identificacao do paciente e endereco.
+- Suporte nativo a abertura com botao do meio do mouse (auxclick / nova aba) atraves de tags de link (Link / <a> com href valido) sem interceptacao de preventDefault, com stopPropagation em eventos de clique para preservar o comportamento dos cards e modais.
+- Estilizacao e refinamento visual dos links e botoes de prontuario no cartao e no modal.
+- Versao atualizada no package.json (root) e backend/composer.json para 1.0.8.
+## [1.0.9] - 2026-09-04
+- Padronizacao e inclusao de colunas de observacoes no Historico do Prontuario (HistoricoSection.tsx):
+  - Conversao do card de Historico de Agendamentos para o padrao de tabela (relatorio-table), incluindo as colunas Data, Servico, Status e Observacoes.
+  - Inclusao da coluna de Observacoes na tabela de Procedimentos Faturados, exibindo as observacoes registradas no agendamento vinculado ou as observacoes da cobranca.
+  - Enriquecimento do backend (FatCobrancaRepository.php e ProntuariosService.php) com metodo findByPet realizando LEFT JOIN com a tabela de agendamentos para carregar age_obs junto aos procedimentos faturados.
+  - Atualizacao da tipagem frontend (types.ts) em HistoricoProcedimento para suportar observacoes e age_obs.
+  - Versao atualizada no package.json (root) e backend/composer.json para 1.0.9.

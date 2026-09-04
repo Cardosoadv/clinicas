@@ -104,10 +104,10 @@ final class ProntuariosServiceTest extends CIUnitTestCase
         $this->pesosRepo->method('findByPet')->willReturn([['id' => 1]]);
         $this->prescricoesRepo->method('findByPet')->willReturn([['id' => 1]]);
         $this->agendamentosRepo->method('findByPet')->willReturn([['id' => 1], ['id' => 2], ['id' => 3]]);
-        $this->fatCobrancaRepo->method('getModel')->willReturn($this->mockCobrancaFindAll([
+        $this->fatCobrancaRepo->method('findByPet')->willReturn([
             ['id' => 1, 'valor' => '100.00'],
             ['id' => 2, 'valor' => '50.50'],
-        ]));
+        ]);
 
         $record = $this->service->getFullRecord(1);
 

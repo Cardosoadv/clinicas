@@ -386,6 +386,23 @@
   color: #1c2333;
 }
 
+.appointment-card__pet--link,
+.agendamento-card__pet--link {
+  text-decoration: none;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+
+.appointment-card__pet--link:hover,
+.agendamento-card__pet--link:hover {
+  color: #1c5fb8;
+  text-decoration: underline;
+}
+
 .appointment-card__tutor,
 .appointment-card__servicos {
   color: #6b7385;
@@ -412,6 +429,30 @@
   border: none;
   cursor: pointer;
   font: inherit;
+}
+
+.appointment-card__prontuario-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid #c8d9f1;
+  background: #fff;
+  color: #1c5fb8;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.appointment-card__prontuario-btn:hover {
+  background: #ebf3fd;
+  border-color: #1c5fb8;
+  color: #0f3f80;
 }
 
 .appointment-card__bill-btn {
@@ -666,4 +707,6 @@
 .agendamento-card__footer {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
 }

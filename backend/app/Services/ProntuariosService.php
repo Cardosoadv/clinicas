@@ -326,11 +326,8 @@ class ProntuariosService extends BaseService
         // Fetch appointments using repository method for service name join
         $appts = $this->agendamentosRepo->findByPet($petId);
 
-        // Fetch billing/procedures
-        $bills = $this->fatCobrancaRepo->getModel()
-            ->where('paciente_id', $petId)
-            ->orderBy('data_servico', 'DESC')
-            ->findAll();
+        // Fetch billing/procedures with appointment observations
+        $bills = $this->fatCobrancaRepo->findByPet($petId);
 
         return [
             'agendamentos' => $appts,

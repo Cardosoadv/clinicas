@@ -104,6 +104,8 @@ export interface HistoricoProcedimento {
   desconto: number | null
   data_servico: string
   status: string
+  observacoes?: string | null
+  age_obs?: string | null
 }
 
 export interface Historico {
