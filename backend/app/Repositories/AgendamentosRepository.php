@@ -35,6 +35,53 @@ class AgendamentosRepository extends BaseRepository
     }
 
     /**
+     * Helper para formatar o endereço completo a partir do paciente ou do tutor
+     *
+     * @param array $row
+     * @return string|null
+     */
+    public function formatEndereco(array $row): ?string
+    {
+        if (!empty($row['paciente_endereco'])) {
+            return trim((string) $row['paciente_endereco']);
+        }
+
+        $parts = [];
+        $rua = $row['tutor_rua'] ?? $row['rua'] ?? null;
+        if (!empty($rua)) {
+            $numero = $row['tutor_numero'] ?? $row['numero'] ?? null;
+            $complemento = $row['tutor_complemento'] ?? $row['complemento'] ?? null;
+            $line = $rua;
+            if (!empty($numero)) {
+                $line .= ', ' . $numero;
+            }
+            if (!empty($complemento)) {
+                $line .= ' - ' . $complemento;
+            }
+            $parts[] = $line;
+        }
+
+        $bairro = $row['tutor_bairro'] ?? $row['bairro'] ?? null;
+        if (!empty($bairro)) {
+            $parts[] = 'Bairro ' . $bairro;
+        }
+
+        $cidade = $row['tutor_cidade'] ?? $row['cidade'] ?? null;
+        $estado = $row['tutor_estado'] ?? $row['estado'] ?? null;
+        $cidadeEstado = array_filter([$cidade, $estado]);
+        if (!empty($cidadeEstado)) {
+            $parts[] = implode('/', $cidadeEstado);
+        }
+
+        $cep = $row['tutor_cep'] ?? $row['cep'] ?? null;
+        if (!empty($cep)) {
+            $parts[] = 'CEP: ' . $cep;
+        }
+
+        return !empty($parts) ? implode(' · ', $parts) : null;
+    }
+
+    /**
      * Search for appointments based on a term.
      *
      * @param string $term
@@ -42,8 +89,8 @@ class AgendamentosRepository extends BaseRepository
      */
     public function search(string $term): array
     {
-        return $this->model
-            ->select('agendamentos.*, pacientes.paciente_nome, pacientes.paciente_avatar, clientes.nome as tutor_nome')
+        $results = $this->model
+            ->select('agendamentos.*, pacientes.paciente_nome, pacientes.paciente_avatar, pacientes.paciente_endereco, clientes.nome as tutor_nome, clientes.rua as tutor_rua, clientes.numero as tutor_numero, clientes.complemento as tutor_complemento, clientes.bairro as tutor_bairro, clientes.cidade as tutor_cidade, clientes.estado as tutor_estado, clientes.cep as tutor_cep')
             ->select("GROUP_CONCAT(CONCAT(IFNULL(servicos.ser_icone, '🐾'), ' ', servicos.ser_nome) SEPARATOR ', ') as age_servico")
             ->select("GROUP_CONCAT(servicos.ser_id) as age_servico_ids")
             ->join('pacientes', 'pacientes.paciente_id = agendamentos.paciente_id')
@@ -56,6 +103,12 @@ class AgendamentosRepository extends BaseRepository
             ->groupEnd()
             ->groupBy('agendamentos.age_id')
             ->findAll(20);
+
+        foreach ($results as &$item) {
+            $item['paciente_endereco'] = $this->formatEndereco($item);
+        }
+
+        return $results;
     }
 
     /**
@@ -66,8 +119,8 @@ class AgendamentosRepository extends BaseRepository
      */
     public function getByDate(string $date): array
     {
-        return $this->model
-            ->select('agendamentos.*, pacientes.paciente_nome, pacientes.paciente_avatar, pacientes.paciente_sexo, clientes.nome as tutor_nome')
+        $results = $this->model
+            ->select('agendamentos.*, pacientes.paciente_nome, pacientes.paciente_avatar, pacientes.paciente_sexo, pacientes.paciente_endereco, clientes.nome as tutor_nome, clientes.rua as tutor_rua, clientes.numero as tutor_numero, clientes.complemento as tutor_complemento, clientes.bairro as tutor_bairro, clientes.cidade as tutor_cidade, clientes.estado as tutor_estado, clientes.cep as tutor_cep')
             ->select("GROUP_CONCAT(CONCAT(IFNULL(servicos.ser_icone, '🐾'), ' ', servicos.ser_nome) SEPARATOR ', ') as age_servico")
             ->select("GROUP_CONCAT(servicos.ser_id) as age_servico_ids")
             ->join('pacientes', 'pacientes.paciente_id = agendamentos.paciente_id')
@@ -78,6 +131,12 @@ class AgendamentosRepository extends BaseRepository
             ->groupBy('agendamentos.age_id')
             ->orderBy('age_hora', 'ASC')
             ->findAll();
+
+        foreach ($results as &$item) {
+            $item['paciente_endereco'] = $this->formatEndereco($item);
+        }
+
+        return $results;
     }
 
     /**
@@ -91,8 +150,8 @@ class AgendamentosRepository extends BaseRepository
         $now = date('Y-m-d');
         $end = date('Y-m-d', strtotime("+$hours hours"));
 
-        return $this->model
-            ->select('agendamentos.*, pacientes.paciente_nome, pacientes.paciente_avatar, clientes.nome as tutor_nome')
+        $results = $this->model
+            ->select('agendamentos.*, pacientes.paciente_nome, pacientes.paciente_avatar, pacientes.paciente_endereco, clientes.nome as tutor_nome, clientes.rua as tutor_rua, clientes.numero as tutor_numero, clientes.complemento as tutor_complemento, clientes.bairro as tutor_bairro, clientes.cidade as tutor_cidade, clientes.estado as tutor_estado, clientes.cep as tutor_cep')
             ->select("GROUP_CONCAT(CONCAT(IFNULL(servicos.ser_icone, '🐾'), ' ', servicos.ser_nome) SEPARATOR ', ') as age_servico")
             ->select("GROUP_CONCAT(servicos.ser_id) as age_servico_ids")
             ->join('pacientes', 'pacientes.paciente_id = agendamentos.paciente_id')
@@ -105,6 +164,12 @@ class AgendamentosRepository extends BaseRepository
             ->orderBy('age_data', 'ASC')
             ->orderBy('age_hora', 'ASC')
             ->findAll(10);
+
+        foreach ($results as &$item) {
+            $item['paciente_endereco'] = $this->formatEndereco($item);
+        }
+
+        return $results;
     }
 
     /**
@@ -117,7 +182,7 @@ class AgendamentosRepository extends BaseRepository
     public function getFiltered(array $filters = []): array
     {
         $builder = $this->model
-            ->select('agendamentos.*, pacientes.paciente_nome, pacientes.paciente_avatar, pacientes.paciente_sexo, clientes.nome as tutor_nome')
+            ->select('agendamentos.*, pacientes.paciente_nome, pacientes.paciente_avatar, pacientes.paciente_sexo, pacientes.paciente_endereco, clientes.nome as tutor_nome, clientes.rua as tutor_rua, clientes.numero as tutor_numero, clientes.complemento as tutor_complemento, clientes.bairro as tutor_bairro, clientes.cidade as tutor_cidade, clientes.estado as tutor_estado, clientes.cep as tutor_cep')
             ->select("GROUP_CONCAT(CONCAT(IFNULL(servicos.ser_icone, '🐾'), ' ', servicos.ser_nome) SEPARATOR ', ') as age_servico")
             ->select("GROUP_CONCAT(servicos.ser_id) as age_servico_ids")
             ->join('pacientes', 'pacientes.paciente_id = agendamentos.paciente_id')
@@ -155,11 +220,17 @@ class AgendamentosRepository extends BaseRepository
             ->groupEnd();
         }
 
-        return $builder
+        $results = $builder
             ->groupBy('agendamentos.age_id')
             ->orderBy('agendamentos.age_data', 'DESC')
             ->orderBy('agendamentos.age_hora', 'DESC')
             ->findAll(300);
+
+        foreach ($results as &$item) {
+            $item['paciente_endereco'] = $this->formatEndereco($item);
+        }
+
+        return $results;
     }
 
     /**

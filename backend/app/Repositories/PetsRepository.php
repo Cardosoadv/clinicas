@@ -70,6 +70,53 @@ class PetsRepository extends BaseRepository
     }
 
     /**
+     * Helper para formatar o endereço completo a partir do paciente ou do tutor
+     *
+     * @param array $row
+     * @return string|null
+     */
+    public function formatEndereco(array $row): ?string
+    {
+        if (!empty($row['paciente_endereco'])) {
+            return trim((string) $row['paciente_endereco']);
+        }
+
+        $parts = [];
+        $rua = $row['tutor_rua'] ?? $row['rua'] ?? null;
+        if (!empty($rua)) {
+            $numero = $row['tutor_numero'] ?? $row['numero'] ?? null;
+            $complemento = $row['tutor_complemento'] ?? $row['complemento'] ?? null;
+            $line = $rua;
+            if (!empty($numero)) {
+                $line .= ', ' . $numero;
+            }
+            if (!empty($complemento)) {
+                $line .= ' - ' . $complemento;
+            }
+            $parts[] = $line;
+        }
+
+        $bairro = $row['tutor_bairro'] ?? $row['bairro'] ?? null;
+        if (!empty($bairro)) {
+            $parts[] = 'Bairro ' . $bairro;
+        }
+
+        $cidade = $row['tutor_cidade'] ?? $row['cidade'] ?? null;
+        $estado = $row['tutor_estado'] ?? $row['estado'] ?? null;
+        $cidadeEstado = array_filter([$cidade, $estado]);
+        if (!empty($cidadeEstado)) {
+            $parts[] = implode('/', $cidadeEstado);
+        }
+
+        $cep = $row['tutor_cep'] ?? $row['cep'] ?? null;
+        if (!empty($cep)) {
+            $parts[] = 'CEP: ' . $cep;
+        }
+
+        return !empty($parts) ? implode(' · ', $parts) : null;
+    }
+
+    /**
      * Optimized search for lookups/autocomplete
      *
      * @param string|null $term
@@ -77,7 +124,21 @@ class PetsRepository extends BaseRepository
      */
     public function findForLookup(?string $term = null): array
     {
-        $query = $this->model->select('pacientes.paciente_id, pacientes.paciente_nome, pacientes.paciente_avatar, clientes.nome as pet_resp_nome, clientes.telefones as pet_resp_tel')
+        $query = $this->model->select('
+            pacientes.paciente_id,
+            pacientes.paciente_nome,
+            pacientes.paciente_avatar,
+            pacientes.paciente_endereco,
+            clientes.nome as pet_resp_nome,
+            clientes.telefones as pet_resp_tel,
+            clientes.rua as tutor_rua,
+            clientes.numero as tutor_numero,
+            clientes.complemento as tutor_complemento,
+            clientes.bairro as tutor_bairro,
+            clientes.cidade as tutor_cidade,
+            clientes.estado as tutor_estado,
+            clientes.cep as tutor_cep
+        ')
             ->join('clientes', 'clientes.id = pacientes.cliente_id', 'left');
 
         if ($term) {
@@ -88,7 +149,13 @@ class PetsRepository extends BaseRepository
             ->groupEnd();
         }
 
-        return $query->findAll(100);
+        $results = $query->findAll(100);
+
+        foreach ($results as &$item) {
+            $item['paciente_endereco'] = $this->formatEndereco($item);
+        }
+
+        return $results;
     }
 
     /**
@@ -112,11 +179,17 @@ class PetsRepository extends BaseRepository
      */
     public function findById(int $id): ?array
     {
-        return $this->model
-            ->select('pacientes.*, clientes.nome as pet_resp_nome, clientes.telefones as pet_resp_tel, clientes.cpf as pet_resp_cpf')
+        $item = $this->model
+            ->select('pacientes.*, clientes.nome as pet_resp_nome, clientes.telefones as pet_resp_tel, clientes.cpf as pet_resp_cpf, clientes.rua as tutor_rua, clientes.numero as tutor_numero, clientes.complemento as tutor_complemento, clientes.bairro as tutor_bairro, clientes.cidade as tutor_cidade, clientes.estado as tutor_estado, clientes.cep as tutor_cep')
             ->join('clientes', 'clientes.id = pacientes.cliente_id', 'left')
             ->where('pacientes.paciente_id', $id)
             ->first();
+
+        if ($item) {
+            $item['paciente_endereco'] = $this->formatEndereco($item);
+        }
+
+        return $item;
     }
 
     /**

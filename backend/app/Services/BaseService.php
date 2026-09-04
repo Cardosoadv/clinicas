@@ -54,7 +54,9 @@ abstract class BaseService
             $db->transComplete();
 
             if ($db->transStatus() === false || !$id) {
-                return $this->error('Erro ao criar registro');
+                $errors = method_exists($this->repository, 'getModel') ? $this->repository->getModel()->errors() : [];
+                $msg = !empty($errors) ? implode(' ', $errors) : 'Erro ao criar registro';
+                return $this->error($msg);
             }
 
             return $this->success('Registro criado com sucesso', ['id' => $id]);
@@ -72,7 +74,9 @@ abstract class BaseService
             $db->transComplete();
 
             if ($db->transStatus() === false || !$result) {
-                return $this->error('Erro ao atualizar registro');
+                $errors = method_exists($this->repository, 'getModel') ? $this->repository->getModel()->errors() : [];
+                $msg = !empty($errors) ? implode(' ', $errors) : 'Erro ao atualizar registro';
+                return $this->error($msg);
             }
 
             return $this->success('Registro atualizado com sucesso');

@@ -17,6 +17,41 @@ class ClientesRepository extends BaseRepository
     }
 
     /**
+     * Sanitiza campos vazios para null para evitar erros de tipo no banco (ex: DATE nascimento com '')
+     *
+     * @param array $data
+     * @return array
+     */
+    private function sanitizeData(array $data): array
+    {
+        $nullableFields = [
+            'nascimento', 'cpf', 'cnpj', 'rg', 'apelido',
+            'razao_social', 'observacoes', 'telefones', 'emails',
+            'rua', 'numero', 'complemento', 'bairro', 'cep',
+            'cidade', 'estado', 'vendedor', 'empresa',
+            'origem_cliente', 'ultima_compra', 'exportacao',
+        ];
+
+        foreach ($nullableFields as $field) {
+            if (array_key_exists($field, $data) && is_string($data[$field]) && trim($data[$field]) === '') {
+                $data[$field] = null;
+            }
+        }
+
+        return $data;
+    }
+
+    public function create(array $data): int
+    {
+        return parent::create($this->sanitizeData($data));
+    }
+
+    public function update(int $id, array $data): bool
+    {
+        return parent::update($id, $this->sanitizeData($data));
+    }
+
+    /**
      * Find a client by CPF, since it should be unique.
      *
      * @param string $cpf

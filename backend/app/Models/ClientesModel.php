@@ -80,10 +80,7 @@ class ClientesModel extends Model
     protected $deletedField  = 'deleted_at';
 
     // Validation
-    protected $validationRules      = [
-        'nome' => 'required|min_length[3]|max_length[255]',
-        'cpf'  => 'permit_empty|is_unique[clientes.cpf,id,{id}]',
-    ];
+    protected $validationRules      = [];
     protected $validationMessages   = [];
     protected $skipValidation       = false;
     protected $cleanValidationRules = true;

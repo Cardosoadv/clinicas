@@ -1,7 +1,8 @@
-import { X } from 'lucide-react'
+import { MapPin, X } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { ApiError } from '../../lib/api'
 import { fetchEquipeOptions, fetchServicosOptions } from './api'
+import { fetchPacienteById } from '../pacientes/api'
 import { PacientePicker } from '../../components/PacientePicker'
 import type { AgendamentoFormValues, AgendamentoStatus, EquipeOption, ServicoOption } from './types'
 import { useEscapeKey } from '../../hooks/useEscapeKey'
@@ -10,6 +11,7 @@ interface AgendamentoFormModalProps {
   title: string
   initialValues: AgendamentoFormValues
   initialPacienteNome?: string
+  initialPacienteEndereco?: string | null
   onClose: () => void
   onSubmit: (values: AgendamentoFormValues) => Promise<void>
 }
@@ -27,6 +29,7 @@ export function AgendamentoFormModal({
   title,
   initialValues,
   initialPacienteNome,
+  initialPacienteEndereco,
   onClose,
   onSubmit,
 }: AgendamentoFormModalProps) {
@@ -34,6 +37,8 @@ export function AgendamentoFormModal({
   const [servicos, setServicos] = useState<ServicoOption[]>([])
   const [equipe, setEquipe] = useState<EquipeOption[]>([])
   const [pacienteError, setPacienteError] = useState<string | undefined>(undefined)
+  const [pacienteEndereco, setPacienteEndereco] = useState<string | null>(initialPacienteEndereco ?? null)
+  const [isLoadingEndereco, setIsLoadingEndereco] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -45,6 +50,32 @@ export function AgendamentoFormModal({
       .then((res) => setEquipe(res.data ?? []))
       .catch(() => setEquipe([]))
   }, [])
+
+  useEffect(() => {
+    if (initialPacienteEndereco !== undefined && initialPacienteEndereco !== null) {
+      setPacienteEndereco(initialPacienteEndereco)
+    }
+  }, [initialPacienteEndereco])
+
+  useEffect(() => {
+    if (!values.paciente_id) {
+      setPacienteEndereco(null)
+      return
+    }
+    if (pacienteEndereco !== null) return
+
+    setIsLoadingEndereco(true)
+    fetchPacienteById(values.paciente_id)
+      .then((res) => {
+        setPacienteEndereco(res.data?.paciente_endereco || '')
+      })
+      .catch(() => {
+        setPacienteEndereco('')
+      })
+      .finally(() => {
+        setIsLoadingEndereco(false)
+      })
+  }, [values.paciente_id, pacienteEndereco])
 
   function toggleServico(id: string) {
     setValues((prev) => ({
@@ -104,15 +135,42 @@ export function AgendamentoFormModal({
           )}
 
           <div className="form-grid">
-            <label className="form-field form-field--full">
-              Paciente *
+            <div className="form-field form-field--full">
+              <label htmlFor="agendamento-paciente-input">Paciente *</label>
               <PacientePicker
+                id="agendamento-paciente-input"
                 value={values.paciente_id}
                 displayName={initialPacienteNome}
-                onChange={(pacienteId) => setValues((prev) => ({ ...prev, paciente_id: pacienteId }))}
+                onChange={(pacienteId, _pacienteNome, paciente) => {
+                  setValues((prev) => ({ ...prev, paciente_id: pacienteId }))
+                  if (!pacienteId) {
+                    setPacienteEndereco(null)
+                  } else if (paciente) {
+                    setPacienteEndereco(paciente.paciente_endereco || '')
+                  } else {
+                    setIsLoadingEndereco(true)
+                    fetchPacienteById(pacienteId)
+                      .then((res) => setPacienteEndereco(res.data?.paciente_endereco || ''))
+                      .catch(() => setPacienteEndereco(''))
+                      .finally(() => setIsLoadingEndereco(false))
+                  }
+                }}
                 error={pacienteError}
               />
-            </label>
+              {values.paciente_id && (
+                <div className="paciente-endereco-label">
+                  <MapPin size={13} className="paciente-endereco-label__icon" />
+                  <span className="paciente-endereco-label__text">
+                    <strong>Endereço:</strong>{' '}
+                    {isLoadingEndereco
+                      ? 'Carregando endereço...'
+                      : pacienteEndereco
+                      ? pacienteEndereco
+                      : 'Não informado'}
+                  </span>
+                </div>
+              )}
+            </div>
 
             <div className="form-field form-field--full">
               Serviços *

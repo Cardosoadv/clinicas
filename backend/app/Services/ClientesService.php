@@ -29,6 +29,30 @@ class ClientesService extends BaseService
         $this->comunicacaoRepo = $comunicacaoRepo ?? new ComunicacaoRepository();
     }
 
+    public function create(array $data): array
+    {
+        if (!empty($data['cpf'])) {
+            $existing = $this->clientesRepo->findByCpf($data['cpf']);
+            if ($existing) {
+                return $this->error('Este CPF já está cadastrado para outro cliente.');
+            }
+        }
+
+        return parent::create($data);
+    }
+
+    public function update(int $id, array $data): array
+    {
+        if (!empty($data['cpf'])) {
+            $existing = $this->clientesRepo->findByCpf($data['cpf']);
+            if ($existing && (int) $existing['id'] !== $id) {
+                return $this->error('Este CPF já está cadastrado para outro cliente.');
+            }
+        }
+
+        return parent::update($id, $data);
+    }
+
     /**
      * Lista os pacientes vinculados a um cliente.
      */

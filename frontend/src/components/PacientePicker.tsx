@@ -5,14 +5,15 @@ import { useClickOutside } from '../hooks/useClickOutside'
 import { PacienteAvatar } from './PacienteAvatar'
 
 interface PacientePickerProps {
+  id?: string
   value: string
   displayName?: string
-  onChange: (pacienteId: string, pacienteNome: string) => void
+  onChange: (pacienteId: string, pacienteNome: string, paciente?: PacienteLookup) => void
   error?: string
 }
 
 /** Combobox de busca de paciente pelo nome (busca no servidor, com debounce). */
-export function PacientePicker({ value, displayName, onChange, error }: PacientePickerProps) {
+export function PacientePicker({ id, value, displayName, onChange, error }: PacientePickerProps) {
   const [query, setQuery] = useState(displayName ?? '')
   const [results, setResults] = useState<PacienteLookup[]>([])
   const [isOpen, setIsOpen] = useState(false)
@@ -43,7 +44,7 @@ export function PacientePicker({ value, displayName, onChange, error }: Paciente
   }, [query])
 
   function handleSelect(paciente: PacienteLookup) {
-    onChange(String(paciente.paciente_id), paciente.paciente_nome)
+    onChange(String(paciente.paciente_id), paciente.paciente_nome, paciente)
     setQuery(paciente.paciente_nome)
     setIsOpen(false)
   }
@@ -51,13 +52,14 @@ export function PacientePicker({ value, displayName, onChange, error }: Paciente
   return (
     <div className="cliente-picker" ref={containerRef}>
       <input
+        id={id}
         type="text"
         placeholder="Buscar paciente pelo nome..."
         value={query}
         onChange={(event) => {
           setQuery(event.target.value)
           setIsOpen(true)
-          if (value) onChange('', '')
+          if (value) onChange('', '', undefined)
         }}
         onFocus={() => setIsOpen(true)}
         autoComplete="off"

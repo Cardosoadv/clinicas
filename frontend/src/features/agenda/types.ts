@@ -24,6 +24,7 @@ export interface Agendamento {
   paciente_avatar?: string | null
   paciente_sexo?: string | null
   tutor_nome?: string
+  paciente_endereco?: string | null
   age_servico?: string
   age_servico_ids?: string
 }
@@ -54,6 +55,7 @@ export interface PacienteLookup {
   paciente_avatar: string | null
   pet_resp_nome?: string | null
   pet_resp_tel?: string | null
+  paciente_endereco?: string | null
 }
 
 export interface AgendamentoFormValues {

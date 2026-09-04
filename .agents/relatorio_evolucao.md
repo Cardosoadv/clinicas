@@ -1354,3 +1354,10 @@ Correção do tamanho da tela e overflow horizontal em dispositivos móveis.
  -   D u p l i c a c a o   d a   e t a p a   d e   d e p l o y   v i a   F T P   n o   a r q u i v o   . g i t h u b / w o r k f l o w s / d e p l o y . y m l   p a r a   s u p o r t a r   s i n c r o n i z a c a o   e m   d u a s   p a s t a s   d e   d e s t i n o   n a   H o s t i n g e r . 
  -   V e r s a o   a t u a l i z a d a   n o   p a c k a g e . j s o n   e   b a c k e n d / c o m p o s e r . j s o n   p a r a   1 . 0 . 6 .  
  
+## [1.0.7] - 2026-09-04
+- Inclusao de exibicao do endereco completo do paciente no modal de agendamento (AgendamentoFormModal.tsx) logo abaixo do campo de selecao de Paciente.
+- Atualizacao do componente PacientePicker.tsx para repassar os dados completos do paciente selecionado (incluindo endereco) via callback onChange.
+- Enriquecimento dos endpoints e repositorios backend (PetsRepository.php e AgendamentosRepository.php) para incluir e formatar os campos de endereco do paciente ou tutor (rua, numero, complemento, bairro, cidade, estado e CEP) nas buscas para autocomplete (findForLookup), busca por id e listagens da agenda.
+- Adicao de endpoint frontend fetchPacienteById em pacientes/api.ts para carregar o endereco dinamicamente caso o agendamento ja venha com paciente pre-selecionado sem endereco em cache.
+- Estilizacao moderna e responsiva da label de endereco (.paciente-endereco-label) com icone MapPin e animacao de fade-in.
+- Versao atualizada no package.json (root) e backend/composer.json para 1.0.7.- Correcao no endpoint de atualizacao de clientes (PUT /clientes/:id): remocao da regra estatica is_unique do ClientesModel que causava falso-positivo de unicidade em updates sem o campo id no payload, sanitizacao de strings vazias para null em colunas opcionais (evitando erros de DATE em nascimento) e validacao explicita de CPF duplicado no ClientesService.

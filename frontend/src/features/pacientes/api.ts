@@ -19,6 +19,10 @@ export function fetchPacientesPainel(): Promise<ApiEnvelope<PacientesPainel>> {
   return api.get<PacientesPainel>('/pacientes/painel')
 }
 
+export function fetchPacienteById(id: number | string): Promise<ApiEnvelope<Paciente>> {
+  return api.get<Paciente>(`/pacientes/${id}`)
+}
+
 function toPayload(values: PacienteFormValues): Record<string, unknown> {
   return { ...values, cliente_id: Number(values.cliente_id) }
 }
