@@ -21,11 +21,17 @@ class Servicos extends BaseController
     }
 
     /**
-     * API: Retorna a lista completa de serviços.
+     * API: Retorna a lista completa de serviços ou filtrada por termo/status.
      */
     public function getAll(): ResponseInterface
     {
-        $data = $this->service->getAll();
+        $search = $this->request->getGet('search');
+        $status = $this->request->getGet('status');
+
+        $searchTerm = is_string($search) && trim($search) !== '' ? trim($search) : null;
+        $statusFilter = is_string($status) && trim($status) !== '' ? trim($status) : null;
+
+        $data = $this->service->getAllFiltered($searchTerm, $statusFilter);
         return $this->apiResponse(['status' => 'success', 'data' => $data]);
     }
 

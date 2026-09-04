@@ -5,6 +5,7 @@ import { ApiError } from '../../lib/api'
 import { fetchEquipeOptions, fetchServicosOptions } from './api'
 import { fetchPacienteById } from '../pacientes/api'
 import { PacientePicker } from '../../components/PacientePicker'
+import { ServicosPicker } from './ServicosPicker'
 import type { AgendamentoFormValues, AgendamentoStatus, EquipeOption, ServicoOption } from './types'
 import { useEscapeKey } from '../../hooks/useEscapeKey'
 
@@ -77,15 +78,6 @@ export function AgendamentoFormModal({
         setIsLoadingEndereco(false)
       })
   }, [values.paciente_id, pacienteEndereco])
-
-  function toggleServico(id: string) {
-    setValues((prev) => ({
-      ...prev,
-      age_servico: prev.age_servico.includes(id)
-        ? prev.age_servico.filter((item) => item !== id)
-        : [...prev.age_servico, id],
-    }))
-  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -200,20 +192,15 @@ export function AgendamentoFormModal({
             </div>
 
             <div className="form-field form-field--full">
-              Serviços *
-              <div className="servico-checklist">
-                {servicos.length === 0 && <p className="cliente-picker__hint">Nenhum serviço cadastrado.</p>}
-                {servicos.map((servico) => (
-                  <label key={servico.ser_id} className="servico-checklist__item">
-                    <input
-                      type="checkbox"
-                      checked={values.age_servico.includes(String(servico.ser_id))}
-                      onChange={() => toggleServico(String(servico.ser_id))}
-                    />
-                    {servico.ser_icone || '🐾'} {servico.ser_nome}
-                  </label>
-                ))}
-              </div>
+              <label htmlFor="agendamento-servicos-input">Serviços *</label>
+              <ServicosPicker
+                id="agendamento-servicos-input"
+                selectedIds={values.age_servico}
+                servicos={servicos}
+                onChange={(nextIds) => {
+                  setValues((prev) => ({ ...prev, age_servico: nextIds }))
+                }}
+              />
             </div>
 
             <label className="form-field">

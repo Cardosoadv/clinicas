@@ -1380,3 +1380,14 @@ Correção do tamanho da tela e overflow horizontal em dispositivos móveis.
 ## [1.0.10] - 2026-09-04
 - Substituicao do campo livre de Porte por componente select com opcoes padronizadas (Mini, Pequeno, Medio, Grande, Gigante) no modal de cadastro/edicao de pacientes (PacienteFormModal.tsx), mantendo compatibilidade e exibicao dinamica caso o paciente possua outro valor customizado ja cadastrado.
 - Versao atualizada no package.json (root) e backend/composer.json para 1.0.10.
+
+## [1.0.11] - 2026-09-04
+- Implementacao de pesquisa e filtros no modulo de Servicos:
+  - Backend: Adicao de busca por termo (ser_nome e ser_descricao) e filtro por status (ser_status) em ServicosRepository::getFiltered, ServicosService::getAllFiltered e controlador Servicos::getAll lendo parametros de query string.
+  - Frontend: Adicao de barra de pesquisa com input debounce, icone e botao de limpeza, abas de filtro por status (Todos, Ativos, Inativos), cards estatisticos e sincronizacao com query params da URL na ServicosListPage.tsx.
+  - Busca rapida global (TopbarSearch.tsx): Inclusao dos servicos cadastrados no combobox rapido do topo da aplicacao, permitindo localiza-los e navegar diretamente para o modulo com o filtro aplicado.
+- Implementacao de selecao multipla de servicos com autocompletar na Agenda:
+  - Criacao do componente ServicosPicker.tsx com suporte a autocompletar, navegacao por teclado, busca em tempo real e visualizacao de servicos selecionados em formato de tags/chips removiveis.
+  - Atualizacao do AgendamentoFormModal.tsx substituindo a checklist fixa anterior pelo novo componente de autocompletar, mantendo suporte nativo a multiplos servicos por agendamento.
+- Versao atualizada no package.json (root) e backend/composer.json para 1.0.11.
+  - Integracao da busca do modulo de servicos diretamente na topbar: TopbarSearch detecta a rota /servicos, ajusta o placeholder ('Buscar servicos por nome ou descricao...'), sincroniza bidirecionalmente com ?search= da pagina e permite filtragem instantanea da listagem sem redundancia de campo de busca no corpo da tela.

@@ -42,6 +42,20 @@ class ServicosService extends BaseService
     }
 
     /**
+     * Retorna a lista de serviços com suporte a busca e filtros.
+     *
+     * @param string|null $search
+     * @param string|null $status
+     * @return array
+     */
+    public function getAllFiltered(?string $search = null, ?string $status = null): array
+    {
+        /** @var ServicosRepository $repo */
+        $repo = $this->repository;
+        return $repo->getFiltered($search, $status);
+    }
+
+    /**
      * Retorna os detalhes de um serviço, incluindo os produtos vinculados.
      *
      * @param int $id

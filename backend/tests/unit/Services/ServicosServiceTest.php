@@ -37,6 +37,17 @@ final class ServicosServiceTest extends CIUnitTestCase
         $this->assertSame([['ser_id' => 1, 'ser_nome' => 'Banho']], $this->service->getAllActive());
     }
 
+    public function testGetAllFilteredDelegatesToRepository(): void
+    {
+        $this->servicosRepo->expects($this->once())
+            ->method('getFiltered')
+            ->with('Tosa', 'Ativo')
+            ->willReturn([['ser_id' => 2, 'ser_nome' => 'Tosa Higiênica']]);
+
+        $result = $this->service->getAllFiltered('Tosa', 'Ativo');
+        $this->assertSame([['ser_id' => 2, 'ser_nome' => 'Tosa Higiênica']], $result);
+    }
+
     public function testGetServiceWithProductsReturnsNullWhenServiceNotFound(): void
     {
         $this->servicosRepo->method('findById')->willReturn(null);

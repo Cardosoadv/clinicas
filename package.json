@@ -1,6 +1,6 @@
 {
   "name": "clinicas",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Sistema de Gestão Veterinária",
   "private": true,
   "scripts": {

@@ -502,8 +502,194 @@
   color: #6b7385;
 }
 
-/* ---------- Checklist de serviços (modal) ---------- */
+/* ---------- Autocompletar e seleção múltipla de serviços (modal) ---------- */
 
+.servicos-picker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.servicos-picker__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.servico-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8f6f0;
+  border: 1px solid #dfd8cb;
+  border-radius: 999px;
+  padding: 4px 10px 4px 8px;
+  font-size: 12px;
+  color: #1c2333;
+  font-weight: 500;
+  animation: fadeInChip 0.15s ease-out;
+}
+
+@keyframes fadeInChip {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.servico-chip__icon {
+  font-size: 14px;
+}
+
+.servico-chip__name {
+  font-weight: 600;
+}
+
+.servico-chip__price {
+  font-size: 11px;
+  color: #6b7385;
+  background: #ede8dc;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.servico-chip__remove {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #8c8577;
+  border-radius: 50%;
+  transition: color 0.15s, background 0.15s;
+}
+
+.servico-chip__remove:hover {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.servicos-picker__input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #e7e3da;
+  border-radius: 7px;
+  padding: 0 10px;
+  transition: border-color 0.15s, outline 0.15s;
+}
+
+.servicos-picker__input-wrapper:focus-within {
+  outline: 2px solid #c99a3f;
+  outline-offset: 1px;
+}
+
+.servicos-picker__search-icon {
+  color: #8c8577;
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.servicos-picker__input-wrapper input {
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 8px 0;
+  color: #1c2333;
+}
+
+.servicos-picker__clear-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+}
+
+.servicos-picker__clear-btn:hover {
+  color: #1c2333;
+}
+
+.servicos-picker__dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid #e7e3da;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(20, 25, 40, 0.12);
+  padding: 6px;
+  z-index: 40;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.servicos-picker__hint {
+  margin: 0;
+  padding: 10px;
+  font-size: 12px;
+  color: #6b7385;
+  text-align: center;
+}
+
+.servicos-picker__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #1c2333;
+  transition: background 0.12s;
+}
+
+.servicos-picker__option:hover,
+.servicos-picker__option--active {
+  background: #f6f4ef;
+}
+
+.servicos-picker__option-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.servicos-picker__option-icon {
+  font-size: 15px;
+}
+
+.servicos-picker__option-name {
+  font-weight: 500;
+}
+
+.servicos-picker__option-price {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555e6d;
+}
+
+/* Mantido para compatibilidade */
 .servico-checklist {
   display: flex;
   flex-wrap: wrap;

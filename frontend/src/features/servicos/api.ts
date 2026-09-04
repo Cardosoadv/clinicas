@@ -1,8 +1,12 @@
 import { api, type ApiEnvelope } from '../../lib/api'
 import type { BomItem, ProdutoOption, Servico, ServicoComProdutos, ServicoFormValues } from './types'
 
-export function fetchServicos(): Promise<ApiEnvelope<Servico[]>> {
-  return api.get<Servico[]>('/servicos')
+export function fetchServicos(search?: string, status?: string): Promise<ApiEnvelope<Servico[]>> {
+  const params = new URLSearchParams()
+  if (search && search.trim()) params.set('search', search.trim())
+  if (status && status.trim()) params.set('status', status.trim())
+  const query = params.toString()
+  return api.get<Servico[]>(`/servicos${query ? `?${query}` : ''}`)
 }
 
 export function fetchProdutoOptions(): Promise<ApiEnvelope<ProdutoOption[]>> {
