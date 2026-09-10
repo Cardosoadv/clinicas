@@ -9,6 +9,7 @@ use App\Models\FatCobrancaModel;
 use App\Models\FatNotaModel;
 use App\Models\PetsModel;
 use App\Services\FatService;
+use App\Services\LojasService;
 use CodeIgniter\HTTP\ResponseInterface;
 
 /**
@@ -49,12 +50,15 @@ class Publico extends BaseController
         $fatService = new FatService();
         $qrCodeData = base_url("api/v1/publico/recibos/{$id}/{$hash}");
 
+        $lojasService = new LojasService();
+
         $data = [
             'nota'            => $nota,
             'cobranca'        => $cobranca,
             'paciente'        => $pet,
             'tutor_nome'      => $tutor['nome'] ?? 'Não informado',
             'tutor_telefone'  => $tutor['telefones'] ?? 'Não informado',
+            'loja'            => $lojasService->getPrincipal(),
             'qr_code_base64'  => $fatService->generateQR($qrCodeData),
         ];
 

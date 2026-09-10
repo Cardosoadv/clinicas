@@ -1,6 +1,6 @@
-import { FileText, Plus } from 'lucide-react'
+import { FileText, Plus, Printer } from 'lucide-react'
 import { useState } from 'react'
-import { createNota } from '../api'
+import { createNota, reciboImprimirUrl } from '../api'
 import { useFaturamento } from '../FaturamentoContext'
 import { NotaFormModal } from '../NotaFormModal'
 
@@ -49,6 +49,15 @@ export function NotasSection() {
                   <span>Valor: {formatCurrency(nota.valor)}</span>
                   <span>Emissão: {formatDate(nota.data_emissao)}</span>
                 </div>
+              </div>
+              <div className="record-card__actions">
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  onClick={() => window.open(reciboImprimirUrl(nota.id, nota.hash), '_blank', 'noopener,noreferrer')}
+                >
+                  <Printer size={16} /> Imprimir
+                </button>
               </div>
             </div>
           ))}

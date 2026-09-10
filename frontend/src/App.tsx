@@ -11,6 +11,7 @@ import { ConfiguracoesPage } from './features/configuracoes/ConfiguracoesPage'
 import { EquipeListPage } from './features/equipe/EquipeListPage'
 import { EstoqueListPage } from './features/estoque/EstoqueListPage'
 import { FaturamentoLayout } from './features/faturamento/FaturamentoLayout'
+import { ReciboPublicoPage } from './features/faturamento/ReciboPublicoPage'
 import { CobrancasSection } from './features/faturamento/sections/CobrancasSection'
 import { DashboardSection as FaturamentoDashboardSection } from './features/faturamento/sections/DashboardSection'
 import { DespesasSection } from './features/faturamento/sections/DespesasSection'
@@ -38,6 +39,7 @@ function App() {
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/recibo/:id/:hash" element={<ReciboPublicoPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AdminLayout />}>

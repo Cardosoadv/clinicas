@@ -51,6 +51,25 @@ export interface Nota {
   created_at: string
 }
 
+export interface ReciboPublicoLoja {
+  nome: string
+  cnpj: string | null
+  telefone: string | null
+  endereco: string | null
+  cidade: string | null
+  estado: string | null
+}
+
+export interface ReciboPublicoData {
+  nota: Nota
+  cobranca: (Cobranca & { desconto: number }) | null
+  paciente: { paciente_nome: string } | null
+  tutor_nome: string
+  tutor_telefone: string
+  loja: ReciboPublicoLoja | null
+  qr_code_base64: string
+}
+
 export interface DashboardKpis {
   receitas: number
   despesas: number
