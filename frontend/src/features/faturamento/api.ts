@@ -6,6 +6,7 @@ import type {
   LancamentosData,
   Nota,
   NotaFormValues,
+  ReciboPublicoData,
 } from './types'
 
 export function fetchDashboard(): Promise<ApiEnvelope<DashboardData>> {
@@ -84,4 +85,13 @@ export function createNota(values: NotaFormValues): Promise<ApiEnvelope> {
     descricao: values.descricao,
     valor: Number(values.valor) || 0,
   })
+}
+
+export function reciboImprimirUrl(id: number, hash: string): string {
+  const basePath = window.APP_CONFIG?.BASE_PATH || ''
+  return `${basePath}/recibo/${id}/${hash}`
+}
+
+export function fetchReciboPublico(id: number, hash: string): Promise<ApiEnvelope<ReciboPublicoData>> {
+  return api.get<ReciboPublicoData>(`/publico/recibos/${id}/${hash}`)
 }
