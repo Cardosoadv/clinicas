@@ -149,6 +149,17 @@
 }
 
 @media print {
+  /*
+   * ReportTemplate.css aplica "body * { visibility: hidden }" globalmente
+   * (todo o CSS da SPA sai em um único bundle). Essa regra de classe tem
+   * especificidade maior que o seletor de elemento "body *" e reexibe a
+   * página do recibo independente da ordem de importação dos CSS.
+   */
+  .recibo-publico,
+  .recibo-publico * {
+    visibility: visible;
+  }
+
   .recibo-publico {
     background: none;
     padding: 0;
