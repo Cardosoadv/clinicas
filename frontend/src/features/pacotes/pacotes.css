@@ -1,17 +1,24 @@
 .pacote-item-row {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 70px 100px auto;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) 70px 100px auto;
   gap: 8px;
   align-items: center;
 }
 
 .pacote-item-row select,
 .pacote-item-row input {
+  min-width: 0;
   font: inherit;
   font-size: 13px;
   padding: 8px 10px;
   border-radius: 7px;
   border: 1px solid #e7e3da;
+}
+
+@media (max-width: 640px) {
+  .pacote-item-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .pacote-detalhes-section {
