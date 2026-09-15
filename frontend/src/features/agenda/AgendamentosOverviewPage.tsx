@@ -238,6 +238,7 @@ export function AgendamentosOverviewPage() {
           initialValues={agendamentoToFormValues(modal.agendamento)}
           initialPacienteNome={modal.agendamento.paciente_nome}
           initialPacienteEndereco={modal.agendamento.paciente_endereco}
+          isEditing
           onClose={() => setModal(null)}
           onSubmit={(values) => handleUpdate(modal.agendamento.age_id, values)}
         />

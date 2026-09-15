@@ -281,6 +281,7 @@ export function AgendaPage() {
           initialValues={modalInitialValues}
           initialPacienteNome={modalInitialPacienteNome}
           initialPacienteEndereco={modal?.mode === 'edit' ? modal.agendamento.paciente_endereco : undefined}
+          isEditing={modal?.mode === 'edit'}
           onClose={() => setModal(null)}
           onSubmit={(values) =>
             modal.mode === 'edit' ? handleUpdate(modal.agendamento.age_id, values) : handleCreate(values)
