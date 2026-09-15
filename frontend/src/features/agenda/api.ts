@@ -55,6 +55,7 @@ function toPayload(values: AgendamentoFormValues): Record<string, unknown> {
     ...values,
     paciente_id: Number(values.paciente_id),
     age_veterinario: values.age_veterinario ? Number(values.age_veterinario) : null,
+    age_recorrencia_fim: values.age_recorrencia_fim || null,
   }
 }
 

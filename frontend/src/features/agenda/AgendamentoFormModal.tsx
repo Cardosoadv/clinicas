@@ -6,7 +6,13 @@ import { fetchEquipeOptions, fetchServicosOptions } from './api'
 import { fetchPacienteById } from '../pacientes/api'
 import { PacientePicker } from '../../components/PacientePicker'
 import { ServicosPicker } from './ServicosPicker'
-import type { AgendamentoFormValues, AgendamentoStatus, EquipeOption, ServicoOption } from './types'
+import type {
+  AgendamentoFormValues,
+  AgendamentoRecorrencia,
+  AgendamentoStatus,
+  EquipeOption,
+  ServicoOption,
+} from './types'
 import { useEscapeKey } from '../../hooks/useEscapeKey'
 
 interface AgendamentoFormModalProps {
@@ -14,6 +20,7 @@ interface AgendamentoFormModalProps {
   initialValues: AgendamentoFormValues
   initialPacienteNome?: string
   initialPacienteEndereco?: string | null
+  isEditing?: boolean
   onClose: () => void
   onSubmit: (values: AgendamentoFormValues) => Promise<void>
 }
@@ -27,11 +34,19 @@ const statusOptions: { value: AgendamentoStatus; label: string }[] = [
   { value: 'cancelado', label: 'Cancelado' },
 ]
 
+const recorrenciaOptions: { value: AgendamentoRecorrencia; label: string }[] = [
+  { value: 'nenhuma', label: 'Não repetir' },
+  { value: 'semanal', label: 'Semanal' },
+  { value: 'quinzenal', label: 'Quinzenal' },
+  { value: 'mensal', label: 'Mensal' },
+]
+
 export function AgendamentoFormModal({
   title,
   initialValues,
   initialPacienteNome,
   initialPacienteEndereco,
+  isEditing = false,
   onClose,
   onSubmit,
 }: AgendamentoFormModalProps) {
@@ -252,6 +267,40 @@ export function AgendamentoFormModal({
                 ))}
               </select>
             </label>
+
+            {!isEditing && (
+              <label className="form-field">
+                Repetir
+                <select
+                  value={values.age_recorrencia}
+                  onChange={(event) =>
+                    setValues((prev) => ({
+                      ...prev,
+                      age_recorrencia: event.target.value as AgendamentoRecorrencia,
+                      age_recorrencia_fim: event.target.value === 'nenhuma' ? '' : prev.age_recorrencia_fim,
+                    }))
+                  }
+                >
+                  {recorrenciaOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {!isEditing && values.age_recorrencia !== 'nenhuma' && (
+              <label className="form-field">
+                Repetir até
+                <input
+                  type="date"
+                  value={values.age_recorrencia_fim}
+                  min={values.age_data}
+                  onChange={(event) => setValues((prev) => ({ ...prev, age_recorrencia_fim: event.target.value }))}
+                />
+              </label>
+            )}
 
             <label className="form-field form-field--full">
               Veterinário responsável

@@ -58,6 +58,8 @@ export interface PacienteLookup {
   paciente_endereco?: string | null
 }
 
+export type AgendamentoRecorrencia = 'nenhuma' | 'semanal' | 'quinzenal' | 'mensal'
+
 export interface AgendamentoFormValues {
   paciente_id: string
   age_servico: string[]
@@ -68,6 +70,8 @@ export interface AgendamentoFormValues {
   age_lembrete: string
   age_status: AgendamentoStatus
   age_veterinario: string
+  age_recorrencia: AgendamentoRecorrencia
+  age_recorrencia_fim: string
 }
 
 export function emptyAgendamentoForm(data: string, hora: string): AgendamentoFormValues {
@@ -81,6 +85,8 @@ export function emptyAgendamentoForm(data: string, hora: string): AgendamentoFor
     age_lembrete: '',
     age_status: 'pendente',
     age_veterinario: '',
+    age_recorrencia: 'nenhuma',
+    age_recorrencia_fim: '',
   }
 }
 
@@ -153,5 +159,7 @@ export function agendamentoToFormValues(agendamento: Agendamento): AgendamentoFo
     age_lembrete: agendamento.age_lembrete ?? '',
     age_status: agendamento.age_status,
     age_veterinario: agendamento.age_veterinario ? String(agendamento.age_veterinario) : '',
+    age_recorrencia: 'nenhuma',
+    age_recorrencia_fim: '',
   }
 }
