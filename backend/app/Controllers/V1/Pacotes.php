@@ -46,6 +46,31 @@ class Pacotes extends BaseController
     }
 
     /**
+     * API: Atualiza os dados de um pacote existente.
+     */
+    public function update(int $id): ResponseInterface
+    {
+        $data = $this->getRequestData();
+
+        // Decodifica JSON dos itens se vier como string (ex.: multipart/form-data)
+        if (isset($data['itens_json'])) {
+            $data['itens'] = json_decode((string) $data['itens_json'], true);
+        }
+
+        $result = $this->service->updatePacote($id, $data);
+        return $this->apiResponse($result);
+    }
+
+    /**
+     * API: Remove um pacote do sistema.
+     */
+    public function delete(int $id): ResponseInterface
+    {
+        $result = $this->service->deletePacote($id);
+        return $this->apiResponse($result);
+    }
+
+    /**
      * API: Exibe os detalhes de um pacote.
      */
     public function show(int $id): ResponseInterface
