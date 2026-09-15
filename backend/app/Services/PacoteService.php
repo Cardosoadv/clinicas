@@ -130,6 +130,104 @@ class PacoteService extends BaseService
     }
 
     /**
+     * Atualiza os dados de um pacote existente.
+     * Os itens só podem ser alterados enquanto o pacote estiver "Pendente",
+     * pois a partir da ativação eles passam a ter uso (quantidade_usada) registrado.
+     *
+     * @param int $id
+     * @param array $data
+     * @return array
+     */
+    public function updatePacote(int $id, array $data): array
+    {
+        $pacote = $this->pacotesRepo->findById($id);
+        if (!$pacote) {
+            return $this->error('Pacote não encontrado.');
+        }
+
+        $allowedStatus = ['Pendente', 'Ativo', 'Esgotado', 'Cancelado'];
+
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        try {
+            $updateData = [];
+
+            if (array_key_exists('nome', $data) && $data['nome'] !== null && $data['nome'] !== '') {
+                $updateData['nome'] = $data['nome'];
+            }
+            if (array_key_exists('data_validade', $data)) {
+                $updateData['data_validade'] = !empty($data['data_validade']) ? $data['data_validade'] : null;
+            }
+            if (array_key_exists('observacoes', $data)) {
+                $updateData['observacoes'] = $data['observacoes'];
+            }
+            if (array_key_exists('status', $data) && in_array($data['status'], $allowedStatus, true)) {
+                $updateData['status'] = $data['status'];
+            }
+            if ($pacote['tipo'] === 'Crédito' && array_key_exists('saldo_valor', $data)) {
+                $updateData['saldo_valor'] = (float) $data['saldo_valor'];
+            }
+
+            if (!empty($updateData)) {
+                $this->pacotesRepo->update($id, $updateData);
+            }
+
+            if ($pacote['tipo'] === 'Serviços' && array_key_exists('itens', $data)) {
+                if ($pacote['status'] !== 'Pendente') {
+                    throw new Exception('Não é possível alterar os itens de um pacote que já está ativo ou possui uso registrado.');
+                }
+                $this->itensRepo->sync($id, (array) $data['itens']);
+            }
+
+            $db->transComplete();
+
+            if ($db->transStatus() === false) {
+                return $this->error('Erro ao atualizar o pacote.');
+            }
+
+            return $this->success('Pacote atualizado com sucesso.');
+        } catch (Exception $e) {
+            $db->transRollback();
+            return $this->error('Erro: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Exclui um pacote, desde que ele ainda não possua uso registrado.
+     * Pacotes já utilizados devem ser cancelados (status "Cancelado") em vez
+     * de excluídos, para preservar o histórico financeiro.
+     *
+     * @param int $id
+     * @return array
+     */
+    public function deletePacote(int $id): array
+    {
+        $pacote = $this->pacotesRepo->findById($id);
+        if (!$pacote) {
+            return $this->error('Pacote não encontrado.');
+        }
+
+        if (!empty($this->usoRepo->getPorPacote($id))) {
+            return $this->error('Não é possível excluir um pacote que já possui uso registrado. Cancele o pacote em vez de excluí-lo.');
+        }
+
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        $this->itensRepo->deleteByPacote($id);
+        $this->pacotesRepo->delete($id);
+
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return $this->error('Erro ao excluir o pacote.');
+        }
+
+        return $this->success('Pacote excluído com sucesso.');
+    }
+
+    /**
      * Ativa um pacote (chamado quando a cobrança vinculada é paga).
      *
      * @param int $pacoteId

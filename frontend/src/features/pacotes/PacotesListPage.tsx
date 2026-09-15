@@ -1,9 +1,10 @@
-import { Eye, Package2, Plus } from 'lucide-react'
+import { Eye, Package2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { PacienteAvatar } from '../../components/PacienteAvatar'
 import { ApiError } from '../../lib/api'
-import { fetchPacotes } from './api'
+import { deletePacote, fetchPacotes } from './api'
 import { PacoteDetailsModal } from './PacoteDetailsModal'
+import { PacoteEditModal } from './PacoteEditModal'
 import { PacoteFormModal } from './PacoteFormModal'
 import './pacotes.css'
 import type { Pacote, PacoteStatus } from './types'
@@ -27,6 +28,7 @@ export function PacotesListPage() {
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [detailsId, setDetailsId] = useState<number | null>(null)
+  const [editId, setEditId] = useState<number | null>(null)
 
   function load() {
     setIsLoading(true)
@@ -40,6 +42,16 @@ export function PacotesListPage() {
   useEffect(() => {
     load()
   }, [])
+
+  async function handleDelete(pacote: Pacote) {
+    if (!window.confirm(`Excluir o pacote "${pacote.nome}"?`)) return
+    try {
+      await deletePacote(pacote.id)
+      load()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Erro ao excluir pacote.')
+    }
+  }
 
   const stats = useMemo(() => {
     const list = pacotes ?? []
@@ -155,6 +167,22 @@ export function PacotesListPage() {
                 >
                   <Eye size={16} />
                 </button>
+                <button
+                  type="button"
+                  className="icon-btn"
+                  aria-label="Editar pacote"
+                  onClick={() => setEditId(pacote.id)}
+                >
+                  <Pencil size={16} />
+                </button>
+                <button
+                  type="button"
+                  className="icon-btn icon-btn--danger"
+                  aria-label="Excluir pacote"
+                  onClick={() => void handleDelete(pacote)}
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
             </div>
           ))}
@@ -171,6 +199,17 @@ export function PacotesListPage() {
       )}
 
       {detailsId !== null && <PacoteDetailsModal pacoteId={detailsId} onClose={() => setDetailsId(null)} />}
+
+      {editId !== null && (
+        <PacoteEditModal
+          pacoteId={editId}
+          onClose={() => setEditId(null)}
+          onSaved={() => {
+            setEditId(null)
+            load()
+          }}
+        />
+      )}
     </div>
   )
 }

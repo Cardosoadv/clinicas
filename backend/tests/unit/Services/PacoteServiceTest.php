@@ -118,6 +118,85 @@ final class PacoteServiceTest extends CIUnitTestCase
         $this->assertStringContainsString('db error', $result['message']);
     }
 
+    public function testUpdatePacoteReturnsErrorWhenNotFound(): void
+    {
+        $this->pacotesRepo->method('findById')->willReturn(null);
+
+        $result = $this->service->updatePacote(99, ['nome' => 'Novo nome']);
+
+        $this->assertSame('error', $result['status']);
+        $this->assertSame('Pacote não encontrado.', $result['message']);
+    }
+
+    public function testUpdatePacoteUpdatesBasicFields(): void
+    {
+        $this->pacotesRepo->method('findById')->willReturn(['id' => 1, 'tipo' => 'Serviços', 'status' => 'Ativo']);
+        $this->pacotesRepo->expects($this->once())
+            ->method('update')
+            ->with(1, $this->callback(static fn (array $d): bool => $d['nome'] === 'Pacote Renomeado' && $d['status'] === 'Cancelado'))
+            ->willReturn(true);
+
+        $result = $this->service->updatePacote(1, ['nome' => 'Pacote Renomeado', 'status' => 'Cancelado']);
+
+        $this->assertSame('success', $result['status']);
+    }
+
+    public function testUpdatePacoteSyncsItensWhenPendente(): void
+    {
+        $this->pacotesRepo->method('findById')->willReturn(['id' => 1, 'tipo' => 'Serviços', 'status' => 'Pendente']);
+        $this->itensRepo->expects($this->once())
+            ->method('sync')
+            ->with(1, [['servico_id' => 5, 'quantidade' => 2, 'valor_unitario' => 50]]);
+
+        $result = $this->service->updatePacote(1, ['itens' => [['servico_id' => 5, 'quantidade' => 2, 'valor_unitario' => 50]]]);
+
+        $this->assertSame('success', $result['status']);
+    }
+
+    public function testUpdatePacoteReturnsErrorWhenChangingItensOfActivePacote(): void
+    {
+        $this->pacotesRepo->method('findById')->willReturn(['id' => 1, 'tipo' => 'Serviços', 'status' => 'Ativo']);
+        $this->itensRepo->expects($this->never())->method('sync');
+
+        $result = $this->service->updatePacote(1, ['itens' => [['servico_id' => 5, 'quantidade' => 2]]]);
+
+        $this->assertSame('error', $result['status']);
+    }
+
+    public function testDeletePacoteReturnsErrorWhenNotFound(): void
+    {
+        $this->pacotesRepo->method('findById')->willReturn(null);
+
+        $result = $this->service->deletePacote(99);
+
+        $this->assertSame('error', $result['status']);
+        $this->assertSame('Pacote não encontrado.', $result['message']);
+    }
+
+    public function testDeletePacoteReturnsErrorWhenUsoRegistrado(): void
+    {
+        $this->pacotesRepo->method('findById')->willReturn(['id' => 1, 'tipo' => 'Serviços', 'status' => 'Esgotado']);
+        $this->usoRepo->method('getPorPacote')->willReturn([['id' => 1]]);
+        $this->pacotesRepo->expects($this->never())->method('delete');
+
+        $result = $this->service->deletePacote(1);
+
+        $this->assertSame('error', $result['status']);
+    }
+
+    public function testDeletePacoteRemovesItensAndPacoteWhenNoUso(): void
+    {
+        $this->pacotesRepo->method('findById')->willReturn(['id' => 1, 'tipo' => 'Serviços', 'status' => 'Pendente']);
+        $this->usoRepo->method('getPorPacote')->willReturn([]);
+
+        $this->itensRepo->expects($this->once())->method('deleteByPacote')->with(1);
+        $this->pacotesRepo->expects($this->once())->method('delete')->with(1)->willReturn(true);
+
+        $result = $this->service->deletePacote(1);
+
+        $this->assertSame('success', $result['status']);
+    }
+
     public function testActivatePacoteDelegatesToModelUpdate(): void
     {
         $this->pacotesRepo->method('getModel')->willReturn($this->mockPacoteModelUpdate());

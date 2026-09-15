@@ -76,3 +76,31 @@ export function emptyPacoteForm(): PacoteFormValues {
     vencimento: new Date().toISOString().slice(0, 10),
   }
 }
+
+export interface PacoteEditFormValues {
+  nome: string
+  status: PacoteStatus
+  data_validade: string
+  observacoes: string
+  saldo_valor: string
+  itens: ItemFormRow[]
+}
+
+export function pacoteToEditFormValues(pacote: PacoteDetalhes): PacoteEditFormValues {
+  return {
+    nome: pacote.nome,
+    status: pacote.status,
+    data_validade: pacote.data_validade ?? '',
+    observacoes: pacote.observacoes ?? '',
+    saldo_valor: String(pacote.saldo_valor ?? 0),
+    itens:
+      pacote.itens.length > 0
+        ? pacote.itens.map((item) => ({
+            servico_id: item.servico_id ? String(item.servico_id) : '',
+            item_nome: item.item_nome ?? '',
+            quantidade: String(item.quantidade_total),
+            valor_unitario: String(item.valor_unitario),
+          }))
+        : [{ servico_id: '', item_nome: '', quantidade: '1', valor_unitario: '' }],
+  }
+}

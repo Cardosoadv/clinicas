@@ -1,5 +1,5 @@
 import { api, type ApiEnvelope } from '../../lib/api'
-import type { Pacote, PacoteDetalhes, PacoteFormValues } from './types'
+import type { Pacote, PacoteDetalhes, PacoteEditFormValues, PacoteFormValues, PacoteTipo } from './types'
 
 export function fetchPacotes(): Promise<ApiEnvelope<Pacote[]>> {
   return api.get<Pacote[]>('/pacotes')
@@ -38,4 +38,34 @@ export function createPacote(values: PacoteFormValues): Promise<ApiEnvelope> {
   }
 
   return api.post('/pacotes', payload)
+}
+
+export function updatePacote(id: number, values: PacoteEditFormValues, tipo: PacoteTipo): Promise<ApiEnvelope> {
+  const payload: Record<string, unknown> = {
+    nome: values.nome,
+    status: values.status,
+    data_validade: values.data_validade || null,
+    observacoes: values.observacoes || null,
+  }
+
+  if (tipo === 'Crédito') {
+    payload.saldo_valor = values.saldo_valor ? Number(values.saldo_valor) : 0
+  }
+
+  if (tipo === 'Serviços' && values.status === 'Pendente') {
+    payload.itens = values.itens
+      .filter((item) => item.servico_id || item.item_nome)
+      .map((item) => ({
+        servico_id: item.servico_id ? Number(item.servico_id) : null,
+        item_nome: item.item_nome || null,
+        quantidade: item.quantidade ? Number(item.quantidade) : 1,
+        valor_unitario: item.valor_unitario ? Number(item.valor_unitario) : 0,
+      }))
+  }
+
+  return api.put(`/pacotes/${id}`, payload)
+}
+
+export function deletePacote(id: number): Promise<ApiEnvelope> {
+  return api.delete(`/pacotes/${id}`)
 }
