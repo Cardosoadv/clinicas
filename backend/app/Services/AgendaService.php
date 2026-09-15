@@ -123,41 +123,33 @@ class AgendaService extends BaseService
 
             $grupoId = bin2hex(random_bytes(16)); // UUID simplificado para agrupar as instâncias
             $data['age_grupo_id'] = $grupoId;
-            
+
             // Define data limite: 1 ano por padrão se não informado
             $dataFimStr = !empty($data['age_recorrencia_fim']) ? $data['age_recorrencia_fim'] : date('Y-m-d', strtotime('+1 year'));
-            $currentDateStr = $data['age_data'];
-            
-            $intervalMap = [
-                'semanal' => '+1 week',
-                'quinzenal' => '+2 weeks',
-                'mensal' => '+1 month'
-            ];
-            $interval = $intervalMap[$recorrencia] ?? '+1 week';
-            
-            $count = 0;
             $maxIterations = 52; // Máximo de 1 ano para recorrência semanal
+
+            $dates = $this->buildRecurrenceDates($data['age_data'], $recorrencia, $dataFimStr, $maxIterations);
+
+            $count = 0;
             $firstId = null;
 
-            while ($currentDateStr <= $dataFimStr && $count < $maxIterations) {
+            foreach ($dates as $currentDateStr) {
                 $iterationData = $data;
                 $iterationData['age_data'] = $currentDateStr;
-                
+
                 $id = $this->repository->create($iterationData);
                 if (!$id) {
                     throw new \Exception("Erro ao criar instância da recorrência na data $currentDateStr");
                 }
-                
+
                 if ($count === 0) {
                     $firstId = $id;
                 }
-                
+
                 if (!empty($services)) {
                     $this->agendamentosRepository->syncServices((int) $id, $services);
                 }
-                
-                // Avança a data para a próxima ocorrência
-                $currentDateStr = date('Y-m-d', strtotime($interval, strtotime($currentDateStr)));
+
                 $count++;
             }
 
@@ -167,8 +159,8 @@ class AgendaService extends BaseService
                 return $this->error("Erro ao processar série de agendamentos no banco de dados.");
             }
 
-            $msg = $count > 1 
-                ? "Série de agendamentos criada com sucesso ($count ocorrências)." 
+            $msg = $count > 1
+                ? "Série de agendamentos criada com sucesso ($count ocorrências)."
                 : "Agendamento criado com sucesso.";
 
             return $this->success($msg, ['id' => $firstId]);
@@ -176,6 +168,99 @@ class AgendaService extends BaseService
         } catch (\Exception $e) {
             return $this->error("Erro ao criar recorrência: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Cria uma série de agendamentos recorrentes limitada por quantidade de
+     * ocorrências (em vez de uma data-fim), agrupando-os pelo mesmo
+     * `age_grupo_id`. Usado para pré-agendar as sessões de um pacote.
+     *
+     * @param array $data
+     * @param int $quantidade
+     * @return array
+     */
+    public function createRecorrenciaPorQuantidade(array $data, int $quantidade): array
+    {
+        $services = (array) ($data['age_servico'] ?? []);
+        unset($data['age_servico']);
+
+        if ($quantidade < 1) {
+            return $this->error('Quantidade de ocorrências inválida.');
+        }
+
+        $recorrencia = $data['age_recorrencia'] ?? 'semanal';
+
+        try {
+            $db = \Config\Database::connect();
+            $db->transStart();
+
+            $grupoId = bin2hex(random_bytes(16));
+            $data['age_grupo_id'] = $grupoId;
+
+            // A quantidade de ocorrências manda; usamos uma data-fim bem distante
+            // apenas como salvaguarda contra periodicidades inválidas.
+            $limiteMaximo = date('Y-m-d', strtotime('+5 years', strtotime($data['age_data'])));
+            $dates = $this->buildRecurrenceDates($data['age_data'], $recorrencia, $limiteMaximo, $quantidade);
+
+            $ids = [];
+
+            foreach ($dates as $currentDateStr) {
+                $iterationData = $data;
+                $iterationData['age_data'] = $currentDateStr;
+
+                $id = $this->repository->create($iterationData);
+                if (!$id) {
+                    throw new \Exception("Erro ao criar instância da recorrência na data $currentDateStr");
+                }
+
+                $ids[] = $id;
+
+                if (!empty($services)) {
+                    $this->agendamentosRepository->syncServices((int) $id, $services);
+                }
+            }
+
+            $db->transComplete();
+
+            if ($db->transStatus() === false) {
+                return $this->error("Erro ao processar série de agendamentos no banco de dados.");
+            }
+
+            return $this->success('Série de agendamentos criada com sucesso.', ['ids' => $ids, 'grupo_id' => $grupoId]);
+
+        } catch (\Exception $e) {
+            return $this->error("Erro ao criar recorrência: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Gera a lista de datas de uma série recorrente, respeitando a
+     * periodicidade, a data-fim e um limite máximo de ocorrências.
+     *
+     * @param string $startDate
+     * @param string $recorrencia
+     * @param string $endDate
+     * @param int $maxOccurrences
+     * @return string[]
+     */
+    protected function buildRecurrenceDates(string $startDate, string $recorrencia, string $endDate, int $maxOccurrences): array
+    {
+        $intervalMap = [
+            'semanal' => '+1 week',
+            'quinzenal' => '+2 weeks',
+            'mensal' => '+1 month'
+        ];
+        $interval = $intervalMap[$recorrencia] ?? '+1 week';
+
+        $dates = [];
+        $currentDateStr = $startDate;
+
+        while ($currentDateStr <= $endDate && count($dates) < $maxOccurrences) {
+            $dates[] = $currentDateStr;
+            $currentDateStr = date('Y-m-d', strtotime($interval, strtotime($currentDateStr)));
+        }
+
+        return $dates;
     }
 
     /**

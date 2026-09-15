@@ -19,6 +19,7 @@ class PacoteService extends BaseService
     protected PacoteItensRepository $itensRepo;
     protected FatCobrancaRepository $cobrancaRepo;
     protected PacoteUsoRepository $usoRepo;
+    protected ?AgendaService $agendaService;
 
     /**
      * Injeta as dependências do serviço de pacotes.
@@ -27,18 +28,24 @@ class PacoteService extends BaseService
      * @param PacoteItensRepository|null $itensRepo
      * @param FatCobrancaRepository|null $cobrancaRepo
      * @param PacoteUsoRepository|null $usoRepo
+     * @param AgendaService|null $agendaService
      */
     public function __construct(
         ?PacotesRepository $pacotesRepo = null,
         ?PacoteItensRepository $itensRepo = null,
         ?FatCobrancaRepository $cobrancaRepo = null,
-        ?PacoteUsoRepository $usoRepo = null
+        ?PacoteUsoRepository $usoRepo = null,
+        ?AgendaService $agendaService = null
     ) {
         $this->pacotesRepo = $pacotesRepo ?? new PacotesRepository();
         $this->repository   = $this->pacotesRepo;
         $this->itensRepo    = $itensRepo    ?? new PacoteItensRepository();
         $this->cobrancaRepo = $cobrancaRepo ?? new FatCobrancaRepository();
         $this->usoRepo      = $usoRepo      ?? new PacoteUsoRepository();
+        // Não instanciamos AgendaService por padrão aqui para evitar dependência
+        // circular (AgendaService também instancia PacoteService por padrão).
+        // É criado sob demanda em gerarPreAgendamentos() quando não injetado.
+        $this->agendaService = $agendaService;
     }
 
     /**
@@ -115,17 +122,87 @@ class PacoteService extends BaseService
 
             $this->cobrancaRepo->create($cobrancaRepoData);
 
+            // 4. Pré-agendar as sessões do pacote na Agenda, se solicitado
+            $preagendado = false;
+            if ($pacoteData['tipo'] === 'Serviços' && !empty($data['preagendar']) && !empty($data['itens'])) {
+                $this->gerarPreAgendamentos((int) $pacoteId, (int) $data['paciente_id'], $data['itens'], $data);
+                $preagendado = true;
+            }
+
             $db->transComplete();
 
             if ($db->transStatus() === false) {
                 return $this->error('Erro ao processar criação do pacote.');
             }
 
-            return $this->success('Pacote criado com sucesso. Aguardando pagamento da cobrança para ativação.', ['id' => $pacoteId]);
+            $msg = $preagendado
+                ? 'Pacote criado com sucesso e sessões pré-agendadas na Agenda. Aguardando pagamento da cobrança para ativação.'
+                : 'Pacote criado com sucesso. Aguardando pagamento da cobrança para ativação.';
+
+            return $this->success($msg, ['id' => $pacoteId]);
 
         } catch (Exception $e) {
             $db->transRollback();
             return $this->error('Erro: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Gera, para cada item do pacote com serviço vinculado ao catálogo, uma
+     * série de agendamentos na Agenda (um por unidade de quantidade),
+     * espaçados conforme a periodicidade escolhida a partir da data inicial.
+     *
+     * Reaproveita AgendaService::createRecorrenciaPorQuantidade(), que já
+     * implementa a geração de ocorrências recorrentes agrupadas por
+     * `age_grupo_id`, limitando-as pela quantidade de sessões do item em vez
+     * de por data-fim.
+     *
+     * Itens sem `servico_id` (nome livre, sem vínculo com o catálogo) são
+     * ignorados, pois não é possível agendá-los na Agenda.
+     *
+     * @param int $pacoteId
+     * @param int $pacienteId
+     * @param array $itens
+     * @param array $data
+     * @return void
+     * @throws Exception
+     */
+    protected function gerarPreAgendamentos(int $pacoteId, int $pacienteId, array $itens, array $data): void
+    {
+        $dataInicial = $data['preagendar_data_inicial'] ?? null;
+        $periodicidade = $data['preagendar_periodicidade'] ?? null;
+
+        if (empty($dataInicial) || !in_array($periodicidade, ['semanal', 'mensal'], true)) {
+            throw new Exception('Informe a data inicial e a periodicidade (semanal ou mensal) para pré-agendar as sessões do pacote.');
+        }
+
+        $agendaService = $this->agendaService ?? new AgendaService();
+
+        foreach ($itens as $item) {
+            $servicoId = $item['servico_id'] ?? null;
+            if (empty($servicoId)) {
+                continue;
+            }
+
+            $quantidade = (int) ($item['quantidade'] ?? 1);
+            if ($quantidade < 1) {
+                continue;
+            }
+
+            $result = $agendaService->createRecorrenciaPorQuantidade([
+                'paciente_id'     => $pacienteId,
+                'age_data'        => $dataInicial,
+                'age_hora'        => '09:00:00',
+                'age_duracao'     => '30',
+                'age_status'      => 'pendente',
+                'age_recorrencia' => $periodicidade,
+                'age_servico'     => [(int) $servicoId],
+                'age_obs'         => 'Pré-agendado automaticamente pelo pacote #' . $pacoteId,
+            ], $quantidade);
+
+            if ($result['status'] !== 'success') {
+                throw new Exception($result['message'] ?? 'Erro ao gerar os agendamentos do pacote.');
+            }
         }
     }
 

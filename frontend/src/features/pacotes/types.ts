@@ -49,6 +49,8 @@ export interface ItemFormRow {
   valor_unitario: string
 }
 
+export type PacotePreagendarPeriodicidade = 'semanal' | 'mensal'
+
 export interface PacoteFormValues {
   paciente_id: string
   nome: string
@@ -60,6 +62,9 @@ export interface PacoteFormValues {
   desconto: string
   forma_pagamento: string
   vencimento: string
+  preagendar: boolean
+  preagendar_data_inicial: string
+  preagendar_periodicidade: PacotePreagendarPeriodicidade
 }
 
 export function emptyPacoteForm(): PacoteFormValues {
@@ -74,6 +79,9 @@ export function emptyPacoteForm(): PacoteFormValues {
     desconto: '0',
     forma_pagamento: 'Cartão de Crédito',
     vencimento: new Date().toISOString().slice(0, 10),
+    preagendar: false,
+    preagendar_data_inicial: new Date().toISOString().slice(0, 10),
+    preagendar_periodicidade: 'semanal',
   }
 }
 

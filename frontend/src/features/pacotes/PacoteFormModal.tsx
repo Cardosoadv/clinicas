@@ -5,7 +5,7 @@ import { ApiError } from '../../lib/api'
 import { fetchServicos } from '../servicos/api'
 import type { Servico } from '../servicos/types'
 import { createPacote } from './api'
-import type { ItemFormRow, PacoteFormValues } from './types'
+import type { ItemFormRow, PacoteFormValues, PacotePreagendarPeriodicidade } from './types'
 import { emptyPacoteForm } from './types'
 import { useEscapeKey } from '../../hooks/useEscapeKey'
 
@@ -199,6 +199,45 @@ export function PacoteFormModal({ onClose, onSaved }: PacoteFormModalProps) {
                 <p className="page-subtitle" style={{ marginTop: 8 }}>
                   Total dos itens: {totalItens.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </p>
+              )}
+
+              <label className="form-field form-field--full" style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
+                <input
+                  type="checkbox"
+                  checked={values.preagendar}
+                  onChange={(event) => setValues((prev) => ({ ...prev, preagendar: event.target.checked }))}
+                />
+                📅 Pré-agendar sessões na Agenda
+              </label>
+
+              {values.preagendar && (
+                <div className="form-grid">
+                  <label className="form-field">
+                    Data inicial
+                    <input
+                      type="date"
+                      value={values.preagendar_data_inicial}
+                      onChange={(event) =>
+                        setValues((prev) => ({ ...prev, preagendar_data_inicial: event.target.value }))
+                      }
+                    />
+                  </label>
+                  <label className="form-field">
+                    Periodicidade
+                    <select
+                      value={values.preagendar_periodicidade}
+                      onChange={(event) =>
+                        setValues((prev) => ({
+                          ...prev,
+                          preagendar_periodicidade: event.target.value as PacotePreagendarPeriodicidade,
+                        }))
+                      }
+                    >
+                      <option value="semanal">Semanal</option>
+                      <option value="mensal">Mensal</option>
+                    </select>
+                  </label>
+                </div>
               )}
             </div>
           ) : (

@@ -148,6 +148,64 @@ final class AgendaServiceTest extends CIUnitTestCase
         $this->assertStringContainsString('Erro ao criar recorrência', $result['message']);
     }
 
+    public function testCreateRecorrenciaPorQuantidadeCreatesOneInstancePerUnit(): void
+    {
+        $this->agendamentosRepository->expects($this->exactly(4))
+            ->method('create')
+            ->willReturnOnConsecutiveCalls(200, 201, 202, 203);
+        $this->agendamentosRepository->expects($this->exactly(4))->method('syncServices');
+
+        $result = $this->service->createRecorrenciaPorQuantidade([
+            'paciente_id'     => 1,
+            'age_data'        => '2026-08-01',
+            'age_recorrencia' => 'semanal',
+            'age_servico'     => [7],
+        ], 4);
+
+        $this->assertSame('success', $result['status']);
+        $this->assertSame([200, 201, 202, 203], $result['ids']);
+    }
+
+    public function testCreateRecorrenciaPorQuantidadeStopsAtQuantidadeNotAtOneYear(): void
+    {
+        // Mensal x 24 ocorrências ultrapassaria o limite de 1 ano usado pela
+        // recorrência normal, mas aqui é a quantidade que deve mandar.
+        $this->agendamentosRepository->expects($this->exactly(24))
+            ->method('create')
+            ->willReturn(1);
+
+        $result = $this->service->createRecorrenciaPorQuantidade([
+            'paciente_id'     => 1,
+            'age_data'        => '2026-01-01',
+            'age_recorrencia' => 'mensal',
+        ], 24);
+
+        $this->assertSame('success', $result['status']);
+        $this->assertCount(24, $result['ids']);
+    }
+
+    public function testCreateRecorrenciaPorQuantidadeReturnsErrorForInvalidQuantidade(): void
+    {
+        $this->agendamentosRepository->expects($this->never())->method('create');
+
+        $result = $this->service->createRecorrenciaPorQuantidade(['age_data' => '2026-08-01'], 0);
+
+        $this->assertSame('error', $result['status']);
+    }
+
+    public function testCreateRecorrenciaPorQuantidadeReturnsErrorWhenInstanceCreationFails(): void
+    {
+        $this->agendamentosRepository->method('create')->willReturn(0);
+
+        $result = $this->service->createRecorrenciaPorQuantidade([
+            'age_data'        => '2026-08-01',
+            'age_recorrencia' => 'semanal',
+        ], 3);
+
+        $this->assertSame('error', $result['status']);
+        $this->assertStringContainsString('Erro ao criar recorrência', $result['message']);
+    }
+
     public function testUpdateSyncsServicesOnSuccess(): void
     {
         $this->agendamentosRepository->expects($this->once())

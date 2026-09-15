@@ -10,6 +10,7 @@ use App\Repositories\FatCobrancaRepository;
 use App\Repositories\PacoteItensRepository;
 use App\Repositories\PacotesRepository;
 use App\Repositories\PacoteUsoRepository;
+use App\Services\AgendaService;
 use App\Services\PacoteService;
 use CodeIgniter\Test\CIUnitTestCase;
 use Exception;
@@ -23,6 +24,7 @@ final class PacoteServiceTest extends CIUnitTestCase
     private PacoteItensRepository $itensRepo;
     private FatCobrancaRepository $cobrancaRepo;
     private PacoteUsoRepository $usoRepo;
+    private AgendaService $agendaService;
     private PacoteService $service;
 
     protected function setUp(): void
@@ -33,8 +35,15 @@ final class PacoteServiceTest extends CIUnitTestCase
         $this->itensRepo = $this->createMock(PacoteItensRepository::class);
         $this->cobrancaRepo = $this->createMock(FatCobrancaRepository::class);
         $this->usoRepo = $this->createMock(PacoteUsoRepository::class);
+        $this->agendaService = $this->createMock(AgendaService::class);
 
-        $this->service = new PacoteService($this->pacotesRepo, $this->itensRepo, $this->cobrancaRepo, $this->usoRepo);
+        $this->service = new PacoteService(
+            $this->pacotesRepo,
+            $this->itensRepo,
+            $this->cobrancaRepo,
+            $this->usoRepo,
+            $this->agendaService
+        );
     }
 
     private function mockPacoteModelUpdate(): PacoteModel
@@ -106,6 +115,127 @@ final class PacoteServiceTest extends CIUnitTestCase
         ]);
 
         $this->assertSame('success', $result['status']);
+    }
+
+    public function testCreatePacoteWithPreagendarGeneratesAgendamentosPerItem(): void
+    {
+        $this->pacotesRepo->method('create')->willReturn(10);
+        $this->cobrancaRepo->method('create')->willReturn(1);
+
+        $this->agendaService->expects($this->exactly(2))
+            ->method('createRecorrenciaPorQuantidade')
+            ->willReturnCallback(function (array $data, int $quantidade) {
+                static $calls = 0;
+                $calls++;
+
+                if ($calls === 1) {
+                    $this->assertSame(1, $data['paciente_id']);
+                    $this->assertSame('2026-09-01', $data['age_data']);
+                    $this->assertSame('semanal', $data['age_recorrencia']);
+                    $this->assertSame([5], $data['age_servico']);
+                    $this->assertSame(4, $quantidade);
+                } else {
+                    $this->assertSame([6], $data['age_servico']);
+                    $this->assertSame(2, $quantidade);
+                }
+
+                return ['status' => 'success', 'ids' => [1], 'grupo_id' => 'x'];
+            });
+
+        $result = $this->service->createPacote([
+            'paciente_id'              => 1,
+            'nome'                     => 'Pacote Banho x4',
+            'valor_total'              => 250,
+            'itens'                    => [
+                ['servico_id' => 5, 'quantidade' => 4, 'valor_unitario' => 50],
+                ['servico_id' => 6, 'quantidade' => 2, 'valor_unitario' => 30],
+            ],
+            'preagendar'               => true,
+            'preagendar_data_inicial'  => '2026-09-01',
+            'preagendar_periodicidade' => 'semanal',
+        ]);
+
+        $this->assertSame('success', $result['status']);
+        $this->assertStringContainsString('pré-agendadas', $result['message']);
+    }
+
+    public function testCreatePacoteWithoutPreagendarDoesNotCallAgendaService(): void
+    {
+        $this->pacotesRepo->method('create')->willReturn(10);
+        $this->cobrancaRepo->method('create')->willReturn(1);
+        $this->agendaService->expects($this->never())->method('createRecorrenciaPorQuantidade');
+
+        $result = $this->service->createPacote([
+            'paciente_id' => 1,
+            'nome'        => 'Pacote Banho x4',
+            'valor_total' => 250,
+            'itens'       => [['servico_id' => 5, 'quantidade' => 4, 'valor_unitario' => 50]],
+        ]);
+
+        $this->assertSame('success', $result['status']);
+    }
+
+    public function testCreatePacoteSkipsItemsWithoutServicoIdWhenPreagendando(): void
+    {
+        $this->pacotesRepo->method('create')->willReturn(10);
+        $this->cobrancaRepo->method('create')->willReturn(1);
+
+        $this->agendaService->expects($this->once())
+            ->method('createRecorrenciaPorQuantidade')
+            ->with($this->callback(static fn (array $d): bool => $d['age_servico'] === [5]), 4)
+            ->willReturn(['status' => 'success', 'ids' => [1], 'grupo_id' => 'x']);
+
+        $result = $this->service->createPacote([
+            'paciente_id'              => 1,
+            'nome'                     => 'Pacote Misto',
+            'valor_total'              => 250,
+            'itens'                    => [
+                ['servico_id' => 5, 'quantidade' => 4, 'valor_unitario' => 50],
+                ['servico_id' => null, 'item_nome' => 'Item livre', 'quantidade' => 3, 'valor_unitario' => 20],
+            ],
+            'preagendar'               => true,
+            'preagendar_data_inicial'  => '2026-09-01',
+            'preagendar_periodicidade' => 'semanal',
+        ]);
+
+        $this->assertSame('success', $result['status']);
+    }
+
+    public function testCreatePacoteReturnsErrorWhenPreagendarMissingRequiredFields(): void
+    {
+        $this->pacotesRepo->method('create')->willReturn(10);
+        $this->agendaService->expects($this->never())->method('createRecorrenciaPorQuantidade');
+
+        $result = $this->service->createPacote([
+            'paciente_id' => 1,
+            'nome'        => 'Pacote Banho x4',
+            'valor_total' => 250,
+            'itens'       => [['servico_id' => 5, 'quantidade' => 4, 'valor_unitario' => 50]],
+            'preagendar'  => true,
+        ]);
+
+        $this->assertSame('error', $result['status']);
+    }
+
+    public function testCreatePacoteReturnsErrorWhenAgendaServiceFailsToGenerateAgendamentos(): void
+    {
+        $this->pacotesRepo->method('create')->willReturn(10);
+
+        $this->agendaService->method('createRecorrenciaPorQuantidade')
+            ->willReturn(['status' => 'error', 'message' => 'Falha ao criar agendamento']);
+
+        $result = $this->service->createPacote([
+            'paciente_id'              => 1,
+            'nome'                     => 'Pacote Banho x4',
+            'valor_total'              => 250,
+            'itens'                    => [['servico_id' => 5, 'quantidade' => 4, 'valor_unitario' => 50]],
+            'preagendar'               => true,
+            'preagendar_data_inicial'  => '2026-09-01',
+            'preagendar_periodicidade' => 'semanal',
+        ]);
+
+        $this->assertSame('error', $result['status']);
+        $this->assertStringContainsString('Falha ao criar agendamento', $result['message']);
     }
 
     public function testCreatePacoteReturnsErrorWhenRepositoryThrows(): void

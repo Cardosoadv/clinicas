@@ -35,6 +35,12 @@ export function createPacote(values: PacoteFormValues): Promise<ApiEnvelope> {
         quantidade: item.quantidade ? Number(item.quantidade) : 1,
         valor_unitario: item.valor_unitario ? Number(item.valor_unitario) : 0,
       }))
+
+    if (values.preagendar) {
+      payload.preagendar = true
+      payload.preagendar_data_inicial = values.preagendar_data_inicial
+      payload.preagendar_periodicidade = values.preagendar_periodicidade
+    }
   }
 
   return api.post('/pacotes', payload)
