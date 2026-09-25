@@ -15,6 +15,8 @@
 }
 
 .report-document {
+  display: flex;
+  flex-direction: column;
   background: white;
   padding: 40px;
   border-radius: 8px;
@@ -22,20 +24,62 @@
   min-height: 297mm; /* A4 size approximation */
   max-width: 210mm;
   margin: 0 auto;
-  font-family: Arial, sans-serif;
-  color: #333;
+  font-family: 'Open Sans', 'Segoe UI', Arial, sans-serif;
+  font-size: 11pt;
+  line-height: 1.45;
+  color: #222;
 }
+
+.report-body {
+  flex: 1;
+}
+
+/* ---------- Cabeçalho ---------- */
 
 .report-header {
-  border-bottom: 2px solid #2c3e50;
-  padding-bottom: 20px;
-  margin-bottom: 30px;
-  text-align: right; /* Alinha a direita baseado no modelo */
+  border-bottom: 1.5px solid #c9d6d0;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
 }
 
-.report-header b, .report-header strong {
-  color: #27ae60;
-  font-size: 1.2rem;
+.report-header--custom {
+  text-align: center;
+}
+
+.report-header__default {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.report-logo {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  border: 2px solid #1f7a3d;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.report-header__identidade {
+  flex: 1;
+}
+
+.report-header__nome {
+  color: #1f7a3d;
+  font-size: 15pt;
+  font-weight: 700;
+}
+
+.report-header__sub {
+  color: #555;
+  margin-top: 6px;
+}
+
+.report-header__contato {
+  text-align: right;
+  font-size: 10pt;
+  line-height: 1.6;
 }
 
 .report-title {
@@ -45,51 +89,161 @@
   color: #2c3e50;
 }
 
+/* ---------- Rodapé ---------- */
+
 .report-footer {
-  margin-top: 50px;
-  padding-top: 20px;
-  border-top: 1px solid #ccc;
-  text-align: left;
-  font-size: 0.9rem;
-  color: #666;
+  margin-top: 48px;
+  font-size: 10pt;
+  line-height: 1.6;
 }
+
+.report-footer__data {
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.report-footer__assinatura {
+  font-weight: 700;
+}
+
+/* ---------- Receita ---------- */
+
+.receita__titulo {
+  font-size: 14pt;
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.receita__box {
+  border: 1px solid #c9ced3;
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  font-size: 9pt;
+  line-height: 1.4;
+  color: #444;
+}
+
+.receita__box strong {
+  color: #111;
+}
+
+.receita__box-sep {
+  color: #999;
+  margin: 0 4px;
+}
+
+.receita__via {
+  background: #e6e6e6;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 10pt;
+  font-weight: 600;
+  padding: 5px 0;
+  margin: 20px 0 16px;
+  text-transform: uppercase;
+}
+
+.receita__item {
+  margin-bottom: 18px;
+  break-inside: avoid;
+}
+
+.receita__item-linha {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 10pt;
+  font-weight: 600;
+}
+
+.receita__item-leader {
+  flex: 1;
+  border-bottom: 2px dotted #555;
+  transform: translateY(-3px);
+}
+
+.receita__posologia {
+  margin: 10px 0 0;
+  color: #444;
+}
+
+.receita__secao {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-size: 10pt;
+  font-weight: 600;
+  margin: 28px 0 16px;
+}
+
+.receita__secao::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #bbb;
+}
+
+.receita__instrucoes {
+  margin: 0;
+  color: #444;
+  white-space: pre-wrap;
+  line-height: 1.8;
+}
+
+/* ---------- Impressão ---------- */
 
 @media print {
   /* Esconde tudo exceto o container de relatório */
   body * {
     visibility: hidden;
   }
-  
+
   .report-document, .report-document * {
     visibility: visible;
   }
-  
+
   .report-document {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
+    max-width: none;
     margin: 0;
     padding: 0;
+    border-radius: 0;
     box-shadow: none;
-    min-height: auto;
+    /* Altura útil da A4 (297mm - margens) para o rodapé ficar no pé da página */
+    min-height: 262mm;
   }
 
   .no-print {
     display: none !important;
   }
 
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   @page {
-    margin: 2cm;
+    size: A4;
+    margin: 1.5cm;
   }
 }
 
-/* Modificador para quando o relatório for renderizado oculto apenas para impressão */
+/* Documento renderizado apenas para impressão (via portal no <body>) */
 .report-container.print-only {
   display: none;
 }
+
 @media print {
   .report-container.print-only {
     display: block;
+  }
+
+  /* Quando há um documento só de impressão, remove o restante da tela do fluxo
+     para não gerar páginas em branco extras. */
+  body:has(> .report-container.print-only) > *:not(.report-container.print-only) {
+    display: none !important;
   }
 }

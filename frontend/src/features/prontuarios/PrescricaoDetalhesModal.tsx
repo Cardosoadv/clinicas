@@ -1,8 +1,9 @@
 import { Pill, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { fetchPrescricao } from './api'
-import type { PrescricaoDetalhada } from './types'
+import type { PrescricaoDetalhada, PrescricaoItem } from './types'
 import { ReportTemplate } from '../../components/ReportTemplate'
+import { formatDataExtenso } from '../../components/reportTemplateData'
 import { useEscapeKey } from '../../hooks/useEscapeKey'
 
 interface PrescricaoDetalhesModalProps {
@@ -16,6 +17,135 @@ function formatDate(value: string): string {
   } catch {
     return value
   }
+}
+
+/** Datas "YYYY-MM-DD" são interpretadas em horário local (evita voltar um dia por fuso). */
+function parseDate(value: string): Date {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value)
+  return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : new Date(value)
+}
+
+function calcIdade(nascimento: string | null): string | null {
+  if (!nascimento || nascimento.startsWith('0000')) return null
+  const nasc = parseDate(nascimento)
+  if (Number.isNaN(nasc.getTime())) return null
+
+  const now = new Date()
+  let anos = now.getFullYear() - nasc.getFullYear()
+  let meses = now.getMonth() - nasc.getMonth()
+  if (now.getDate() < nasc.getDate()) meses -= 1
+  if (meses < 0) {
+    anos -= 1
+    meses += 12
+  }
+
+  if (anos <= 0) return `${meses} ${meses === 1 ? 'mês' : 'meses'}`
+  return `${anos} ${anos === 1 ? 'ano' : 'anos'}${meses > 0 ? ` e ${meses} ${meses === 1 ? 'mês' : 'meses'}` : ''}`
+}
+
+const comecaComNumero = (value: string) => /^\d/.test(value.trim())
+
+/** Monta a posologia em texto corrido: "Dar 1/2 comprimido a cada 24h por 30 dias". */
+function formatPosologia(item: PrescricaoItem): string {
+  const partes = [
+    item.dosagem,
+    item.frequencia && (comecaComNumero(item.frequencia) ? `a cada ${item.frequencia}` : item.frequencia),
+    item.duracao && (comecaComNumero(item.duracao) ? `por ${item.duracao}` : item.duracao),
+  ].filter(Boolean)
+  let texto = partes.join(' ')
+  if (item.particao) texto += ` (${item.particao})`
+  return texto
+}
+
+/** Agrupa os itens pela via de administração, mantendo a ordem de cadastro. */
+function agruparPorVia(itens: PrescricaoItem[]): Array<{ via: string; itens: PrescricaoItem[] }> {
+  const grupos: Array<{ via: string; itens: PrescricaoItem[] }> = []
+  for (const item of itens) {
+    const via = item.via_administracao?.trim() ? `Uso ${item.via_administracao.trim()}` : 'Uso oral / externo'
+    const grupo = grupos.find((g) => g.via.toLowerCase() === via.toLowerCase())
+    if (grupo) grupo.itens.push(item)
+    else grupos.push({ via, itens: [item] })
+  }
+  return grupos
+}
+
+function Separador() {
+  return <span className="receita__box-sep">·</span>
+}
+
+function ReceitaImpressao({ prescricao }: { prescricao: PrescricaoDetalhada }) {
+  const data = parseDate(prescricao.data_prescricao)
+  const idade = calcIdade(prescricao.pet_nascimento)
+  const detalhesPet = [
+    ['Espécie', prescricao.pet_especie],
+    ['Raça', prescricao.pet_raca],
+    ['Sexo', prescricao.pet_sexo],
+    ['Idade', idade],
+  ].filter((entry): entry is [string, string] => Boolean(entry[1]))
+
+  return (
+    <ReportTemplate
+      printOnly
+      showPrintButton={false}
+      variables={{
+        data: new Intl.DateTimeFormat('pt-BR').format(data),
+        data_extenso: formatDataExtenso(data),
+        veterinario: prescricao.veterinario_nome,
+        crmv: prescricao.veterinario_crmv,
+      }}
+    >
+      <h2 className="receita__titulo">Receita Simples</h2>
+
+      <div className="receita__box">
+        Animal: <strong>{prescricao.pet_nome}</strong> (ID: {prescricao.pet_id})
+        {detalhesPet.length > 0 && (
+          <div>
+            {detalhesPet.map(([label, value], index) => (
+              <span key={label}>
+                {index > 0 && <Separador />}
+                {label}: <strong>{value}</strong>
+              </span>
+            ))}
+          </div>
+        )}
+        <div>
+          Responsável: <strong>{prescricao.tutor_nome}</strong>
+        </div>
+        {prescricao.tutor_endereco && <div>Endereço: {prescricao.tutor_endereco}</div>}
+      </div>
+
+      <div className="receita__box">
+        Emitente: <strong>{prescricao.veterinario_nome || 'Clínico'}</strong>
+        {prescricao.veterinario_crmv && (
+          <div>
+            CRMV: <strong>{prescricao.veterinario_crmv}</strong>
+          </div>
+        )}
+      </div>
+
+      {agruparPorVia(prescricao.itens).map((grupo) => (
+        <section key={grupo.via}>
+          <div className="receita__via">{grupo.via}</div>
+          {grupo.itens.map((item) => (
+            <div className="receita__item" key={item.id}>
+              <div className="receita__item-linha">
+                <span>{item.medicamento}</span>
+                <span className="receita__item-leader" />
+              </div>
+              <p className="receita__posologia">Posologia: {formatPosologia(item)}</p>
+            </div>
+          ))}
+        </section>
+      ))}
+
+      {prescricao.observacoes && (
+        <>
+          <div className="receita__secao">INSTRUÇÕES DE TRATAMENTO</div>
+          <p className="receita__instrucoes">{prescricao.observacoes}</p>
+        </>
+      )}
+    </ReportTemplate>
+  )
 }
 
 export function PrescricaoDetalhesModal({ prescricaoId, onClose }: PrescricaoDetalhesModalProps) {
@@ -90,58 +220,7 @@ export function PrescricaoDetalhesModal({ prescricaoId, onClose }: PrescricaoDet
         </div>
       </div>
 
-      {!isLoading && prescricao && (
-        <ReportTemplate className="print-only" showPrintButton={false}>
-          <div style={{ textAlign: 'center', marginBottom: 30 }}>
-            <h2 style={{ margin: 0 }}>Receita Simples</h2>
-            <p style={{ margin: '5px 0 0', color: '#666' }}>
-              Data: {formatDate(prescricao.data_prescricao)}
-            </p>
-          </div>
-
-          <div style={{ marginBottom: 40, border: '1px solid #ccc', padding: 20, borderRadius: 8, display: 'flex', gap: 20 }}>
-            <div style={{ flex: 1 }}>
-              <h3 style={{ margin: '0 0 10px', fontSize: '1rem' }}>Animal</h3>
-              <p style={{ margin: 0, fontSize: '0.9rem' }}>
-                <strong>ID:</strong> {prescricao.pet_id}<br/>
-                <strong>Nome:</strong> {prescricao.pet_nome}
-              </p>
-            </div>
-            <div style={{ flex: 1 }}>
-              <h3 style={{ margin: '0 0 10px', fontSize: '1rem' }}>Responsável</h3>
-              <p style={{ margin: 0, fontSize: '0.9rem' }}>
-                <strong>Nome:</strong> {prescricao.tutor_nome}<br/>
-                <strong>Endereço:</strong> Não informado
-              </p>
-            </div>
-          </div>
-
-          <h3 style={{ marginBottom: 20 }}>USO ORAL / EXTERNO</h3>
-
-          {prescricao.itens.map((item) => (
-            <div key={item.id} style={{ marginBottom: 25 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #ccc', paddingBottom: 5, marginBottom: 10 }}>
-                <strong>{item.medicamento}</strong>
-                <span style={{ border: '1px solid #333', padding: '2px 8px', borderRadius: 4, fontSize: '0.8rem' }}>
-                  A DEFINIR QTD
-                </span>
-              </div>
-              <p style={{ margin: 0, fontSize: '0.9rem' }}>
-                Dar {[item.dosagem, item.frequencia, item.duracao, item.via_administracao, item.particao]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </p>
-            </div>
-          ))}
-
-          {prescricao.observacoes && (
-            <div style={{ marginTop: 40, padding: 20, backgroundColor: '#f9f9f9', borderRadius: 8 }}>
-              <strong>Observações:</strong>
-              <p style={{ margin: '5px 0 0', fontSize: '0.9rem' }}>{prescricao.observacoes}</p>
-            </div>
-          )}
-        </ReportTemplate>
-      )}
+      {!isLoading && prescricao && <ReceitaImpressao prescricao={prescricao} />}
     </div>
   )
 }
