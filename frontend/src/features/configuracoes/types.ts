@@ -52,15 +52,15 @@ export const templateDefinitions: TemplateDefinition[] = [
   {
     key: 'report_header',
     titulo: 'Cabeçalho de Relatórios/Receitas',
-    descricao: 'Aparece no topo das impressões (aceita HTML básico ou será centralizado).',
-    placeholders: ['{clinica}', '{telefone}', '{endereco}', '{crmv}'],
-    padrao: '<b>Sua Clínica Veterinária</b><br>Endereço - Telefone',
+    descricao: 'Aparece no topo das impressões (aceita HTML básico). Deixe em branco para usar o layout padrão com logo e dados da loja principal.',
+    placeholders: ['{logo}', '{clinica}', '{cnpj}', '{endereco}', '{telefone}', '{email}', '{veterinario}', '{crmv}'],
+    padrao: '',
   },
   {
     key: 'report_footer',
     titulo: 'Rodapé de Relatórios/Receitas',
-    descricao: 'Aparece no fim das impressões (aceita HTML básico).',
-    placeholders: ['{data}', '{veterinario}', '{crmv}'],
-    padrao: '{data}<br>Assinado por {veterinario}',
+    descricao: 'Aparece no fim das impressões (aceita HTML básico). Deixe em branco para usar o layout padrão com data e assinatura.',
+    placeholders: ['{data}', '{data_extenso}', '{veterinario}', '{crmv}', '{clinica}'],
+    padrao: '<b>{data_extenso}</b><br><br><b>{veterinario}</b><br>CRMV {crmv}',
   },
 ]

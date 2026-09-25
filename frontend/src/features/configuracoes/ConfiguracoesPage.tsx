@@ -1,5 +1,6 @@
 import { Check, MessageCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { invalidateReportTemplates } from '../../components/reportTemplateData'
 import { ApiError } from '../../lib/api'
 import { fetchTemplates, updateTemplate } from './api'
 import './configuracoes.css'
@@ -40,6 +41,7 @@ export function ConfiguracoesPage() {
     setSavingKey(key)
     try {
       await updateTemplate(key, values[key] ?? '')
+      invalidateReportTemplates()
       setSavedKey(key)
       setTimeout(() => setSavedKey((current) => (current === key ? null : current)), 2000)
     } catch (err) {

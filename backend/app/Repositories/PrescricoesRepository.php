@@ -52,16 +52,29 @@ class PrescricoesRepository extends BaseRepository
         $db = \Config\Database::connect();
         $vet = $db->table('equipe')->where('equ_id', $prescricao['veterinario_id'])->get()->getRowArray();
         $prescricao['veterinario_nome'] = $vet['equ_nome'] ?? 'Clínico';
+        $prescricao['veterinario_crmv'] = $vet['equ_crmv'] ?? null;
 
         $pet = $db->table('pacientes')->where('paciente_id', $prescricao['paciente_id'])->get()->getRowArray();
         $prescricao['pet_id'] = $prescricao['paciente_id'];
         $prescricao['pet_nome'] = $pet['paciente_nome'] ?? 'Desconhecido';
+        $prescricao['pet_especie'] = $pet['paciente_especie'] ?? null;
+        $prescricao['pet_raca'] = $pet['paciente_raca'] ?? null;
+        $prescricao['pet_sexo'] = $pet['paciente_sexo'] ?? null;
+        $prescricao['pet_nascimento'] = $pet['paciente_nascimento'] ?? null;
+
+        $prescricao['tutor_nome'] = 'Desconhecido';
+        $prescricao['tutor_endereco'] = null;
 
         if ($pet && !empty($pet['cliente_id'])) {
             $tutor = $db->table('clientes')->where('id', $pet['cliente_id'])->get()->getRowArray();
             $prescricao['tutor_nome'] = $tutor['nome'] ?? 'Desconhecido';
-        } else {
-            $prescricao['tutor_nome'] = 'Desconhecido';
+
+            if ($tutor) {
+                $rua = trim(implode(', ', array_filter([$tutor['rua'] ?? null, $tutor['numero'] ?? null, $tutor['complemento'] ?? null])));
+                $cidade = trim(implode('/', array_filter([$tutor['cidade'] ?? null, $tutor['estado'] ?? null])));
+                $endereco = implode(' - ', array_filter([$rua, $tutor['bairro'] ?? null, $cidade]));
+                $prescricao['tutor_endereco'] = $endereco !== '' ? $endereco : null;
+            }
         }
 
         return $prescricao;
