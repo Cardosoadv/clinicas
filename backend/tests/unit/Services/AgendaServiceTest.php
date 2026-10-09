@@ -135,6 +135,50 @@ final class AgendaServiceTest extends CIUnitTestCase
         $this->assertStringContainsString('3 ocorrências', $result['message']);
     }
 
+    public function testCreateRecurringAppointmentsOnSelectedWeekdays(): void
+    {
+        $datas = [];
+        $this->agendamentosRepository->expects($this->exactly(4))
+            ->method('create')
+            ->willReturnCallback(function (array $data) use (&$datas) {
+                $this->assertArrayNotHasKey('age_recorrencia_dias', $data);
+                $datas[] = $data['age_data'];
+                return 200 + count($datas);
+            });
+
+        // 2026-08-03 é segunda-feira; repete às segundas (1) e terças (2)
+        $result = $this->service->create([
+            'age_data'             => '2026-08-03',
+            'age_recorrencia'      => 'semanal',
+            'age_recorrencia_fim'  => '2026-08-11',
+            'age_recorrencia_dias' => [2, 1],
+        ]);
+
+        $this->assertSame('success', $result['status']);
+        $this->assertSame(['2026-08-03', '2026-08-04', '2026-08-10', '2026-08-11'], $datas);
+        $this->assertStringContainsString('4 ocorrências', $result['message']);
+    }
+
+    public function testCreateBiweeklyRecurringAppointmentsOnSelectedWeekdaysSkipsDaysBeforeStart(): void
+    {
+        $datas = [];
+        $this->agendamentosRepository->method('create')
+            ->willReturnCallback(function (array $data) use (&$datas) {
+                $datas[] = $data['age_data'];
+                return count($datas);
+            });
+
+        // 2026-08-05 é quarta-feira; segunda (1) da primeira semana fica antes do início
+        $this->service->create([
+            'age_data'             => '2026-08-05',
+            'age_recorrencia'      => 'quinzenal',
+            'age_recorrencia_fim'  => '2026-08-31',
+            'age_recorrencia_dias' => ['1', '5'],
+        ]);
+
+        $this->assertSame(['2026-08-07', '2026-08-17', '2026-08-21', '2026-08-31'], $datas);
+    }
+
     public function testCreateRecurringAppointmentReturnsErrorWhenInstanceCreationFails(): void
     {
         $this->agendamentosRepository->method('create')->willReturn(0);

@@ -6,6 +6,7 @@ import { fetchEquipeOptions, fetchServicosOptions } from './api'
 import { fetchPacienteById } from '../pacientes/api'
 import { PacientePicker } from '../../components/PacientePicker'
 import { ServicosPicker } from './ServicosPicker'
+import './agenda.css'
 import type {
   AgendamentoFormValues,
   AgendamentoRecorrencia,
@@ -40,6 +41,26 @@ const recorrenciaOptions: { value: AgendamentoRecorrencia; label: string }[] = [
   { value: 'quinzenal', label: 'Quinzenal' },
   { value: 'mensal', label: 'Mensal' },
 ]
+
+const diasSemanaOptions = [
+  { value: 0, label: 'Dom', title: 'Domingo' },
+  { value: 1, label: 'Seg', title: 'Segunda-feira' },
+  { value: 2, label: 'Ter', title: 'Terça-feira' },
+  { value: 3, label: 'Qua', title: 'Quarta-feira' },
+  { value: 4, label: 'Qui', title: 'Quinta-feira' },
+  { value: 5, label: 'Sex', title: 'Sexta-feira' },
+  { value: 6, label: 'Sáb', title: 'Sábado' },
+]
+
+function diaSemanaDaData(data: string): number[] {
+  if (!data) return []
+  const [ano, mes, dia] = data.split('-').map(Number)
+  return [new Date(ano, mes - 1, dia).getDay()]
+}
+
+function permiteDiasSemana(recorrencia: AgendamentoRecorrencia): boolean {
+  return recorrencia === 'semanal' || recorrencia === 'quinzenal'
+}
 
 export function AgendamentoFormModal({
   title,
@@ -273,13 +294,19 @@ export function AgendamentoFormModal({
                 Repetir
                 <select
                   value={values.age_recorrencia}
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    const recorrencia = event.target.value as AgendamentoRecorrencia
                     setValues((prev) => ({
                       ...prev,
-                      age_recorrencia: event.target.value as AgendamentoRecorrencia,
-                      age_recorrencia_fim: event.target.value === 'nenhuma' ? '' : prev.age_recorrencia_fim,
+                      age_recorrencia: recorrencia,
+                      age_recorrencia_fim: recorrencia === 'nenhuma' ? '' : prev.age_recorrencia_fim,
+                      age_recorrencia_dias: !permiteDiasSemana(recorrencia)
+                        ? []
+                        : prev.age_recorrencia_dias.length > 0
+                          ? prev.age_recorrencia_dias
+                          : diaSemanaDaData(prev.age_data),
                     }))
-                  }
+                  }}
                 >
                   {recorrenciaOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -300,6 +327,43 @@ export function AgendamentoFormModal({
                   onChange={(event) => setValues((prev) => ({ ...prev, age_recorrencia_fim: event.target.value }))}
                 />
               </label>
+            )}
+
+            {!isEditing && permiteDiasSemana(values.age_recorrencia) && (
+              <div className="form-field form-field--full">
+                <span id="recorrencia-dias-label">Repetir nos dias</span>
+                <div className="dias-semana" role="group" aria-labelledby="recorrencia-dias-label">
+                  {diasSemanaOptions.map((dia) => {
+                    const ativo = values.age_recorrencia_dias.includes(dia.value)
+                    return (
+                      <button
+                        key={dia.value}
+                        type="button"
+                        title={dia.title}
+                        aria-pressed={ativo}
+                        className={`dias-semana__opcao${ativo ? ' dias-semana__opcao--ativo' : ''}`}
+                        onClick={() =>
+                          setValues((prev) => ({
+                            ...prev,
+                            age_recorrencia_dias: ativo
+                              ? prev.age_recorrencia_dias.filter((d) => d !== dia.value)
+                              : [...prev.age_recorrencia_dias, dia.value].sort((a, b) => a - b),
+                          }))
+                        }
+                      >
+                        {dia.label}
+                      </button>
+                    )
+                  })}
+                </div>
+                <small className="dias-semana__ajuda">
+                  {values.age_recorrencia_dias.length > 0
+                    ? `A série começa no primeiro dia selecionado a partir da data informada e se repete ${
+                        values.age_recorrencia === 'quinzenal' ? 'a cada duas semanas' : 'toda semana'
+                      }.`
+                    : 'Nenhum dia selecionado: repete no mesmo dia da semana da data informada.'}
+                </small>
+              </div>
             )}
 
             <label className="form-field form-field--full">

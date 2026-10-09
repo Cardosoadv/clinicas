@@ -107,6 +107,8 @@ class AgendaService extends BaseService
         unset($data['age_servico']);
 
         $recorrencia = $data['age_recorrencia'] ?? 'nenhuma';
+        $diasSemana = (array) ($data['age_recorrencia_dias'] ?? []);
+        unset($data['age_recorrencia_dias']);
 
         if ($recorrencia === 'nenhuma') {
             $result = parent::create($data);
@@ -116,7 +118,14 @@ class AgendaService extends BaseService
             return $result;
         }
 
-        // É recorrente
+        // É recorrente. Data limite: 1 ano por padrão se não informada
+        $dataFimStr = !empty($data['age_recorrencia_fim']) ? $data['age_recorrencia_fim'] : date('Y-m-d', strtotime('+1 year'));
+        $datas = $this->gerarDatasRecorrencia((string) $data['age_data'], $dataFimStr, $recorrencia, $diasSemana);
+
+        if (empty($datas)) {
+            return $this->error("Nenhuma data da série cai entre o início e o fim informados.");
+        }
+
         try {
             $db = \Config\Database::connect();
             $db->transStart();
@@ -124,40 +133,26 @@ class AgendaService extends BaseService
             $grupoId = bin2hex(random_bytes(16)); // UUID simplificado para agrupar as instâncias
             $data['age_grupo_id'] = $grupoId;
             
-            // Define data limite: 1 ano por padrão se não informado
-            $dataFimStr = !empty($data['age_recorrencia_fim']) ? $data['age_recorrencia_fim'] : date('Y-m-d', strtotime('+1 year'));
-            $currentDateStr = $data['age_data'];
-            
-            $intervalMap = [
-                'semanal' => '+1 week',
-                'quinzenal' => '+2 weeks',
-                'mensal' => '+1 month'
-            ];
-            $interval = $intervalMap[$recorrencia] ?? '+1 week';
-            
             $count = 0;
-            $maxIterations = 52; // Máximo de 1 ano para recorrência semanal
             $firstId = null;
 
-            while ($currentDateStr <= $dataFimStr && $count < $maxIterations) {
+            foreach ($datas as $dataOcorrencia) {
                 $iterationData = $data;
-                $iterationData['age_data'] = $currentDateStr;
-                
+                $iterationData['age_data'] = $dataOcorrencia;
+
                 $id = $this->repository->create($iterationData);
                 if (!$id) {
-                    throw new \Exception("Erro ao criar instância da recorrência na data $currentDateStr");
+                    throw new \Exception("Erro ao criar instância da recorrência na data $dataOcorrencia");
                 }
-                
+
                 if ($count === 0) {
                     $firstId = $id;
                 }
-                
+
                 if (!empty($services)) {
                     $this->agendamentosRepository->syncServices((int) $id, $services);
                 }
-                
-                // Avança a data para a próxima ocorrência
-                $currentDateStr = date('Y-m-d', strtotime($interval, strtotime($currentDateStr)));
+
                 $count++;
             }
 
@@ -179,6 +174,70 @@ class AgendaService extends BaseService
     }
 
     /**
+     * Gera as datas das ocorrências de uma série recorrente.
+     *
+     * Para recorrência semanal/quinzenal, é possível informar os dias da semana
+     * (0 = domingo ... 6 = sábado) em que o agendamento se repete. Sem dias
+     * informados, repete no mesmo dia da semana da data inicial.
+     *
+     * @param string $dataInicio
+     * @param string $dataFim
+     * @param string $recorrencia
+     * @param array $diasSemana
+     * @return string[]
+     */
+    protected function gerarDatasRecorrencia(string $dataInicio, string $dataFim, string $recorrencia, array $diasSemana = []): array
+    {
+        $maxOcorrencias = 366;
+        $datas = [];
+
+        $diasSemana = array_values(array_unique(array_filter(
+            array_map('intval', $diasSemana),
+            static fn (int $dia): bool => $dia >= 0 && $dia <= 6
+        )));
+        sort($diasSemana);
+
+        if (in_array($recorrencia, ['semanal', 'quinzenal'], true) && !empty($diasSemana)) {
+            $passoSemanas = $recorrencia === 'quinzenal' ? 2 : 1;
+            $inicio = new \DateTimeImmutable($dataInicio);
+            // Domingo da semana da data inicial
+            $semana = $inicio->modify('-' . (int) $inicio->format('w') . ' days');
+
+            while ($semana->format('Y-m-d') <= $dataFim && count($datas) < $maxOcorrencias) {
+                foreach ($diasSemana as $dia) {
+                    $data = $semana->modify("+{$dia} days")->format('Y-m-d');
+                    if ($data < $dataInicio || $data > $dataFim) {
+                        continue;
+                    }
+                    $datas[] = $data;
+                    if (count($datas) >= $maxOcorrencias) {
+                        break;
+                    }
+                }
+                $semana = $semana->modify("+{$passoSemanas} weeks");
+            }
+
+            return $datas;
+        }
+
+        $intervalMap = [
+            'semanal' => '+1 week',
+            'quinzenal' => '+2 weeks',
+            'mensal' => '+1 month'
+        ];
+        $interval = $intervalMap[$recorrencia] ?? '+1 week';
+        $maxIterations = 52; // Máximo de 1 ano para recorrência semanal
+
+        $atual = $dataInicio;
+        while ($atual <= $dataFim && count($datas) < $maxIterations) {
+            $datas[] = $atual;
+            $atual = date('Y-m-d', strtotime($interval, strtotime($atual)));
+        }
+
+        return $datas;
+    }
+
+    /**
      * Atualiza um agendamento existente e seus serviços.
      *
      * @param int $id
@@ -192,6 +251,7 @@ class AgendaService extends BaseService
             $services = (array) $data['age_servico'];
             unset($data['age_servico']);
         }
+        unset($data['age_recorrencia_dias']);
 
         $result = parent::update($id, $data);
 

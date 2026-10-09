@@ -896,3 +896,42 @@
   align-items: center;
   gap: 8px;
 }
+
+.dias-semana {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dias-semana__opcao {
+  font: inherit;
+  font-size: 13px;
+  min-width: 48px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  border: 1px solid #e7e3da;
+  background: #fff;
+  color: #1c2333;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.dias-semana__opcao:hover {
+  border-color: #c99a3f;
+}
+
+.dias-semana__opcao:focus-visible {
+  outline: 2px solid #c99a3f;
+  outline-offset: 1px;
+}
+
+.dias-semana__opcao--ativo {
+  background: #c99a3f;
+  border-color: #c99a3f;
+  color: #fff;
+}
+
+.dias-semana__ajuda {
+  font-size: 12px;
+  color: #6b7280;
+}

@@ -72,6 +72,8 @@ export interface AgendamentoFormValues {
   age_veterinario: string
   age_recorrencia: AgendamentoRecorrencia
   age_recorrencia_fim: string
+  /** Dias da semana (0 = domingo ... 6 = sábado) para recorrência semanal/quinzenal */
+  age_recorrencia_dias: number[]
 }
 
 export function emptyAgendamentoForm(data: string, hora: string): AgendamentoFormValues {
@@ -87,6 +89,7 @@ export function emptyAgendamentoForm(data: string, hora: string): AgendamentoFor
     age_veterinario: '',
     age_recorrencia: 'nenhuma',
     age_recorrencia_fim: '',
+    age_recorrencia_dias: [],
   }
 }
 
@@ -161,5 +164,6 @@ export function agendamentoToFormValues(agendamento: Agendamento): AgendamentoFo
     age_veterinario: agendamento.age_veterinario ? String(agendamento.age_veterinario) : '',
     age_recorrencia: 'nenhuma',
     age_recorrencia_fim: '',
+    age_recorrencia_dias: [],
   }
 }
