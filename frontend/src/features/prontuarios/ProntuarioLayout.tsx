@@ -130,7 +130,14 @@ export function ProntuarioLayout() {
                 </span>
               </div>
               <p className="page-subtitle">
-                {[pet.paciente_especie, pet.paciente_raca, calcIdade(pet.paciente_nascimento)].filter(Boolean).join(' · ')}
+                {[
+                  pet.paciente_especie,
+                  pet.paciente_raca,
+                  calcIdade(pet.paciente_nascimento),
+                  ultimoPeso !== null ? `${ultimoPeso.toLocaleString('pt-BR', { maximumFractionDigits: 3 })} kg` : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
                 {pet.pet_resp_nome ? ` · Tutor: ${pet.pet_resp_nome}` : ''}
                 {pet.pet_resp_tel ? ` · ${pet.pet_resp_tel}` : ''}
               </p>
