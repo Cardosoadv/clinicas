@@ -140,7 +140,9 @@ function ReceitaImpressao({ prescricao }: { prescricao: PrescricaoDetalhada }) {
 
       {prescricao.observacoes && (
         <>
-          <div className="receita__secao">INSTRUÇÕES DE TRATAMENTO</div>
+          <div className="receita__secao">
+            {prescricao.itens.length > 0 ? 'INSTRUÇÕES DE TRATAMENTO' : 'ORIENTAÇÕES / ENCAMINHAMENTO'}
+          </div>
           <p className="receita__instrucoes">{prescricao.observacoes}</p>
         </>
       )}
