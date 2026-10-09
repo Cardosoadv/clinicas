@@ -164,9 +164,10 @@ export function PrescricoesSection() {
             <div className="record-card" key={prescricao.id}>
               <div className="record-card__main">
                 <div className="record-card__title-row">
-                  <h3>Prescrição #{prescricao.id}</h3>
+                  <h3>{prescricao.medicamentos || 'Encaminhamento'}</h3>
                 </div>
                 <div className="record-card__meta">
+                  <span>#{prescricao.id}</span>
                   <span>{formatDate(prescricao.data_prescricao)}</span>
                   <span>{prescricao.veterinario_nome || 'Clínico'}</span>
                 </div>

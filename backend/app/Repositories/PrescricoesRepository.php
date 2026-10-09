@@ -18,15 +18,20 @@ class PrescricoesRepository extends BaseRepository
     }
 
     /**
-     * Retorna todas as prescrições de um pet com os dados do veterinário.
+     * Retorna todas as prescrições de um pet com os dados do veterinário
+     * e os nomes dos medicamentos (separados por vírgula) para exibição no histórico.
      *
      * @param int $petId
      * @return array
      */
     public function findByPet(int $petId): array
     {
+        $medicamentos = '(SELECT GROUP_CONCAT(pi.medicamento ORDER BY pi.id SEPARATOR \', \')'
+            . ' FROM prescricao_itens pi WHERE pi.prescricao_id = prescricoes.id) as medicamentos';
+
         return $this->model
             ->select('prescricoes.*, equipe.equ_nome as veterinario_nome')
+            ->select($medicamentos, false)
             ->join('equipe', 'equipe.equ_id = prescricoes.veterinario_id', 'left')
             ->where('paciente_id', $petId)
             ->orderBy('data_prescricao', 'DESC')
