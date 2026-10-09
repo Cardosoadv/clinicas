@@ -1,0 +1,46 @@
+title: Clínicas — Documentação
+description: Sistema de gestão para clínicas veterinárias — agenda, prontuários, faturamento, estoque e relatórios financeiros.
+lang: pt-BR
+
+remote_theme: just-the-docs/just-the-docs@v0.10.1
+plugins:
+  - jekyll-remote-theme
+  - jekyll-seo-tag
+
+color_scheme: light
+search_enabled: true
+search:
+  heading_level: 3
+  previews: 2
+  button: true
+
+heading_anchors: true
+back_to_top: true
+back_to_top_text: "Voltar ao topo"
+
+aux_links:
+  "Repositório no GitHub": "https://github.com/Cardosoadv/clinicas"
+aux_links_new_tab: true
+
+gh_edit_link: true
+gh_edit_link_text: "Editar esta página no GitHub"
+gh_edit_repository: "https://github.com/Cardosoadv/clinicas"
+gh_edit_branch: "main"
+gh_edit_source: docs
+gh_edit_view_mode: "tree"
+
+footer_content: "Clínicas — Sistema de Gestão Veterinária. Licença MIT."
+
+callouts:
+  nota:
+    title: Nota
+    color: blue
+  atencao:
+    title: Atenção
+    color: yellow
+  importante:
+    title: Importante
+    color: red
+  dica:
+    title: Dica
+    color: green

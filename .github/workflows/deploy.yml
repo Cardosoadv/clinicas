@@ -29,6 +29,7 @@ jobs:
           **/.git*/**
           **/node_modules/**
           **/.agents/**
+          docs/**
           **/.github/**
           **/.vscode/**
           **/.settings/**
@@ -58,6 +59,7 @@ jobs:
           **/.git*/**
           **/node_modules/**
           **/.agents/**
+          docs/**
           **/.github/**
           **/.vscode/**
           **/.settings/**
