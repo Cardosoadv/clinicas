@@ -334,7 +334,6 @@ class Prontuarios extends BaseController
 
         $rules = [
             'data_prescricao' => 'required|valid_date[Y-m-d]',
-            'itens'           => 'required',
         ];
 
         if (!$this->validateData($data, $rules)) {
@@ -343,8 +342,21 @@ class Prontuarios extends BaseController
 
         $data['paciente_id'] = $petId;
 
-        if (is_string($data['itens'])) {
+        if (isset($data['itens']) && is_string($data['itens'])) {
             $data['itens'] = json_decode($data['itens'], true);
+        }
+
+        // Itens sem medicamento são descartados; a prescrição pode ser apenas um
+        // encaminhamento (sem medicamentos), desde que as observações estejam preenchidas.
+        $data['itens'] = array_values(array_filter(
+            is_array($data['itens'] ?? null) ? $data['itens'] : [],
+            static fn ($item): bool => is_array($item) && trim((string) ($item['medicamento'] ?? '')) !== ''
+        ));
+
+        if ($data['itens'] === [] && trim((string) ($data['observacoes'] ?? '')) === '') {
+            return $this->apiValidationError([
+                'itens' => 'Informe ao menos um medicamento ou preencha as observações (ex.: encaminhamento).',
+            ]);
         }
 
         $data['veterinario_id'] = $this->resolveVeterinarioId();

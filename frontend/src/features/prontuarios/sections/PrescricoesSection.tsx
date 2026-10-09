@@ -40,8 +40,8 @@ export function PrescricoesSection() {
 
   async function handleSubmit() {
     const validItens = values.itens.filter((item) => item.medicamento.trim())
-    if (validItens.length === 0) {
-      setError('Adicione ao menos um item com medicamento preenchido.')
+    if (validItens.length === 0 && !values.observacoes.trim()) {
+      setError('Informe ao menos um medicamento ou preencha as observações (ex.: encaminhamento).')
       return
     }
     setError(null)
@@ -135,9 +135,10 @@ export function PrescricoesSection() {
         </button>
 
         <label className="form-field form-field--full" style={{ marginTop: 12 }}>
-          Observações
+          Observações / Encaminhamento
           <textarea
-            rows={2}
+            rows={3}
+            placeholder="Para apenas encaminhar o paciente, deixe os medicamentos em branco e descreva o encaminhamento aqui."
             value={values.observacoes}
             onChange={(event) => setValues((prev) => ({ ...prev, observacoes: event.target.value }))}
           />
