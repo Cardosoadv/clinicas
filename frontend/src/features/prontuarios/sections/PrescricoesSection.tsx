@@ -14,7 +14,11 @@ function formatDate(value: string): string {
   }
 }
 
-const particaoOptions = ['1 Inteiro', '1/2 Metade', '1/4 Um quarto', '3/4 Três quartos']
+/** Valor vazio = "Sem partição": não é salvo nem impresso. */
+const particaoOptions = [
+  { value: '', label: 'Sem partição' },
+  ...['1 Inteiro', '1/2 Metade', '1/4 Um quarto', '3/4 Três quartos'].map((opt) => ({ value: opt, label: opt })),
+]
 
 export function PrescricoesSection() {
   const { pacienteId, record, reload } = useProntuario()
@@ -112,8 +116,8 @@ export function PrescricoesSection() {
                   Partição
                   <select value={item.particao} onChange={(event) => updateItem(index, 'particao', event.target.value)}>
                     {particaoOptions.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
                       </option>
                     ))}
                   </select>

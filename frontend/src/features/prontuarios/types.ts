@@ -208,7 +208,7 @@ export const emptyPrescricaoItem: PrescricaoItemFormValues = {
   frequencia: '',
   duracao: '',
   via_administracao: '',
-  particao: '1 Inteiro',
+  particao: '',
 }
 
 export interface PrescricaoFormValues {
