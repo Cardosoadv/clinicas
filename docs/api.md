@@ -81,7 +81,7 @@ As rotas são definidas em dois arquivos: `app/Config/Routes.php` (principal) e 
 | GET | `/agendamentos/proximos` | Próximos |
 | GET | `/agendamentos/buscar-pacientes` | `?term=` |
 | GET | `/agendamentos/dias-do-mes` | `?year=&month=` |
-| POST | `/agendamentos` | Cria (com `age_servico[]` e `age_recorrencia`) |
+| POST | `/agendamentos` | Cria (com `age_servico[]`, `age_recorrencia` e, na semanal ou quinzenal, `age_recorrencia_dias[]` com os dias da semana de 0 a 6) |
 | PUT | `/agendamentos/{id}` | Edita |
 | PATCH | `/agendamentos/{id}/status` | `{age_status}` |
 | POST | `/agendamentos/{id}/faturar` | Cria/atualiza a cobrança |

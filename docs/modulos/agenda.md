@@ -51,7 +51,7 @@ Lista com filtros combináveis:
 | Veterinário | Membro da [Equipe](equipe) marcado como veterinário |
 | Observações | `age_obs` |
 | Lembrete | `age_lembrete` |
-| Recorrência | `nenhuma`, `semanal`, `quinzenal` ou `mensal`, com data final opcional |
+| Recorrência | `nenhuma`, `semanal`, `quinzenal` ou `mensal`, com data final opcional. Na semanal e na quinzenal, dá para escolher os dias da semana. |
 
 ### Recorrência
 
@@ -60,8 +60,29 @@ Quando a recorrência não é `nenhuma`, o sistema cria **uma série de agendame
 - todas as ocorrências compartilham o mesmo `age_grupo_id`;
 - o intervalo é de 1 semana, 2 semanas ou 1 mês;
 - sem data final, a série vai até **1 ano** à frente;
-- o limite é de **52 ocorrências**;
+- o limite é de **52 ocorrências**, ou de **366** quando há dias da semana escolhidos;
 - os serviços são copiados para cada ocorrência.
+
+#### Dias da semana
+
+Na recorrência **semanal** ou **quinzenal**, o formulário mostra os botões **Dom** a **Sáb** para escolher em quais dias o agendamento se repete. Exemplo: toda semana às segundas e terças.
+
+- Ao escolher Semanal ou Quinzenal, o dia da semana da data informada já vem marcado.
+- A série começa no primeiro dia marcado a partir da data informada. Dias marcados que caem antes dela, na mesma semana, ficam de fora.
+- Na quinzenal, os dias marcados se repetem a cada duas semanas.
+- Sem nenhum dia marcado, a série se repete no mesmo dia da semana da data informada.
+- Se nenhuma data cair entre o início e o fim informados, o sistema mostra um erro e não cria nada.
+
+Na API, os dias vão no campo `age_recorrencia_dias`, uma lista de números de `0` (domingo) a `6` (sábado). Esse campo só serve para gerar a série e não é gravado no banco.
+
+```json
+{
+  "age_data": "2026-08-03",
+  "age_recorrencia": "semanal",
+  "age_recorrencia_fim": "2026-08-31",
+  "age_recorrencia_dias": [1, 2]
+}
+```
 
 ## Status
 
