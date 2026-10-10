@@ -14,7 +14,11 @@ function formatDate(value: string): string {
   }
 }
 
-const particaoOptions = ['1 Inteiro', '1/2 Metade', '1/4 Um quarto', '3/4 Três quartos']
+/** Valor vazio = "Sem partição": não é salvo nem impresso. */
+const particaoOptions = [
+  { value: '', label: 'Sem partição' },
+  ...['1 Inteiro', '1/2 Metade', '1/4 Um quarto', '3/4 Três quartos'].map((opt) => ({ value: opt, label: opt })),
+]
 
 export function PrescricoesSection() {
   const { pacienteId, record, reload } = useProntuario()
@@ -40,8 +44,8 @@ export function PrescricoesSection() {
 
   async function handleSubmit() {
     const validItens = values.itens.filter((item) => item.medicamento.trim())
-    if (validItens.length === 0) {
-      setError('Adicione ao menos um item com medicamento preenchido.')
+    if (validItens.length === 0 && !values.observacoes.trim()) {
+      setError('Informe ao menos um medicamento ou preencha as observações (ex.: encaminhamento).')
       return
     }
     setError(null)
@@ -112,8 +116,8 @@ export function PrescricoesSection() {
                   Partição
                   <select value={item.particao} onChange={(event) => updateItem(index, 'particao', event.target.value)}>
                     {particaoOptions.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
                       </option>
                     ))}
                   </select>
@@ -135,9 +139,10 @@ export function PrescricoesSection() {
         </button>
 
         <label className="form-field form-field--full" style={{ marginTop: 12 }}>
-          Observações
+          Observações / Encaminhamento
           <textarea
-            rows={2}
+            rows={3}
+            placeholder="Para apenas encaminhar o paciente, deixe os medicamentos em branco e descreva o encaminhamento aqui."
             value={values.observacoes}
             onChange={(event) => setValues((prev) => ({ ...prev, observacoes: event.target.value }))}
           />
@@ -159,9 +164,10 @@ export function PrescricoesSection() {
             <div className="record-card" key={prescricao.id}>
               <div className="record-card__main">
                 <div className="record-card__title-row">
-                  <h3>Prescrição #{prescricao.id}</h3>
+                  <h3>{prescricao.medicamentos || 'Encaminhamento'}</h3>
                 </div>
                 <div className="record-card__meta">
+                  <span>#{prescricao.id}</span>
                   <span>{formatDate(prescricao.data_prescricao)}</span>
                   <span>{prescricao.veterinario_nome || 'Clínico'}</span>
                 </div>

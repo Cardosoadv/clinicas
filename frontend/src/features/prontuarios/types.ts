@@ -65,6 +65,8 @@ export interface Prescricao {
   data_prescricao: string
   observacoes: string | null
   veterinario_nome: string | null
+  /** Nomes dos medicamentos separados por vírgula (apenas na listagem do histórico). */
+  medicamentos?: string | null
   created_at: string
   updated_at: string
 }
@@ -208,7 +210,7 @@ export const emptyPrescricaoItem: PrescricaoItemFormValues = {
   frequencia: '',
   duracao: '',
   via_administracao: '',
-  particao: '1 Inteiro',
+  particao: '',
 }
 
 export interface PrescricaoFormValues {
