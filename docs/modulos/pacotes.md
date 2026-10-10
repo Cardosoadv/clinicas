@@ -49,7 +49,41 @@ Ao salvar, numa transação:
 
 1. o pacote é criado com status **Pendente**;
 2. os itens são criados com `quantidade_usada = 0`;
-3. uma cobrança **"Compra de Pacote: {nome}"** é lançada no [Faturamento](faturamento) como Pendente e ligada ao pacote (`pacote_id`).
+3. uma cobrança **"Compra de Pacote: {nome}"** é lançada no [Faturamento](faturamento) como Pendente e ligada ao pacote (`pacote_id`);
+4. se a opção **📅 Pré-agendar as sessões na Agenda** estiver marcada, os agendamentos das sessões são criados (veja abaixo). Se algum falhar, nada é salvo — nem o pacote.
+
+## Pré-agendar as sessões
+
+Num pacote de **Serviços**, marque **📅 Pré-agendar as sessões na Agenda** e informe:
+
+| Campo | Uso |
+|:--|:--|
+| Data inicial | Data da 1ª sessão |
+| Periodicidade | **Semanal** ou **Mensal** |
+| Horário | Horário da 1ª sessão de cada dia |
+| Duração de cada sessão | Padrão de 30 min |
+| Veterinário responsável | Opcional |
+
+Como os agendamentos são gerados:
+
+- cada item com **serviço do catálogo** vira uma série com **um agendamento por sessão** (ex.: 4 banhos → 4 agendamentos), repetida toda semana ou todo mês a partir da data inicial;
+- na mensal, o dia do mês é mantido (dia 31 vira o último dia dos meses mais curtos);
+- com vários itens, cada um fica no **horário seguinte** ao anterior, no mesmo dia, para não se sobreporem. Ex.: banho às 14:00 e tosa às 14:30 (com 30 min de duração). Se os horários passarem da meia-noite, o sistema recusa;
+- itens de **nome livre** (sem serviço do catálogo) não são agendados. Se nenhum item tiver serviço, o sistema recusa;
+- cada agendamento fica com status **pendente**, com o serviço do item e ligado ao pacote (`agendamentos.pacote_id`). Ao faturar, o modal já sugere a forma **Pacote** com esse pacote, se ele estiver ativo.
+
+### Pelo Editar Pacote
+
+Em **Editar Pacote** (pacotes de serviços que não estejam Cancelados nem Esgotados) há a opção **📅 Pré-agendar na Agenda as sessões ainda não usadas nem agendadas**, com os mesmos campos. Ela agenda, por item:
+
+```text
+quantidade_total − quantidade_usada − agendamentos do pacote ainda pendentes (não cancelados e não faturados)
+```
+
+Assim, dá para pré-agendar um pacote antigo, ou completar a agenda depois de cancelar algumas sessões, sem duplicar as que já existem. Se não sobrar nenhuma sessão, o sistema avisa e não cria nada.
+
+{: .nota }
+Editar ou cancelar em massa as sessões pré-agendadas ainda não é possível: altere cada agendamento na Agenda. Excluir o pacote não apaga os agendamentos; eles só perdem o vínculo (`pacote_id` fica vazio).
 
 {: .atencao }
 A intenção é ativar o pacote quando a cobrança ligada a ele for paga: o `FatService` dispara o evento `cobranca_paga`. Porém **nenhum ouvinte está registrado** para esse evento em `app/Config/Events.php`, então hoje a ativação **não é automática**. Depois de receber o pagamento, abra **Editar Pacote** e mude o status para **Ativo**. Para corrigir, basta registrar `Events::on('cobranca_paga', fn (int $id) => (new \App\Services\PacoteService())->activatePacote($id));`.
@@ -77,7 +111,8 @@ No **faturamento de um agendamento** com forma Pacote, o consumo acontece duas v
 |:--|:--|:--|
 | GET | `/pacotes` | Lista com o paciente |
 | GET | `/pacotes/{id}` | Detalhe com itens e histórico de uso |
-| POST | `/pacotes` | Cria pacote + itens + cobrança (`paciente_id`, `nome`, `tipo`, `valor_total`, `itens[]`...) |
+| POST | `/pacotes` | Cria pacote + itens + cobrança (`paciente_id`, `nome`, `tipo`, `valor_total`, `itens[]`...). Com `preagendar: true` e `preagendamento: {data_inicial, periodicidade, hora, duracao, veterinario_id}`, também pré-agenda as sessões |
 | PUT | `/pacotes/{id}` | Edita |
+| POST | `/pacotes/{id}/preagendar` | Pré-agenda as sessões restantes (`data_inicial`, `periodicidade`, `hora`, `duracao`, `veterinario_id`) |
 | DELETE | `/pacotes/{id}` | Exclui (só sem uso) |
 | GET | `/pacientes/{id}/pacotes-disponiveis` | Pacotes ativos do paciente, com itens |

@@ -174,21 +174,81 @@ class AgendaService extends BaseService
     }
 
     /**
+     * Cria uma série recorrente com uma quantidade fixa de ocorrências (em vez
+     * de uma data-fim), agrupadas pelo mesmo `age_grupo_id`. Usado para
+     * pré-agendar as sessões de um pacote.
+     *
+     * Não abre transação própria: quem chama (ex.: PacoteService) controla a
+     * transação e deve desfazê-la se este método retornar erro.
+     *
+     * @param array $data Campos do agendamento (inclui `age_servico` e `age_recorrencia`)
+     * @param int $quantidade
+     * @return array
+     */
+    public function createSeriePorQuantidade(array $data, int $quantidade): array
+    {
+        if ($quantidade < 1) {
+            return $this->error('Quantidade de ocorrências inválida.');
+        }
+
+        $services = (array) ($data['age_servico'] ?? []);
+        unset($data['age_servico']);
+        $diasSemana = (array) ($data['age_recorrencia_dias'] ?? []);
+        unset($data['age_recorrencia_dias']);
+
+        $recorrencia = $data['age_recorrencia'] ?? 'semanal';
+        // A quantidade é quem limita a série; a data-fim é só uma salvaguarda.
+        $dataFim = date('Y-m-d', strtotime('+10 years', strtotime((string) $data['age_data'])));
+        $datas = $this->gerarDatasRecorrencia((string) $data['age_data'], $dataFim, $recorrencia, $diasSemana, $quantidade);
+
+        if (count($datas) < $quantidade) {
+            return $this->error('Não foi possível gerar todas as datas da série.');
+        }
+
+        $data['age_grupo_id'] = bin2hex(random_bytes(16));
+        $data['age_recorrencia_fim'] = end($datas);
+        $ids = [];
+
+        foreach ($datas as $dataOcorrencia) {
+            $iterationData = $data;
+            $iterationData['age_data'] = $dataOcorrencia;
+
+            $id = $this->repository->create($iterationData);
+            if (!$id) {
+                return $this->error("Erro ao criar o agendamento da data $dataOcorrencia.");
+            }
+
+            if (!empty($services)) {
+                $this->agendamentosRepository->syncServices((int) $id, $services);
+            }
+
+            $ids[] = (int) $id;
+        }
+
+        return $this->success(count($ids) . ' agendamento(s) criado(s).', ['ids' => $ids, 'datas' => $datas]);
+    }
+
+    /**
      * Gera as datas das ocorrências de uma série recorrente.
      *
      * Para recorrência semanal/quinzenal, é possível informar os dias da semana
      * (0 = domingo ... 6 = sábado) em que o agendamento se repete. Sem dias
      * informados, repete no mesmo dia da semana da data inicial.
      *
+     * Na recorrência mensal, as datas são calculadas a partir do dia da data
+     * inicial (ex.: dia 31 vira o último dia dos meses mais curtos), sem
+     * acumular deslocamentos de um mês para o outro.
+     *
      * @param string $dataInicio
      * @param string $dataFim
      * @param string $recorrencia
      * @param array $diasSemana
+     * @param int|null $limite Máximo de ocorrências (padrão: 366 com dias da semana, 52 sem)
      * @return string[]
      */
-    protected function gerarDatasRecorrencia(string $dataInicio, string $dataFim, string $recorrencia, array $diasSemana = []): array
+    protected function gerarDatasRecorrencia(string $dataInicio, string $dataFim, string $recorrencia, array $diasSemana = [], ?int $limite = null): array
     {
-        $maxOcorrencias = 366;
+        $maxOcorrencias = $limite ?? 366;
         $datas = [];
 
         $diasSemana = array_values(array_unique(array_filter(
@@ -220,13 +280,31 @@ class AgendaService extends BaseService
             return $datas;
         }
 
+        $maxIterations = $limite ?? 52; // Máximo de 1 ano para recorrência semanal
+
+        if ($recorrencia === 'mensal') {
+            $inicio = new \DateTimeImmutable($dataInicio);
+            $diaDoMes = (int) $inicio->format('j');
+            $primeiroDoMes = $inicio->modify('first day of this month');
+
+            for ($n = 0; count($datas) < $maxIterations; $n++) {
+                $mes = $primeiroDoMes->modify("+{$n} months");
+                $dia = min($diaDoMes, (int) $mes->format('t'));
+                $data = $mes->setDate((int) $mes->format('Y'), (int) $mes->format('n'), $dia)->format('Y-m-d');
+                if ($data > $dataFim) {
+                    break;
+                }
+                $datas[] = $data;
+            }
+
+            return $datas;
+        }
+
         $intervalMap = [
             'semanal' => '+1 week',
             'quinzenal' => '+2 weeks',
-            'mensal' => '+1 month'
         ];
         $interval = $intervalMap[$recorrencia] ?? '+1 week';
-        $maxIterations = 52; // Máximo de 1 ano para recorrência semanal
 
         $atual = $dataInicio;
         while ($atual <= $dataFim && count($datas) < $maxIterations) {

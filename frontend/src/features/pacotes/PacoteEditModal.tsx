@@ -3,10 +3,11 @@ import { useEffect, useState } from 'react'
 import { ApiError } from '../../lib/api'
 import { fetchServicos } from '../servicos/api'
 import type { Servico } from '../servicos/types'
-import { fetchPacoteDetalhes, updatePacote } from './api'
+import { fetchPacoteDetalhes, preAgendarPacote, updatePacote } from './api'
+import { PreAgendamentoFields } from './PreAgendamentoFields'
 import { useEscapeKey } from '../../hooks/useEscapeKey'
-import type { ItemFormRow, PacoteDetalhes, PacoteEditFormValues, PacoteStatus } from './types'
-import { pacoteToEditFormValues } from './types'
+import type { ItemFormRow, PacoteDetalhes, PacoteEditFormValues, PacoteStatus, PreAgendamentoValues } from './types'
+import { emptyPreAgendamento, pacoteToEditFormValues } from './types'
 
 interface PacoteEditModalProps {
   pacoteId: number
@@ -23,6 +24,8 @@ export function PacoteEditModal({ pacoteId, onClose, onSaved }: PacoteEditModalP
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [preagendar, setPreagendar] = useState(false)
+  const [preagendamento, setPreagendamento] = useState<PreAgendamentoValues>(emptyPreAgendamento)
 
   useEffect(() => {
     fetchPacoteDetalhes(pacoteId)
@@ -41,6 +44,8 @@ export function PacoteEditModal({ pacoteId, onClose, onSaved }: PacoteEditModalP
   }, [pacoteId])
 
   const podeEditarItens = pacote?.tipo === 'Serviços' && values?.status === 'Pendente'
+  const podePreAgendar =
+    pacote?.tipo === 'Serviços' && values?.status !== 'Cancelado' && values?.status !== 'Esgotado'
 
   function updateItem(index: number, field: keyof ItemFormRow, value: string) {
     setValues((prev) =>
@@ -66,10 +71,24 @@ export function PacoteEditModal({ pacoteId, onClose, onSaved }: PacoteEditModalP
       return
     }
 
+    if (podePreAgendar && preagendar && (!preagendamento.data_inicial || !preagendamento.hora)) {
+      setError('Informe a data inicial e o horário das sessões a pré-agendar.')
+      return
+    }
+
     setError(null)
     setIsSubmitting(true)
     try {
       await updatePacote(pacote.id, values, pacote.tipo)
+      if (podePreAgendar && preagendar) {
+        try {
+          await preAgendarPacote(pacote.id, preagendamento)
+        } catch (err) {
+          const motivo = err instanceof ApiError ? err.message : 'erro desconhecido'
+          setError(`O pacote foi salvo, mas as sessões não foram pré-agendadas: ${motivo}`)
+          return
+        }
+      }
       onSaved()
     } catch (err) {
       if (err instanceof ApiError) {
@@ -230,6 +249,22 @@ export function PacoteEditModal({ pacoteId, onClose, onSaved }: PacoteEditModalP
                       </button>
                     </>
                   )}
+                </div>
+              )}
+
+              {podePreAgendar && (
+                <div>
+                  <label className="form-field form-field--full">
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <input
+                        type="checkbox"
+                        checked={preagendar}
+                        onChange={(event) => setPreagendar(event.target.checked)}
+                      />
+                      📅 Pré-agendar na Agenda as sessões ainda não usadas nem agendadas
+                    </span>
+                  </label>
+                  {preagendar && <PreAgendamentoFields values={preagendamento} onChange={setPreagendamento} />}
                 </div>
               )}
 

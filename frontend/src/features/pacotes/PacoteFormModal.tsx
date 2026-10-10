@@ -5,6 +5,7 @@ import { ApiError } from '../../lib/api'
 import { fetchServicos } from '../servicos/api'
 import type { Servico } from '../servicos/types'
 import { createPacote } from './api'
+import { PreAgendamentoFields } from './PreAgendamentoFields'
 import type { ItemFormRow, PacoteFormValues } from './types'
 import { emptyPacoteForm } from './types'
 import { useEscapeKey } from '../../hooks/useEscapeKey'
@@ -64,6 +65,17 @@ export function PacoteFormModal({ onClose, onSaved }: PacoteFormModalProps) {
       return
     }
     setPacienteError(undefined)
+
+    if (values.tipo === 'Serviços' && values.preagendar) {
+      if (!values.itens.some((item) => item.servico_id)) {
+        setError('Para pré-agendar, vincule ao menos um item a um serviço do catálogo.')
+        return
+      }
+      if (!values.preagendamento.data_inicial || !values.preagendamento.hora) {
+        setError('Informe a data inicial e o horário das sessões a pré-agendar.')
+        return
+      }
+    }
 
     setIsSubmitting(true)
     try {
@@ -199,6 +211,23 @@ export function PacoteFormModal({ onClose, onSaved }: PacoteFormModalProps) {
                 <p className="page-subtitle" style={{ marginTop: 8 }}>
                   Total dos itens: {totalItens.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </p>
+              )}
+
+              <label className="form-field form-field--full" style={{ marginTop: 12 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={values.preagendar}
+                    onChange={(event) => setValues((prev) => ({ ...prev, preagendar: event.target.checked }))}
+                  />
+                  📅 Pré-agendar as sessões na Agenda
+                </span>
+              </label>
+              {values.preagendar && (
+                <PreAgendamentoFields
+                  values={values.preagendamento}
+                  onChange={(preagendamento) => setValues((prev) => ({ ...prev, preagendamento }))}
+                />
               )}
             </div>
           ) : (

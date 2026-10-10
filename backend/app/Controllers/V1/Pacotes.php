@@ -62,6 +62,15 @@ class Pacotes extends BaseController
     }
 
     /**
+     * API: Pré-agenda na Agenda as sessões restantes de um pacote de serviços.
+     */
+    public function preAgendar(int $id): ResponseInterface
+    {
+        $result = $this->service->preAgendar($id, $this->getRequestData());
+        return $this->apiResponse($result, 201);
+    }
+
+    /**
      * API: Remove um pacote do sistema.
      */
     public function delete(int $id): ResponseInterface

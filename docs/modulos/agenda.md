@@ -59,6 +59,7 @@ Quando a recorrência não é `nenhuma`, o sistema cria **uma série de agendame
 
 - todas as ocorrências compartilham o mesmo `age_grupo_id`;
 - o intervalo é de 1 semana, 2 semanas ou 1 mês;
+- na mensal, a série mantém o dia do mês da data inicial; nos meses mais curtos, usa o último dia (ex.: 31/01 → 28/02 → 31/03);
 - sem data final, a série vai até **1 ano** à frente;
 - o limite é de **52 ocorrências**, ou de **366** quando há dias da semana escolhidos;
 - os serviços são copiados para cada ocorrência.
@@ -72,6 +73,10 @@ Na recorrência **semanal** ou **quinzenal**, o formulário mostra os botões **
 - Na quinzenal, os dias marcados se repetem a cada duas semanas.
 - Sem nenhum dia marcado, a série se repete no mesmo dia da semana da data informada.
 - Se nenhuma data cair entre o início e o fim informados, o sistema mostra um erro e não cria nada.
+
+#### Sessões de pacote
+
+Os agendamentos criados pelo [pré-agendamento de um pacote](pacotes#pré-agendar-as-sessões) também formam séries (`age_grupo_id`), mas são limitados pela **quantidade de sessões** do item, e não pela data final ou pelo limite de 1 ano. Eles guardam o pacote em `pacote_id`; ao faturar um deles, o modal já sugere a forma **Pacote** com esse pacote selecionado (se ele estiver ativo).
 
 Na API, os dias vão no campo `age_recorrencia_dias`, uma lista de números de `0` (domingo) a `6` (sábado). Esse campo só serve para gerar a série e não é gravado no banco.
 
