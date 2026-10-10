@@ -50,12 +50,17 @@ export function fetchEquipeOptions(): Promise<ApiEnvelope<EquipeOption[]>> {
   return api.get<EquipeOption[]>('/equipe')
 }
 
+function permiteDias(values: AgendamentoFormValues): boolean {
+  return values.age_recorrencia === 'semanal' || values.age_recorrencia === 'quinzenal'
+}
+
 function toPayload(values: AgendamentoFormValues): Record<string, unknown> {
   return {
     ...values,
     paciente_id: Number(values.paciente_id),
     age_veterinario: values.age_veterinario ? Number(values.age_veterinario) : null,
     age_recorrencia_fim: values.age_recorrencia_fim || null,
+    age_recorrencia_dias: permiteDias(values) ? values.age_recorrencia_dias : [],
   }
 }
 
