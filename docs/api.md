@@ -185,6 +185,7 @@ As rotas são definidas em dois arquivos: `app/Config/Routes.php` (principal) e 
 | GET | `/pacotes/{id}` | Detalhe com itens e usos |
 | POST | `/pacotes` | Cria pacote + cobrança |
 | PUT | `/pacotes/{id}` | Edita |
+| POST | `/pacotes/{id}/preagendar` | Pré-agenda na Agenda as sessões restantes |
 | DELETE | `/pacotes/{id}` | Exclui (só sem uso) |
 
 ## Perfil

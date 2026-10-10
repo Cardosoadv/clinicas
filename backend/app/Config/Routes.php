@@ -143,6 +143,7 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\V1', 'filter' => 'apia
     $routes->get('pacotes/(:num)', 'Pacotes::show/$1');
     $routes->post('pacotes', 'Pacotes::create');
     $routes->put('pacotes/(:num)', 'Pacotes::update/$1');
+    $routes->post('pacotes/(:num)/preagendar', 'Pacotes::preAgendar/$1');
     $routes->delete('pacotes/(:num)', 'Pacotes::delete/$1');
 
     // Perfil

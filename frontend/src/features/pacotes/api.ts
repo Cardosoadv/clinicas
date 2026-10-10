@@ -1,5 +1,12 @@
 import { api, type ApiEnvelope } from '../../lib/api'
-import type { Pacote, PacoteDetalhes, PacoteEditFormValues, PacoteFormValues, PacoteTipo } from './types'
+import type {
+  Pacote,
+  PacoteDetalhes,
+  PacoteEditFormValues,
+  PacoteFormValues,
+  PacoteTipo,
+  PreAgendamentoValues,
+} from './types'
 
 export function fetchPacotes(): Promise<ApiEnvelope<Pacote[]>> {
   return api.get<Pacote[]>('/pacotes')
@@ -35,9 +42,28 @@ export function createPacote(values: PacoteFormValues): Promise<ApiEnvelope> {
         quantidade: item.quantidade ? Number(item.quantidade) : 1,
         valor_unitario: item.valor_unitario ? Number(item.valor_unitario) : 0,
       }))
+
+    if (values.preagendar) {
+      payload.preagendar = true
+      payload.preagendamento = preAgendamentoPayload(values.preagendamento)
+    }
   }
 
   return api.post('/pacotes', payload)
+}
+
+function preAgendamentoPayload(values: PreAgendamentoValues): Record<string, unknown> {
+  return {
+    data_inicial: values.data_inicial,
+    periodicidade: values.periodicidade,
+    hora: values.hora,
+    duracao: Number(values.duracao) || 30,
+    veterinario_id: values.veterinario_id ? Number(values.veterinario_id) : null,
+  }
+}
+
+export function preAgendarPacote(id: number, values: PreAgendamentoValues): Promise<ApiEnvelope> {
+  return api.post(`/pacotes/${id}/preagendar`, preAgendamentoPayload(values))
 }
 
 export function updatePacote(id: number, values: PacoteEditFormValues, tipo: PacoteTipo): Promise<ApiEnvelope> {

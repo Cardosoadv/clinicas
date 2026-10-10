@@ -41,7 +41,16 @@ export function FaturarModal({ agendamento, servicosOptions, onClose, onSubmit }
   useEffect(() => {
     if (values.forma_pagamento === 'Pacote') {
       fetchPacotesDisponiveis(agendamento.paciente_id)
-        .then((res) => setPacotesDisponiveis(res.data ?? []))
+        .then((res) => {
+          const pacotes = res.data ?? []
+          setPacotesDisponiveis(pacotes)
+          // O pacote sugerido (sessão pré-agendada) pode ainda não estar ativo
+          setValues((prev) =>
+            prev.pacote_id && !pacotes.some((pacote) => String(pacote.id) === prev.pacote_id)
+              ? { ...prev, pacote_id: '' }
+              : prev,
+          )
+        })
         .catch(() => setPacotesDisponiveis([]))
     }
   }, [values.forma_pagamento, agendamento.paciente_id])

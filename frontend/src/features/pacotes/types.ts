@@ -49,6 +49,27 @@ export interface ItemFormRow {
   valor_unitario: string
 }
 
+export type PreAgendamentoPeriodicidade = 'semanal' | 'mensal'
+
+/** Opções para pré-agendar na Agenda as sessões de um pacote de serviços */
+export interface PreAgendamentoValues {
+  data_inicial: string
+  periodicidade: PreAgendamentoPeriodicidade
+  hora: string
+  duracao: string
+  veterinario_id: string
+}
+
+export function emptyPreAgendamento(): PreAgendamentoValues {
+  return {
+    data_inicial: new Date().toISOString().slice(0, 10),
+    periodicidade: 'semanal',
+    hora: '09:00',
+    duracao: '30',
+    veterinario_id: '',
+  }
+}
+
 export interface PacoteFormValues {
   paciente_id: string
   nome: string
@@ -60,6 +81,8 @@ export interface PacoteFormValues {
   desconto: string
   forma_pagamento: string
   vencimento: string
+  preagendar: boolean
+  preagendamento: PreAgendamentoValues
 }
 
 export function emptyPacoteForm(): PacoteFormValues {
@@ -74,6 +97,8 @@ export function emptyPacoteForm(): PacoteFormValues {
     desconto: '0',
     forma_pagamento: 'Cartão de Crédito',
     vencimento: new Date().toISOString().slice(0, 10),
+    preagendar: false,
+    preagendamento: emptyPreAgendamento(),
   }
 }
 
