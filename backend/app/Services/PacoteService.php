@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Repositories\AgendamentosRepository;
 use App\Repositories\PacotesRepository;
 use App\Repositories\PacoteItensRepository;
 use App\Repositories\FatCobrancaRepository;
@@ -19,6 +20,11 @@ class PacoteService extends BaseService
     protected PacoteItensRepository $itensRepo;
     protected FatCobrancaRepository $cobrancaRepo;
     protected PacoteUsoRepository $usoRepo;
+    protected ?AgendaService $agendaService;
+    protected ?AgendamentosRepository $agendamentosRepo;
+
+    /** Periodicidades aceitas no pré-agendamento das sessões de um pacote. */
+    public const PERIODICIDADES_PREAGENDAMENTO = ['semanal', 'mensal'];
 
     /**
      * Injeta as dependências do serviço de pacotes.
@@ -27,18 +33,46 @@ class PacoteService extends BaseService
      * @param PacoteItensRepository|null $itensRepo
      * @param FatCobrancaRepository|null $cobrancaRepo
      * @param PacoteUsoRepository|null $usoRepo
+     * @param AgendaService|null $agendaService
+     * @param AgendamentosRepository|null $agendamentosRepo
      */
     public function __construct(
         ?PacotesRepository $pacotesRepo = null,
         ?PacoteItensRepository $itensRepo = null,
         ?FatCobrancaRepository $cobrancaRepo = null,
-        ?PacoteUsoRepository $usoRepo = null
+        ?PacoteUsoRepository $usoRepo = null,
+        ?AgendaService $agendaService = null,
+        ?AgendamentosRepository $agendamentosRepo = null
     ) {
         $this->pacotesRepo = $pacotesRepo ?? new PacotesRepository();
         $this->repository   = $this->pacotesRepo;
         $this->itensRepo    = $itensRepo    ?? new PacoteItensRepository();
         $this->cobrancaRepo = $cobrancaRepo ?? new FatCobrancaRepository();
         $this->usoRepo      = $usoRepo      ?? new PacoteUsoRepository();
+        // AgendaService instancia PacoteService no próprio construtor; por isso
+        // as dependências da Agenda são criadas sob demanda (ver agenda()).
+        $this->agendaService    = $agendaService;
+        $this->agendamentosRepo = $agendamentosRepo;
+    }
+
+    /**
+     * Retorna o serviço da Agenda, criando-o na primeira vez em que é usado.
+     *
+     * @return AgendaService
+     */
+    protected function agenda(): AgendaService
+    {
+        return $this->agendaService ??= new AgendaService(null, null, null, $this);
+    }
+
+    /**
+     * Retorna o repositório de agendamentos, criando-o na primeira vez em que é usado.
+     *
+     * @return AgendamentosRepository
+     */
+    protected function agendamentos(): AgendamentosRepository
+    {
+        return $this->agendamentosRepo ??= new AgendamentosRepository();
     }
 
     /**
@@ -115,18 +149,179 @@ class PacoteService extends BaseService
 
             $this->cobrancaRepo->create($cobrancaRepoData);
 
+            // 4. Pré-agendar as sessões na Agenda, se solicitado
+            $preagendados = 0;
+            if ($pacoteData['tipo'] === 'Serviços' && !empty($data['preagendar'])) {
+                $sessoes = [];
+                foreach ((array) ($data['itens'] ?? []) as $item) {
+                    $sessoes[] = [
+                        'servico_id' => $item['servico_id'] ?? null,
+                        'quantidade' => (int) ($item['quantidade'] ?? 1),
+                    ];
+                }
+                $preagendados = $this->gerarPreAgendamentos((int) $pacoteId, (int) $data['paciente_id'], $sessoes, (array) ($data['preagendamento'] ?? []));
+                if ($preagendados === 0) {
+                    throw new Exception('Nenhum item do pacote tem serviço do catálogo para pré-agendar.');
+                }
+            }
+
             $db->transComplete();
 
             if ($db->transStatus() === false) {
                 return $this->error('Erro ao processar criação do pacote.');
             }
 
-            return $this->success('Pacote criado com sucesso. Aguardando pagamento da cobrança para ativação.', ['id' => $pacoteId]);
+            $msg = 'Pacote criado com sucesso. Aguardando pagamento da cobrança para ativação.';
+            if ($preagendados > 0) {
+                $msg = "Pacote criado com sucesso e $preagendados sessão(ões) pré-agendada(s) na Agenda. Aguardando pagamento da cobrança para ativação.";
+            }
+
+            return $this->success($msg, ['id' => $pacoteId, 'preagendados' => $preagendados]);
 
         } catch (Exception $e) {
             $db->transRollback();
             return $this->error('Erro: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Pré-agenda na Agenda as sessões ainda não usadas nem agendadas de um
+     * pacote de serviços já existente (ex.: pela tela de edição do pacote).
+     *
+     * Para cada item com serviço do catálogo, agenda
+     * `quantidade_total - quantidade_usada - agendamentos pendentes do pacote`.
+     *
+     * @param int $pacoteId
+     * @param array $opcoes data_inicial, periodicidade, hora, duracao, veterinario_id
+     * @return array
+     */
+    public function preAgendar(int $pacoteId, array $opcoes): array
+    {
+        $pacote = $this->pacotesRepo->findById($pacoteId);
+        if (!$pacote) {
+            return $this->error('Pacote não encontrado.');
+        }
+        if ($pacote['tipo'] !== 'Serviços') {
+            return $this->error('Só é possível pré-agendar sessões de pacotes de serviços.');
+        }
+        if (in_array($pacote['status'], ['Cancelado', 'Esgotado'], true)) {
+            return $this->error("Não é possível pré-agendar sessões de um pacote {$pacote['status']}.");
+        }
+
+        $pendentes = $this->agendamentos()->countPendentesPorPacote($pacoteId);
+        $sessoes = [];
+
+        foreach ($this->itensRepo->getPorPacote($pacoteId) as $item) {
+            $servicoId = (int) ($item['servico_id'] ?? 0);
+            $restante = (int) $item['quantidade_total'] - (int) $item['quantidade_usada'];
+
+            // Desconta as sessões já agendadas (o mesmo serviço pode estar em mais de um item)
+            $jaAgendadas = min($restante, $pendentes[$servicoId] ?? 0);
+            if ($servicoId > 0) {
+                $pendentes[$servicoId] = ($pendentes[$servicoId] ?? 0) - $jaAgendadas;
+            }
+
+            $sessoes[] = ['servico_id' => $servicoId ?: null, 'quantidade' => $restante - $jaAgendadas];
+        }
+
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        try {
+            $total = $this->gerarPreAgendamentos($pacoteId, (int) $pacote['paciente_id'], $sessoes, $opcoes);
+
+            if ($total === 0) {
+                throw new Exception('Todas as sessões deste pacote já foram usadas ou já estão agendadas.');
+            }
+
+            $db->transComplete();
+
+            if ($db->transStatus() === false) {
+                return $this->error('Erro ao pré-agendar as sessões do pacote.');
+            }
+
+            return $this->success("$total sessão(ões) pré-agendada(s) na Agenda.", ['preagendados' => $total]);
+        } catch (Exception $e) {
+            $db->transRollback();
+            return $this->error('Erro: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Gera na Agenda os agendamentos das sessões de um pacote, vinculados a ele
+     * (`pacote_id`) e ao serviço de cada item.
+     *
+     * Cada item com serviço do catálogo vira uma série com uma ocorrência por
+     * sessão, espaçada pela periodicidade a partir da data inicial. Quando há
+     * vários itens, eles ficam em horários consecutivos no mesmo dia (o 2º item
+     * começa quando termina o 1º, e assim por diante), para não se sobreporem.
+     * Itens de nome livre (sem serviço do catálogo) não são agendados.
+     *
+     * Deve ser chamado dentro de uma transação: em caso de erro, lança exceção
+     * para que quem chamou desfaça tudo.
+     *
+     * @param int $pacoteId
+     * @param int $pacienteId
+     * @param array $sessoes Lista de ['servico_id' => int|null, 'quantidade' => int]
+     * @param array $opcoes data_inicial, periodicidade, hora, duracao, veterinario_id
+     * @return int Quantidade de agendamentos criados
+     * @throws Exception
+     */
+    protected function gerarPreAgendamentos(int $pacoteId, int $pacienteId, array $sessoes, array $opcoes): int
+    {
+        $dataInicial   = (string) ($opcoes['data_inicial'] ?? '');
+        $periodicidade = (string) ($opcoes['periodicidade'] ?? '');
+        $hora          = substr((string) ($opcoes['hora'] ?? ''), 0, 5);
+        $duracao       = (int) ($opcoes['duracao'] ?? 30);
+        $veterinario   = !empty($opcoes['veterinario_id']) ? (int) $opcoes['veterinario_id'] : null;
+
+        $inicio = \DateTimeImmutable::createFromFormat('!Y-m-d H:i', "$dataInicial $hora");
+        if ($inicio === false || $inicio->format('Y-m-d H:i') !== "$dataInicial $hora") {
+            throw new Exception('Informe a data inicial e o horário das sessões para pré-agendar.');
+        }
+        if (!in_array($periodicidade, self::PERIODICIDADES_PREAGENDAMENTO, true)) {
+            throw new Exception('Periodicidade inválida para o pré-agendamento (use semanal ou mensal).');
+        }
+        if ($duracao < 1) {
+            throw new Exception('Duração das sessões inválida.');
+        }
+
+        $total = 0;
+        $horario = $inicio;
+
+        foreach ($sessoes as $sessao) {
+            $servicoId  = (int) ($sessao['servico_id'] ?? 0);
+            $quantidade = (int) ($sessao['quantidade'] ?? 0);
+            if ($servicoId < 1 || $quantidade < 1) {
+                continue;
+            }
+
+            if ($horario->format('Y-m-d') !== $dataInicial) {
+                throw new Exception('Os horários das sessões ultrapassam o fim do dia. Escolha um horário inicial mais cedo.');
+            }
+
+            $result = $this->agenda()->createSeriePorQuantidade([
+                'paciente_id'     => $pacienteId,
+                'pacote_id'       => $pacoteId,
+                'age_data'        => $dataInicial,
+                'age_hora'        => $horario->format('H:i:s'),
+                'age_duracao'     => (string) $duracao,
+                'age_status'      => 'pendente',
+                'age_veterinario' => $veterinario,
+                'age_recorrencia' => $periodicidade,
+                'age_servico'     => [$servicoId],
+                'age_obs'         => "Sessão pré-agendada do pacote #$pacoteId",
+            ], $quantidade);
+
+            if ($result['status'] !== 'success') {
+                throw new Exception($result['message'] ?? 'Erro ao pré-agendar as sessões do pacote.');
+            }
+
+            $total += $quantidade;
+            $horario = $horario->modify("+{$duracao} minutes");
+        }
+
+        return $total;
     }
 
     /**

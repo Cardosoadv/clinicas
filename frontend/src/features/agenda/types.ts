@@ -5,6 +5,8 @@ export type AgendamentoStatus = 'pendente' | 'confirmado' | 'cancelado' | 'concl
 export interface Agendamento {
   age_id: number
   age_grupo_id: string | null
+  /** Pacote de serviços ao qual a sessão pertence (pré-agendamento do pacote) */
+  pacote_id: number | null
   paciente_id: number
   age_data: string
   age_hora: string
@@ -129,8 +131,9 @@ export function emptyFaturarForm(agendamento: Agendamento, servicosOptions: Serv
   return {
     valor: valorTotal ? String(valorTotal) : '',
     desconto: '0',
-    forma_pagamento: 'Pix',
-    pacote_id: '',
+    // Sessão pré-agendada por um pacote: já sugere faturar com ele
+    forma_pagamento: agendamento.pacote_id ? 'Pacote' : 'Pix',
+    pacote_id: agendamento.pacote_id ? String(agendamento.pacote_id) : '',
     parcelas: '1',
     vencimento: today,
     status: 'Pago',

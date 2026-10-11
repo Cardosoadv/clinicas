@@ -22,7 +22,7 @@ Estrutura criada pelas migrations de `backend/app/Database/Migrations/` (MySQL/M
 ## Relacionamentos
 
 ```text
-clientes 1─┬─N pacientes 1─┬─N agendamentos N─N servicos (agendamento_servicos)
+clientes 1─┬─N pacientes 1─┬─N agendamentos N─N servicos (agendamento_servicos), ──► pacotes
            │               ├─N paciente_pesos
            ├─N cliente_notas├─N vacinas
            └─N comunicacoes ├─N evolucoes ──► equipe (veterinario_id)
@@ -105,6 +105,7 @@ Chave `age_id`.
 | Campo | Tipo / valores |
 |:--|:--|
 | `age_grupo_id` | Agrupa as ocorrências de uma série recorrente |
+| `pacote_id` | → `pacotes` (opcional). Preenchido nas sessões pré-agendadas de um pacote |
 | `paciente_id` | → `pacientes` |
 | `age_data`, `age_hora`, `age_duracao` | Data, hora e duração (min) |
 | `age_obs`, `age_lembrete` | — |

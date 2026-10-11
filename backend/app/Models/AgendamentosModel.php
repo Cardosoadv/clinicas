@@ -19,6 +19,7 @@ use CodeIgniter\Model;
  * @property string $age_status
  * @property int|null $age_veterinario
  * @property int $age_faturado
+ * @property int|null $pacote_id
  */
 class AgendamentosModel extends Model
 {
@@ -39,6 +40,7 @@ class AgendamentosModel extends Model
         'age_veterinario',
         'age_faturado',
         'age_grupo_id',
+        'pacote_id',
         'age_recorrencia',
         'age_recorrencia_fim',
     ];

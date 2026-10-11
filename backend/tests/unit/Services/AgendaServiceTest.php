@@ -192,6 +192,99 @@ final class AgendaServiceTest extends CIUnitTestCase
         $this->assertStringContainsString('Erro ao criar recorrência', $result['message']);
     }
 
+    public function testCreateMonthlyRecurrenceKeepsDayOfMonthWithoutDrift(): void
+    {
+        $datas = [];
+        $this->agendamentosRepository->method('create')
+            ->willReturnCallback(static function (array $data) use (&$datas): int {
+                $datas[] = $data['age_data'];
+                return count($datas);
+            });
+
+        $result = $this->service->create([
+            'age_data'            => '2027-01-31',
+            'age_recorrencia'     => 'mensal',
+            'age_recorrencia_fim' => '2027-05-31',
+        ]);
+
+        $this->assertSame('success', $result['status']);
+        $this->assertSame(['2027-01-31', '2027-02-28', '2027-03-31', '2027-04-30', '2027-05-31'], $datas);
+    }
+
+    public function testCreateSeriePorQuantidadeCreatesOneAppointmentPerSession(): void
+    {
+        $criados = [];
+        $this->agendamentosRepository->expects($this->exactly(4))
+            ->method('create')
+            ->willReturnCallback(static function (array $data) use (&$criados): int {
+                $criados[] = $data;
+                return 200 + count($criados);
+            });
+        $this->agendamentosRepository->expects($this->exactly(4))
+            ->method('syncServices')
+            ->with($this->anything(), [7]);
+
+        $result = $this->service->createSeriePorQuantidade([
+            'paciente_id'     => 1,
+            'pacote_id'       => 9,
+            'age_data'        => '2026-11-02',
+            'age_hora'        => '14:00:00',
+            'age_recorrencia' => 'semanal',
+            'age_servico'     => [7],
+        ], 4);
+
+        $this->assertSame('success', $result['status']);
+        $this->assertSame([201, 202, 203, 204], $result['ids']);
+        $this->assertSame(['2026-11-02', '2026-11-09', '2026-11-16', '2026-11-23'], array_column($criados, 'age_data'));
+        $this->assertSame([9], array_unique(array_column($criados, 'pacote_id')));
+        $this->assertCount(1, array_unique(array_column($criados, 'age_grupo_id')));
+        $this->assertSame('2026-11-23', $criados[0]['age_recorrencia_fim']);
+        $this->assertArrayNotHasKey('age_servico', $criados[0]);
+    }
+
+    public function testCreateSeriePorQuantidadeIsLimitedByQuantityNotByOneYear(): void
+    {
+        $datas = [];
+        $this->agendamentosRepository->expects($this->exactly(14))
+            ->method('create')
+            ->willReturnCallback(static function (array $data) use (&$datas): int {
+                $datas[] = $data['age_data'];
+                return count($datas);
+            });
+
+        $result = $this->service->createSeriePorQuantidade([
+            'age_data'        => '2026-10-15',
+            'age_recorrencia' => 'mensal',
+        ], 14);
+
+        $this->assertSame('success', $result['status']);
+        $this->assertSame('2026-10-15', $datas[0]);
+        $this->assertSame('2026-11-15', $datas[1]);
+        $this->assertSame('2027-11-15', $datas[13]);
+    }
+
+    public function testCreateSeriePorQuantidadeRejectsInvalidQuantity(): void
+    {
+        $this->agendamentosRepository->expects($this->never())->method('create');
+
+        $result = $this->service->createSeriePorQuantidade(['age_data' => '2026-10-15'], 0);
+
+        $this->assertSame('error', $result['status']);
+    }
+
+    public function testCreateSeriePorQuantidadeReturnsErrorWhenCreationFails(): void
+    {
+        $this->agendamentosRepository->method('create')->willReturnOnConsecutiveCalls(1, 0);
+
+        $result = $this->service->createSeriePorQuantidade([
+            'age_data'        => '2026-10-15',
+            'age_recorrencia' => 'semanal',
+        ], 3);
+
+        $this->assertSame('error', $result['status']);
+        $this->assertStringContainsString('2026-10-22', $result['message']);
+    }
+
     public function testUpdateSyncsServicesOnSuccess(): void
     {
         $this->agendamentosRepository->expects($this->once())

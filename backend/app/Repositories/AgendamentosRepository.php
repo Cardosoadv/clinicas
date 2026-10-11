@@ -406,4 +406,32 @@ class AgendamentosRepository extends BaseRepository
 
         return array_column($results, 'ser_id');
     }
+
+    /**
+     * Conta, por serviço, os agendamentos vinculados a um pacote que ainda
+     * vão consumir sessões dele (não cancelados e ainda não faturados).
+     *
+     * @param int $pacoteId
+     * @return array<int, int> [ser_id => quantidade]
+     */
+    public function countPendentesPorPacote(int $pacoteId): array
+    {
+        $db = \Config\Database::connect();
+        $results = $db->table('agendamentos')
+            ->select('agendamento_servicos.ser_id, COUNT(DISTINCT agendamentos.age_id) as total')
+            ->join('agendamento_servicos', 'agendamento_servicos.age_id = agendamentos.age_id')
+            ->where('agendamentos.pacote_id', $pacoteId)
+            ->where('agendamentos.age_status !=', 'cancelado')
+            ->where('agendamentos.age_faturado', 0)
+            ->groupBy('agendamento_servicos.ser_id')
+            ->get()
+            ->getResultArray();
+
+        $contagem = [];
+        foreach ($results as $row) {
+            $contagem[(int) $row['ser_id']] = (int) $row['total'];
+        }
+
+        return $contagem;
+    }
 }
