@@ -1,14 +1,16 @@
-import { X } from 'lucide-react'
+import { Plus, Trash2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { PacienteAvatar } from '../../components/PacienteAvatar'
 import { useEscapeKey } from '../../hooks/useEscapeKey'
 import { ApiError } from '../../lib/api'
+import { fetchProdutos } from '../estoque/api'
+import type { Produto } from '../estoque/types'
 import { formasPagamentoCobranca } from '../faturamento/types'
 import { fetchPacotesDisponiveis } from '../pacotes/api'
 import type { Pacote } from '../pacotes/types'
 import { fetchFaturamento } from './api'
-import { cobrancaToFaturarForm, emptyFaturarForm } from './types'
-import type { Agendamento, FaturarFormValues, FaturarStatus, ServicoOption } from './types'
+import { cobrancaToFaturarForm, emptyFaturarForm, totalMateriais } from './types'
+import type { Agendamento, FaturarFormValues, FaturarMaterial, FaturarStatus, ServicoOption } from './types'
 
 interface FaturarModalProps {
   agendamento: Agendamento
@@ -19,11 +21,16 @@ interface FaturarModalProps {
 
 const jaFaturado = (agendamento: Agendamento) => Number(agendamento.age_faturado) === 1
 
+function formatCurrency(value: number): string {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
 export function FaturarModal({ agendamento, servicosOptions, onClose, onSubmit }: FaturarModalProps) {
   const isEdit = jaFaturado(agendamento)
   const [values, setValues] = useState<FaturarFormValues>(() => emptyFaturarForm(agendamento, servicosOptions))
   const [isLoadingExisting, setIsLoadingExisting] = useState(isEdit)
   const [pacotesDisponiveis, setPacotesDisponiveis] = useState<Pacote[]>([])
+  const [produtos, setProdutos] = useState<Produto[]>([])
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -37,6 +44,12 @@ export function FaturarModal({ agendamento, servicosOptions, onClose, onSubmit }
       .finally(() => setIsLoadingExisting(false))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agendamento.age_id])
+
+  useEffect(() => {
+    fetchProdutos()
+      .then((res) => setProdutos(res.data ?? []))
+      .catch(() => setProdutos([]))
+  }, [])
 
   useEffect(() => {
     if (values.forma_pagamento === 'Pacote') {
@@ -55,10 +68,42 @@ export function FaturarModal({ agendamento, servicosOptions, onClose, onSubmit }
     }
   }, [values.forma_pagamento, agendamento.paciente_id])
 
+  function addMaterial() {
+    setValues((prev) => ({
+      ...prev,
+      materiais: [...prev.materiais, { produto_id: '', quantidade: '1', valor_unitario: '0' }],
+    }))
+  }
+
+  function updateMaterial(index: number, field: keyof FaturarMaterial, value: string) {
+    setValues((prev) => ({
+      ...prev,
+      materiais: prev.materiais.map((item, i) => {
+        if (i !== index) return item
+        if (field !== 'produto_id') return { ...item, [field]: value }
+        // Ao escolher o produto, sugere o valor de venda cadastrado no estoque
+        const produto = produtos.find((p) => String(p.id) === value)
+        return { ...item, produto_id: value, valor_unitario: produto ? String(Number(produto.valor_venda)) : '0' }
+      }),
+    }))
+  }
+
+  function removeMaterial(index: number) {
+    setValues((prev) => ({ ...prev, materiais: prev.materiais.filter((_, i) => i !== index) }))
+  }
+
+  const valorMateriais = totalMateriais(values.materiais)
+  const valorTotal = Number(values.valor || 0) + valorMateriais
+
   async function handleSubmit() {
     setError(null)
 
-    if (!values.valor || Number(values.valor) <= 0) {
+    if (values.materiais.some((item) => !item.produto_id || Number(item.quantidade) <= 0)) {
+      setError('Selecione o produto e informe a quantidade de cada material, ou remova a linha.')
+      return
+    }
+
+    if (valorTotal <= 0) {
       setError('Informe um valor válido.')
       return
     }
@@ -118,7 +163,7 @@ export function FaturarModal({ agendamento, servicosOptions, onClose, onSubmit }
 
           <div className="form-grid">
             <label className="form-field">
-              Valor (R$) *
+              Valor dos serviços (R$) *
               <input
                 type="number"
                 min="0"
@@ -208,6 +253,80 @@ export function FaturarModal({ agendamento, servicosOptions, onClose, onSubmit }
                 <option value="Cancelado">Cancelado</option>
               </select>
             </label>
+
+            <div className="form-field form-field--full faturar-materiais">
+              <span>Materiais utilizados</span>
+              {values.materiais.length === 0 && (
+                <p className="faturar-materiais__vazio">
+                  Medicamentos, seringas, luvas e outros itens do estoque usados no atendimento.
+                </p>
+              )}
+              {values.materiais.length > 0 && (
+                <div className="faturar-materiais__row faturar-materiais__row--head" aria-hidden="true">
+                  <span>Produto</span>
+                  <span>Qtd.</span>
+                  <span>Valor unit. (R$)</span>
+                  <span>Subtotal</span>
+                  <span />
+                </div>
+              )}
+              {values.materiais.map((item, index) => {
+                const produto = produtos.find((p) => String(p.id) === item.produto_id)
+                return (
+                  <div className="faturar-materiais__row" key={index}>
+                    <select
+                      aria-label="Produto"
+                      value={item.produto_id}
+                      onChange={(event) => updateMaterial(index, 'produto_id', event.target.value)}
+                    >
+                      <option value="">Selecione...</option>
+                      {produtos.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.nome} — {Number(p.quantidade_atual)} {p.unidade_medida ?? ''} em estoque
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      aria-label={`Quantidade${produto?.unidade_medida ? ` (${produto.unidade_medida})` : ''}`}
+                      value={item.quantidade}
+                      onChange={(event) => updateMaterial(index, 'quantidade', event.target.value)}
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      aria-label="Valor unitário"
+                      value={item.valor_unitario}
+                      onChange={(event) => updateMaterial(index, 'valor_unitario', event.target.value)}
+                    />
+                    <span className="faturar-materiais__subtotal">
+                      {formatCurrency(Number(item.quantidade || 0) * Number(item.valor_unitario || 0))}
+                    </span>
+                    <button
+                      type="button"
+                      className="icon-btn icon-btn--danger"
+                      aria-label="Remover material"
+                      title="Remover material"
+                      onClick={() => removeMaterial(index)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                )
+              })}
+              <button type="button" className="btn btn--ghost faturar-materiais__add" onClick={addMaterial}>
+                <Plus size={14} /> Adicionar material
+              </button>
+            </div>
+
+            <div className="form-field form-field--full faturar-totais">
+              <span>Serviços: {formatCurrency(Number(values.valor || 0))}</span>
+              <span>Materiais: {formatCurrency(valorMateriais)}</span>
+              <strong>Total da cobrança: {formatCurrency(valorTotal)}</strong>
+            </div>
 
             <label className="form-field form-field--full">
               Observações

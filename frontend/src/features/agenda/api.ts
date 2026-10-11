@@ -1,10 +1,11 @@
 import { api, type ApiEnvelope } from '../../lib/api'
-import type { Cobranca } from '../faturamento/types'
+import { totalMateriais } from './types'
 import type {
   Agendamento,
   AgendamentoFormValues,
   AgendamentosFiltro,
   AgendamentoStatus,
+  CobrancaAgendamento,
   DayData,
   EquipeOption,
   FaturarFormValues,
@@ -82,11 +83,21 @@ export function updateAgendamentoStatus(id: number, status: AgendamentoStatus): 
 }
 
 function toFaturarPayload(values: FaturarFormValues): Record<string, unknown> {
+  const materiais = values.materiais
+    .filter((item) => item.produto_id && Number(item.quantidade) > 0)
+    .map((item) => ({
+      produto_id: Number(item.produto_id),
+      quantidade: Number(item.quantidade),
+      valor_unitario: item.valor_unitario ? Number(item.valor_unitario) : 0,
+    }))
+
   return {
     ...values,
-    valor: Number(values.valor),
+    // Total cobrado = serviços + materiais
+    valor: Math.round((Number(values.valor || 0) + totalMateriais(values.materiais)) * 100) / 100,
     desconto: values.desconto ? Number(values.desconto) : 0,
     pacote_id: values.pacote_id ? Number(values.pacote_id) : null,
+    materiais,
   }
 }
 
@@ -94,6 +105,6 @@ export function faturarAgendamento(id: number, values: FaturarFormValues): Promi
   return api.post(`/agendamentos/${id}/faturar`, toFaturarPayload(values))
 }
 
-export function fetchFaturamento(id: number): Promise<ApiEnvelope<Cobranca | null>> {
-  return api.get<Cobranca | null>(`/agendamentos/${id}/faturamento`)
+export function fetchFaturamento(id: number): Promise<ApiEnvelope<CobrancaAgendamento | null>> {
+  return api.get<CobrancaAgendamento | null>(`/agendamentos/${id}/faturamento`)
 }

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services;
 
+use App\Repositories\AgendamentoMateriaisRepository;
 use App\Repositories\AgendamentosRepository;
 use App\Repositories\PetsRepository;
 use App\Services\AgendaService;
+use App\Services\EstoqueService;
 use App\Services\FatService;
 use App\Services\PacoteService;
 use CodeIgniter\Test\CIUnitTestCase;
@@ -20,6 +22,8 @@ final class AgendaServiceTest extends CIUnitTestCase
     private PetsRepository $petsRepository;
     private FatService $fatService;
     private PacoteService $pacoteService;
+    private AgendamentoMateriaisRepository $materiaisRepository;
+    private EstoqueService $estoqueService;
     private AgendaService $service;
 
     protected function setUp(): void
@@ -30,12 +34,16 @@ final class AgendaServiceTest extends CIUnitTestCase
         $this->petsRepository = $this->createMock(PetsRepository::class);
         $this->fatService = $this->createMock(FatService::class);
         $this->pacoteService = $this->createMock(PacoteService::class);
+        $this->materiaisRepository = $this->createMock(AgendamentoMateriaisRepository::class);
+        $this->estoqueService = $this->createMock(EstoqueService::class);
 
         $this->service = new AgendaService(
             $this->agendamentosRepository,
             $this->petsRepository,
             $this->fatService,
-            $this->pacoteService
+            $this->pacoteService,
+            $this->materiaisRepository,
+            $this->estoqueService
         );
     }
 
@@ -458,5 +466,115 @@ final class AgendaServiceTest extends CIUnitTestCase
         $result = $this->service->billAppointment(5, ['forma_pagamento' => 'Pacote', 'pacote_id' => 3, 'valor' => 100]);
 
         $this->assertSame('success', $result['status']);
+    }
+
+    private function mockAppointmentForBilling(): void
+    {
+        $this->agendamentosRepository->method('findById')->willReturn([
+            'paciente_id' => 1,
+            'age_servico' => 'Consulta',
+            'age_data'    => '2026-10-11',
+        ]);
+        $this->agendamentosRepository->method('getServiceIds')->willReturn([7]);
+    }
+
+    public function testBillAppointmentDeductsMateriaisAndSavesThem(): void
+    {
+        $this->mockAppointmentForBilling();
+        $this->materiaisRepository->method('findByAgendamento')->willReturn([]);
+        $this->estoqueService->method('findById')->willReturn(['nome' => 'Seringa', 'quantidade_atual' => 10]);
+        $this->fatService->method('createCobranca')
+            ->with($this->callback(static fn (array $d): bool => !array_key_exists('materiais', $d)))
+            ->willReturn(['status' => 'success', 'id' => 9]);
+
+        $this->estoqueService->expects($this->once())
+            ->method('registrarSaida')
+            ->with(['produto_id' => 3, 'quantidade' => 3.0, 'observacao' => 'Material utilizado no agendamento #5']);
+        $this->materiaisRepository->expects($this->once())
+            ->method('sync')
+            ->with(5, [['produto_id' => 3, 'quantidade' => 3.0, 'valor_unitario' => 2.5]]);
+
+        $result = $this->service->billAppointment(5, [
+            'forma_pagamento' => 'Dinheiro',
+            'valor'           => 107.5,
+            'materiais'       => [
+                ['produto_id' => 3, 'quantidade' => 2, 'valor_unitario' => 2.5],
+                ['produto_id' => 3, 'quantidade' => 1, 'valor_unitario' => 2.5],
+                ['produto_id' => '', 'quantidade' => 1, 'valor_unitario' => 1],
+            ],
+        ]);
+
+        $this->assertSame('success', $result['status']);
+    }
+
+    public function testBillAppointmentFailsWithoutBillingWhenMaterialStockIsInsufficient(): void
+    {
+        $this->mockAppointmentForBilling();
+        $this->materiaisRepository->method('findByAgendamento')->willReturn([]);
+        $this->estoqueService->method('findById')->willReturn(['nome' => 'Luva', 'quantidade_atual' => 1]);
+
+        $this->fatService->expects($this->never())->method('createCobranca');
+        $this->estoqueService->expects($this->never())->method('registrarSaida');
+
+        $result = $this->service->billAppointment(5, [
+            'forma_pagamento' => 'Dinheiro',
+            'valor'           => 100,
+            'materiais'       => [['produto_id' => 4, 'quantidade' => 2, 'valor_unitario' => 1]],
+        ]);
+
+        $this->assertSame('error', $result['status']);
+        $this->assertStringContainsString('Luva', $result['message']);
+    }
+
+    public function testBillAppointmentEditMovesOnlyTheMaterialDifference(): void
+    {
+        $this->mockAppointmentForBilling();
+        $this->fatService->method('findByAgendamento')->willReturn(['id' => 42, 'status' => 'Pago']);
+        $this->fatService->method('updateCobranca')->willReturn(['status' => 'success']);
+        // Já lançados: 5 do produto 3 e 2 do produto 4
+        $this->materiaisRepository->method('findByAgendamento')->willReturn([
+            ['produto_id' => 3, 'quantidade' => '5.00'],
+            ['produto_id' => 4, 'quantidade' => '2.00'],
+        ]);
+        $this->estoqueService->method('findById')->willReturn(['nome' => 'Seringa', 'quantidade_atual' => 0]);
+
+        // Produto 3 cai para 4 (estorna 1); produto 4 é removido (estorna 2)
+        $this->estoqueService->expects($this->never())->method('registrarSaida');
+        $this->estoqueService->expects($this->exactly(2))
+            ->method('registrarEntrada')
+            ->with($this->callback(static fn (array $d): bool =>
+                ($d['produto_id'] === 3 && $d['quantidade'] === 1.0)
+                || ($d['produto_id'] === 4 && $d['quantidade'] === 2.0)));
+
+        $result = $this->service->billAppointment(5, [
+            'forma_pagamento' => 'Dinheiro',
+            'valor'           => 100,
+            'materiais'       => [['produto_id' => 3, 'quantidade' => 4, 'valor_unitario' => 1]],
+        ]);
+
+        $this->assertSame('success', $result['status']);
+    }
+
+    public function testBillAppointmentWithoutMateriaisKeyLeavesMateriaisUntouched(): void
+    {
+        $this->mockAppointmentForBilling();
+        $this->fatService->method('createCobranca')->willReturn(['status' => 'success', 'id' => 9]);
+
+        $this->materiaisRepository->expects($this->never())->method('sync');
+        $this->estoqueService->expects($this->never())->method('registrarSaida');
+
+        $result = $this->service->billAppointment(5, ['forma_pagamento' => 'Dinheiro', 'valor' => 100]);
+
+        $this->assertSame('success', $result['status']);
+    }
+
+    public function testGetBillingIncludesMateriais(): void
+    {
+        $this->fatService->method('findByAgendamento')->willReturn(['id' => 42]);
+        $this->materiaisRepository->method('findByAgendamento')->with(5)->willReturn([['produto_id' => 3]]);
+
+        $result = $this->service->getBilling(5);
+
+        $this->assertSame([['produto_id' => 3]], $result['materiais']);
     }
 }

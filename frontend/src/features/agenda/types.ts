@@ -110,7 +110,28 @@ export interface EquipeOption {
 
 export type FaturarStatus = 'Pendente' | 'Pago' | 'Cancelado'
 
+/** Material (produto do estoque) utilizado no atendimento: medicamento, seringa, luva... */
+export interface FaturarMaterial {
+  produto_id: string
+  quantidade: string
+  valor_unitario: string
+}
+
+/** Material já lançado, como retornado pela API junto da cobrança */
+export interface AgendamentoMaterial {
+  id: number
+  agendamento_id: number
+  produto_id: number
+  produto_nome: string
+  unidade_medida: string | null
+  quantidade: number
+  valor_unitario: number
+}
+
+export type CobrancaAgendamento = Cobranca & { materiais?: AgendamentoMaterial[] }
+
 export interface FaturarFormValues {
+  /** Valor dos serviços; o total cobrado soma também os materiais */
   valor: string
   desconto: string
   forma_pagamento: string
@@ -119,6 +140,11 @@ export interface FaturarFormValues {
   vencimento: string
   status: FaturarStatus
   observacoes: string
+  materiais: FaturarMaterial[]
+}
+
+export function totalMateriais(materiais: FaturarMaterial[]): number {
+  return materiais.reduce((sum, item) => sum + Number(item.quantidade || 0) * Number(item.valor_unitario || 0), 0)
 }
 
 export function emptyFaturarForm(agendamento: Agendamento, servicosOptions: ServicoOption[]): FaturarFormValues {
@@ -138,12 +164,21 @@ export function emptyFaturarForm(agendamento: Agendamento, servicosOptions: Serv
     vencimento: today,
     status: 'Pago',
     observacoes: '',
+    materiais: [],
   }
 }
 
-export function cobrancaToFaturarForm(cobranca: Cobranca): FaturarFormValues {
+export function cobrancaToFaturarForm(cobranca: CobrancaAgendamento): FaturarFormValues {
+  const materiais: FaturarMaterial[] = (cobranca.materiais ?? []).map((material) => ({
+    produto_id: String(material.produto_id),
+    quantidade: String(Number(material.quantidade)),
+    valor_unitario: String(Number(material.valor_unitario)),
+  }))
+  // A cobrança guarda o total; o campo do formulário mostra só a parte dos serviços
+  const valorServicos = Math.max(0, Number(cobranca.valor) - totalMateriais(materiais))
+
   return {
-    valor: String(cobranca.valor),
+    valor: String(Math.round(valorServicos * 100) / 100),
     desconto: String(cobranca.desconto),
     forma_pagamento: cobranca.forma_pagamento,
     pacote_id: cobranca.pacote_id ? String(cobranca.pacote_id) : '',
@@ -151,6 +186,7 @@ export function cobrancaToFaturarForm(cobranca: Cobranca): FaturarFormValues {
     vencimento: cobranca.vencimento,
     status: (cobranca.status === 'Atrasado' ? 'Pendente' : cobranca.status) as FaturarStatus,
     observacoes: cobranca.observacoes ?? '',
+    materiais,
   }
 }
 

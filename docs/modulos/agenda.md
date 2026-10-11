@@ -100,14 +100,38 @@ Na API, os dias vão no campo `age_recorrencia_dias`, uma lista de números de `
 
 ## Faturar um agendamento
 
-O botão **Faturar** abre um modal com valor, desconto, forma de pagamento (Pix, Dinheiro, Cartão de Crédito, Cartão de Débito, Boleto ou **Pacote**), parcelas, vencimento e status (Pendente, Pago ou Cancelado).
+O botão **Faturar** abre um modal com valor dos serviços, desconto, forma de pagamento (Pix, Dinheiro, Cartão de Crédito, Cartão de Débito, Boleto ou **Pacote**), parcelas, vencimento, status (Pendente, Pago ou Cancelado) e os **materiais utilizados**.
+
+### Materiais utilizados
+
+Em **+ Adicionar material**, lance os produtos do [Estoque](estoque) gastos no atendimento: medicamentos, seringas, luvas etc. Para cada linha, informe:
+
+| Campo | Observação |
+|:--|:--|
+| Produto | A lista mostra a quantidade em estoque |
+| Quantidade | Na unidade de medida do produto |
+| Valor unitário | Já vem com o **valor de venda** do produto. Pode ser alterado, ou zerado se o item não for cobrado do tutor |
+
+O modal mostra **Serviços + Materiais = Total da cobrança**. É esse total que fica gravado no valor da cobrança. O desconto continua sendo só registrado e não entra na conta.
+
+Regras:
+
+- Ao faturar, cada material sai do estoque (observação `Material utilizado no agendamento #{id}`), **qualquer que seja o status** da cobrança — o material foi usado de qualquer forma.
+- Se algum material não tiver estoque suficiente, o faturamento é **recusado** antes de criar a cobrança, com o nome do produto em falta.
+- Ao **editar** o faturamento, só a diferença é movimentada: aumentar a quantidade gera nova saída; diminuir ou remover um material devolve a diferença ao estoque como `Entrada` (observação `Estorno de material do agendamento #{id}`).
+- Com forma **Pacote** de crédito, o total (com os materiais) é descontado do saldo do pacote.
+- Os materiais ficam na tabela `agendamento_materiais` e são independentes da baixa automática da ficha técnica (BOM) do serviço.
+
+### O que acontece ao confirmar
 
 Ao confirmar (`POST agendamentos/{id}/faturar`):
 
-1. se a forma for **Pacote**, o sistema consome uma sessão (ou o valor, se o pacote for de crédito) do pacote escolhido, usando o **primeiro serviço** do agendamento — veja [Pacotes](pacotes);
-2. cria a cobrança no [Faturamento](faturamento), ligada ao agendamento (`agendamento_id`), ao paciente e ao serviço principal;
-3. se a cobrança nasce **Paga**, dá baixa no estoque dos insumos do serviço (ficha técnica/BOM — veja [Serviços](servicos));
-4. marca o agendamento como `age_faturado = 1` e status `concluido`.
+1. se vierem materiais, confere o estoque de cada um (falta de estoque cancela tudo);
+2. se a forma for **Pacote**, o sistema consome uma sessão (ou o valor, se o pacote for de crédito) do pacote escolhido, usando o **primeiro serviço** do agendamento — veja [Pacotes](pacotes);
+3. cria a cobrança no [Faturamento](faturamento), ligada ao agendamento (`agendamento_id`), ao paciente e ao serviço principal;
+4. se a cobrança nasce **Paga**, dá baixa no estoque dos insumos do serviço (ficha técnica/BOM — veja [Serviços](servicos));
+5. grava os materiais e movimenta o estoque deles;
+6. marca o agendamento como `age_faturado = 1` e status `concluido`.
 
 Faturar de novo um agendamento já faturado **edita a cobrança existente** em vez de criar outra, e **não consome o pacote outra vez**.
 
@@ -127,5 +151,5 @@ Pelo backend é possível gerar links de WhatsApp de **lembrete do agendamento**
 | POST | `/agendamentos` | Cria (envie `age_servico` como lista de IDs de serviço) |
 | PUT | `/agendamentos/{id}` | Edita (e sincroniza os serviços, se `age_servico` vier) |
 | PATCH | `/agendamentos/{id}/status` | Muda só o status |
-| POST | `/agendamentos/{id}/faturar` | Fatura (cria ou atualiza a cobrança) |
-| GET | `/agendamentos/{id}/faturamento` | Cobrança ligada ao agendamento |
+| POST | `/agendamentos/{id}/faturar` | Fatura (cria ou atualiza a cobrança). Aceita `materiais[]` com `produto_id`, `quantidade` e `valor_unitario`; `valor` é o total já somado aos materiais. Sem a chave `materiais`, os materiais já lançados não mudam |
+| GET | `/agendamentos/{id}/faturamento` | Cobrança ligada ao agendamento, com a lista `materiais` (inclui `produto_nome` e `unidade_medida`) |

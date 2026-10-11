@@ -84,8 +84,8 @@ As rotas são definidas em dois arquivos: `app/Config/Routes.php` (principal) e 
 | POST | `/agendamentos` | Cria (com `age_servico[]`, `age_recorrencia` e, na semanal ou quinzenal, `age_recorrencia_dias[]` com os dias da semana de 0 a 6) |
 | PUT | `/agendamentos/{id}` | Edita |
 | PATCH | `/agendamentos/{id}/status` | `{age_status}` |
-| POST | `/agendamentos/{id}/faturar` | Cria/atualiza a cobrança |
-| GET | `/agendamentos/{id}/faturamento` | Cobrança ligada |
+| POST | `/agendamentos/{id}/faturar` | Cria/atualiza a cobrança. `materiais[]` opcional (`produto_id`, `quantidade`, `valor_unitario`) |
+| GET | `/agendamentos/{id}/faturamento` | Cobrança ligada, com `materiais` |
 
 ## Clientes
 

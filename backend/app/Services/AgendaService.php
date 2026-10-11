@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Repositories\AgendamentoMateriaisRepository;
 use App\Repositories\AgendamentosRepository;
 use App\Repositories\PetsRepository;
 
@@ -16,24 +17,58 @@ class AgendaService extends BaseService
     protected PetsRepository $petsRepository;
     protected FatService $fatService;
     protected PacoteService $pacoteService;
+    protected ?AgendamentoMateriaisRepository $materiaisRepository;
+    protected ?EstoqueService $estoqueService;
 
     /**
      * @param AgendamentosRepository|null $agendamentosRepository
      * @param PetsRepository|null $petsRepository
      * @param FatService|null $fatService
      * @param PacoteService|null $pacoteService
+     * @param AgendamentoMateriaisRepository|null $materiaisRepository
+     * @param EstoqueService|null $estoqueService
      */
     public function __construct(
         ?AgendamentosRepository $agendamentosRepository = null,
         ?PetsRepository $petsRepository = null,
         ?FatService $fatService = null,
-        ?PacoteService $pacoteService = null
+        ?PacoteService $pacoteService = null,
+        ?AgendamentoMateriaisRepository $materiaisRepository = null,
+        ?EstoqueService $estoqueService = null
     ) {
         $this->agendamentosRepository   = $agendamentosRepository ?? new AgendamentosRepository();
         $this->repository               = $this->agendamentosRepository;
         $this->petsRepository           = $petsRepository ?? new PetsRepository();
         $this->fatService               = $fatService ?? new FatService();
         $this->pacoteService            = $pacoteService ?? new PacoteService();
+        $this->materiaisRepository      = $materiaisRepository;
+        $this->estoqueService           = $estoqueService;
+    }
+
+    /**
+     * Lazy loader do repositório de materiais do agendamento
+     *
+     * @return AgendamentoMateriaisRepository
+     */
+    protected function getMateriaisRepository(): AgendamentoMateriaisRepository
+    {
+        if ($this->materiaisRepository === null) {
+            $this->materiaisRepository = new AgendamentoMateriaisRepository();
+        }
+        return $this->materiaisRepository;
+    }
+
+    /**
+     * Lazy loader do EstoqueService
+     *
+     * @return EstoqueService
+     */
+    protected function getEstoqueService(): EstoqueService
+    {
+        if ($this->estoqueService === null) {
+            $this->estoqueService = new EstoqueService();
+        }
+        return $this->estoqueService;
     }
 
     /**
@@ -383,6 +418,19 @@ class AgendaService extends BaseService
             $billingData['pacote_id'] = null;
         }
 
+        // Materiais utilizados (medicamentos, seringas, luvas...). Só são
+        // sincronizados quando a chave vier no payload.
+        $materiais = null;
+        if (array_key_exists('materiais', $billingData)) {
+            $materiais = $this->normalizeMateriais((array) ($billingData['materiais'] ?? []));
+            unset($billingData['materiais']);
+
+            $erroEstoque = $this->validateEstoqueMateriais($id, $materiais);
+            if ($erroEstoque !== null) {
+                return $this->error($erroEstoque);
+            }
+        }
+
         // Se já existe uma cobrança para este agendamento, é uma edição: não deve
         // criar uma cobrança duplicada nem consumir o pacote de novo.
         $existingCobranca = $this->fatService->findByAgendamento($id);
@@ -404,6 +452,10 @@ class AgendaService extends BaseService
             : $this->fatService->createCobranca($billingData);
 
         if ($result['status'] === 'success') {
+            if ($materiais !== null) {
+                $this->syncMateriais($id, $materiais);
+            }
+
             // Mark as billed
             $this->repository->update($id, [
                 'age_faturado' => 1,
@@ -424,6 +476,119 @@ class AgendaService extends BaseService
      */
     public function getBilling(int $id): ?array
     {
-        return $this->fatService->findByAgendamento($id);
+        $cobranca = $this->fatService->findByAgendamento($id);
+        if ($cobranca) {
+            $cobranca['materiais'] = $this->getMateriaisRepository()->findByAgendamento($id);
+        }
+        return $cobranca;
+    }
+
+    /**
+     * Limpa a lista de materiais recebida, agrupando produtos repetidos
+     * e descartando linhas sem produto ou com quantidade inválida.
+     *
+     * @param array $materiais
+     * @return array<int, array{produto_id: int, quantidade: float, valor_unitario: float}> indexado por produto_id
+     */
+    protected function normalizeMateriais(array $materiais): array
+    {
+        $normalized = [];
+        foreach ($materiais as $m) {
+            $produtoId  = (int) ($m['produto_id'] ?? 0);
+            $quantidade = (float) ($m['quantidade'] ?? 0);
+            if ($produtoId <= 0 || $quantidade <= 0) {
+                continue;
+            }
+
+            if (isset($normalized[$produtoId])) {
+                $normalized[$produtoId]['quantidade'] += $quantidade;
+            } else {
+                $normalized[$produtoId] = [
+                    'produto_id'     => $produtoId,
+                    'quantidade'     => $quantidade,
+                    'valor_unitario' => max(0.0, (float) ($m['valor_unitario'] ?? 0)),
+                ];
+            }
+        }
+        return $normalized;
+    }
+
+    /**
+     * Retorna a quantidade já lançada de cada produto no agendamento.
+     *
+     * @param int $agendamentoId
+     * @return array<int, float> produto_id => quantidade
+     */
+    protected function getQuantidadesLancadas(int $agendamentoId): array
+    {
+        $lancadas = [];
+        foreach ($this->getMateriaisRepository()->findByAgendamento($agendamentoId) as $m) {
+            $produtoId = (int) $m['produto_id'];
+            $lancadas[$produtoId] = ($lancadas[$produtoId] ?? 0) + (float) $m['quantidade'];
+        }
+        return $lancadas;
+    }
+
+    /**
+     * Confere se há estoque para o acréscimo de cada material em relação
+     * ao que já foi lançado (em edições, só a diferença sai do estoque).
+     *
+     * @param int $agendamentoId
+     * @param array $materiais
+     * @return string|null Mensagem de erro, ou null se houver estoque
+     */
+    protected function validateEstoqueMateriais(int $agendamentoId, array $materiais): ?string
+    {
+        $lancadas = $this->getQuantidadesLancadas($agendamentoId);
+
+        foreach ($materiais as $produtoId => $m) {
+            $delta = $m['quantidade'] - ($lancadas[$produtoId] ?? 0);
+            if ($delta <= 0) {
+                continue;
+            }
+
+            $produto = $this->getEstoqueService()->findById($produtoId);
+            if (!$produto) {
+                return "Material ID {$produtoId} não encontrado no estoque.";
+            }
+            if ((float) $produto['quantidade_atual'] < $delta) {
+                return "Estoque insuficiente de '{$produto['nome']}' (disponível: {$produto['quantidade_atual']}).";
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Grava os materiais do agendamento e movimenta o estoque pela diferença
+     * entre o lançamento anterior e o atual (saída do acréscimo, estorno da redução).
+     *
+     * @param int $agendamentoId
+     * @param array $materiais
+     * @return void
+     */
+    protected function syncMateriais(int $agendamentoId, array $materiais): void
+    {
+        $lancadas   = $this->getQuantidadesLancadas($agendamentoId);
+        $produtoIds = array_unique(array_merge(array_keys($lancadas), array_keys($materiais)));
+
+        foreach ($produtoIds as $produtoId) {
+            $delta = ($materiais[$produtoId]['quantidade'] ?? 0) - ($lancadas[$produtoId] ?? 0);
+
+            if ($delta > 0) {
+                $this->getEstoqueService()->registrarSaida([
+                    'produto_id' => $produtoId,
+                    'quantidade' => $delta,
+                    'observacao' => "Material utilizado no agendamento #{$agendamentoId}",
+                ]);
+            } elseif ($delta < 0) {
+                $this->getEstoqueService()->registrarEntrada([
+                    'produto_id' => $produtoId,
+                    'quantidade' => -$delta,
+                    'observacao' => "Estorno de material do agendamento #{$agendamentoId}",
+                ]);
+            }
+        }
+
+        $this->getMateriaisRepository()->sync($agendamentoId, array_values($materiais));
     }
 }

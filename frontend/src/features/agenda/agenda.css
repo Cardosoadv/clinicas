@@ -935,3 +935,70 @@
   font-size: 12px;
   color: #6b7280;
 }
+
+/* ---------- Materiais utilizados no faturamento ---------- */
+
+.faturar-materiais {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.faturar-materiais__vazio {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7385;
+}
+
+.faturar-materiais__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 80px 110px 90px auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.faturar-materiais__row--head {
+  font-size: 12px;
+  color: #6b7385;
+}
+
+.faturar-materiais__row select,
+.faturar-materiais__row input {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  border: 1px solid #e7e3da;
+  min-width: 0;
+}
+
+.faturar-materiais__subtotal {
+  font-size: 13px;
+  text-align: right;
+}
+
+.faturar-materiais__add {
+  align-self: flex-start;
+}
+
+.faturar-totais {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 16px;
+  padding: 10px 12px;
+  border: 1px solid #e7e3da;
+  border-radius: 7px;
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .faturar-materiais__row {
+    grid-template-columns: minmax(0, 1fr) 70px 90px auto;
+  }
+
+  .faturar-materiais__row--head span:nth-child(4),
+  .faturar-materiais__subtotal {
+    display: none;
+  }
+}

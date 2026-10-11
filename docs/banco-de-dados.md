@@ -119,6 +119,18 @@ Chave `age_id`.
 
 `id`, `age_id`, `ser_id`, `created_at`.
 
+### `agendamento_materiais`
+
+Materiais do estoque usados no atendimento, lançados ao faturar o agendamento.
+
+| Campo | Tipo / valores |
+|:--|:--|
+| `agendamento_id` | → `agendamentos.age_id` (CASCADE) |
+| `produto_id` | → `estoque_produtos` (CASCADE) |
+| `quantidade` | DECIMAL(10,2) |
+| `valor_unitario` | DECIMAL(10,2). Valor cobrado por unidade (0 se não cobrado) |
+| `created_at`, `updated_at` | — |
+
 ### `pacotes`
 
 `id`, `paciente_id`, `nome`, `tipo` (ENUM Serviços, Crédito), `saldo_valor`, `data_validade`, `status` (ENUM Pendente, Ativo, Esgotado, Cancelado), `observacoes`.

@@ -44,6 +44,10 @@ Informe produto, quantidade e observação. A saída é **recusada** se a quanti
 
 Quando um serviço com ficha técnica é faturado como **Pago**, cada produto vinculado sai automaticamente do estoque. Veja [Serviços → Ficha técnica](servicos#ficha-tecnica-bom).
 
+### Materiais lançados no faturamento
+
+Ao [faturar um agendamento](agenda#materiais-utilizados), os materiais informados (medicamentos, seringas, luvas etc.) saem do estoque com a observação `Material utilizado no agendamento #{id}`. Ao editar o faturamento, só a diferença é movimentada, e reduções ou remoções voltam ao estoque como `Entrada` com a observação `Estorno de material do agendamento #{id}`. Falta de estoque impede o faturamento.
+
 Tipos de movimentação gravados em `estoque_movimentacoes`: `Entrada`, `Saída` e `Ajuste`.
 
 ## API

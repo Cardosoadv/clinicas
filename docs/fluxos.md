@@ -25,7 +25,8 @@ As regras que atravessam vários módulos, passo a passo.
 Cliente ──► Paciente ──► Agendamento ──► Prontuário ──► Faturar ──► Cobrança ──► Recibo
                               │                            │
                               │                            ├─► consome Pacote (se forma = Pacote)
-                              │                            └─► baixa Estoque (se Pago e serviço com BOM)
+                              │                            ├─► baixa Estoque (se Pago e serviço com BOM)
+                              │                            └─► baixa Estoque dos materiais utilizados
                               └─► WhatsApp: lembrete / pós-consulta
 ```
 
@@ -33,7 +34,7 @@ Cliente ──► Paciente ──► Agendamento ──► Prontuário ──►
 2. Crie o **agendamento** com um ou mais serviços e o veterinário.
 3. Mude o status para **confirmado** depois de falar com o tutor.
 4. No atendimento, o veterinário registra **anamnese, peso, vacinas, prescrições e evolução** no prontuário.
-5. **Fature** o agendamento: a cobrança é criada, o agendamento vira **concluído** e `age_faturado = 1`.
+5. **Fature** o agendamento, lançando os **materiais utilizados** (medicamentos, seringas, luvas...): a cobrança é criada com o total de serviços + materiais, os materiais saem do estoque, o agendamento vira **concluído** e `age_faturado = 1`.
 6. Emita o **recibo** em Faturamento → Notas e envie o link público ao tutor.
 7. Nos 2 dias seguintes, o atendimento aparece em **Pós-consulta** no Dashboard.
 
@@ -77,6 +78,7 @@ Saída de 30 ml de Shampoo + 1 Laço   (observação: "Saída automática via fa
 - Roda **uma vez** por cobrança — mudar de Pago para Pago não baixa de novo.
 - Se um produto não tiver saldo, só a saída dele falha; as demais são feitas.
 - Na fatura de agendamento, o serviço usado é o **primeiro** serviço do agendamento.
+- Os **materiais utilizados** lançados no faturamento são outra baixa, separada da BOM: saem do estoque em qualquer status da cobrança e, se faltar estoque, o faturamento é recusado. Veja [Agenda → Materiais utilizados]({{ site.baseurl }}/modulos/agenda#materiais-utilizados).
 
 ## 4. Compra de estoque → despesa
 
