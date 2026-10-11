@@ -1,4 +1,4 @@
-# Sistema de Gestão para Clínicas (Clinicas)
+# Sistema de Gestão para Clínicas (Clinicas) - v1.0.12
 
 Sistema de gestão para clínicas: agenda, prontuários, faturamento e relatórios financeiros. Desenvolvido em CodeIgniter 4 com padrão MVCRS e frontend em React + TypeScript + Vite.
 

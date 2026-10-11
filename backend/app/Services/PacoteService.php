@@ -180,7 +180,11 @@ class PacoteService extends BaseService
 
         } catch (Exception $e) {
             $db->transRollback();
-            return $this->error('Erro: ' . $e->getMessage());
+            $msg = $e->getMessage();
+            if (str_starts_with($msg, 'Erro: ')) {
+                $msg = substr($msg, 6);
+            }
+            return $this->error($msg);
         }
     }
 
@@ -243,7 +247,11 @@ class PacoteService extends BaseService
             return $this->success("$total sessão(ões) pré-agendada(s) na Agenda.", ['preagendados' => $total]);
         } catch (Exception $e) {
             $db->transRollback();
-            return $this->error('Erro: ' . $e->getMessage());
+            $msg = $e->getMessage();
+            if (str_starts_with($msg, 'Erro: ')) {
+                $msg = substr($msg, 6);
+            }
+            return $this->error($msg);
         }
     }
 
@@ -384,7 +392,11 @@ class PacoteService extends BaseService
             return $this->success('Pacote atualizado com sucesso.');
         } catch (Exception $e) {
             $db->transRollback();
-            return $this->error('Erro: ' . $e->getMessage());
+            $msg = $e->getMessage();
+            if (str_starts_with($msg, 'Erro: ')) {
+                $msg = substr($msg, 6);
+            }
+            return $this->error($msg);
         }
     }
 

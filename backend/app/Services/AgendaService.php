@@ -142,7 +142,9 @@ class AgendaService extends BaseService
 
                 $id = $this->repository->create($iterationData);
                 if (!$id) {
-                    throw new \Exception("Erro ao criar instância da recorrência na data $dataOcorrencia");
+                    $modelErrors = method_exists($this->repository, 'getModel') ? $this->repository->getModel()->errors() : [];
+                    $suffix = !empty($modelErrors) ? ': ' . implode(', ', $modelErrors) : '';
+                    throw new \Exception("Erro ao criar instância da recorrência na data $dataOcorrencia$suffix");
                 }
 
                 if ($count === 0) {
@@ -215,7 +217,9 @@ class AgendaService extends BaseService
 
             $id = $this->repository->create($iterationData);
             if (!$id) {
-                return $this->error("Erro ao criar o agendamento da data $dataOcorrencia.");
+                $modelErrors = method_exists($this->repository, 'getModel') ? $this->repository->getModel()->errors() : [];
+                $suffix = !empty($modelErrors) ? ': ' . implode(', ', $modelErrors) : '.';
+                return $this->error("Erro ao criar o agendamento da data $dataOcorrencia$suffix");
             }
 
             if (!empty($services)) {

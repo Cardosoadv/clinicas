@@ -181,3 +181,12 @@
 ## Results
 - Reduced file size and eliminated over 100 lines of dead code.
 - Improved clarity of the database configuration file.
+
+### 10. Agendamento com Pacote e Migração de Banco de Dados [v1.0.12]
+- **Issue:** Erro ao salvar agendamento vinculado a pacote (`Unknown column 'pacote_id' in 'field list'` na tabela `agendamentos`), disparando a mensagem `"Erro: Erro ao criar o agendamento da data YYYY-MM-DD"`.
+- **Solution:**
+    - Executada a migration pendente `2026-10-10-090000_AddPacoteIdToAgendamentos.php`, adicionando a coluna `pacote_id`, índice e chave estrangeira na tabela `agendamentos`.
+    - Sanitizada a formatação de mensagens de erro em `PacoteService.php` para evitar prefixação redundante de `"Erro: "`.
+    - Aprimorado o tratamento de falhas em `AgendaService.php` para incluir mensagens de validação do model quando o insert falha.
+- **Benefit:** Criação de pacotes com pré-agendamento operacional, integridade referencial mantida e mensagens de erro amigáveis.
+

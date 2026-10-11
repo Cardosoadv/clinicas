@@ -1,12 +1,23 @@
-# RelatÃ³rio de EvoluÃ§Ã£o do Projeto â€” Petys
+ï»¿# RelatÃ³rio de EvoluÃ§Ã£o do Projeto â€” Petys
 
 Este relatÃ³rio documenta as principais evoluÃ§Ãµes e melhorias implementadas no sistema **Petys** â€” sistema de gestÃ£o veterinÃ¡ria, originalmente derivado do projeto Oralys (odontologia), migrado e rebranded para atender clÃ­nicas pet.
 
 ---
-# RelatÃ³rio de EvoluÃ§Ã£o do Projeto â€” Petys
-## DB: Consolidação de Migrations (Julho 2026) [v3.4.31]
 
-Consolidação de todas as migrações antigas do banco de dados em um único arquivo inicial utilizando um dump SQL estruturado, visando simplificar o histórico de migrações e otimizar novas instalações.
+## DB & Fix: Coluna pacote_id em Agendamentos e PrÃ©-agendamento de Pacotes (Outubro 2026) [v1.0.12]
+
+CorreÃ§Ã£o do erro na criaÃ§Ã£o de pacotes com sessÃµes prÃ©-agendadas que falhava ao persistir agendamentos na tabela `agendamentos` devido Ã  ausÃªncia da coluna `pacote_id`.
+
+### AÃ§Ãµes Realizadas:
+- **Migration Executada**: Aplicada a migraÃ§Ã£o `2026-10-10-090000_AddPacoteIdToAgendamentos`, adicionando a coluna `pacote_id` (com chave estrangeira para `pacotes(id)` e Ã­ndice) na tabela `agendamentos`.
+- **Backend (PacoteService)**: Ajustado o tratamento de exceÃ§Ãµes em `createPacote`, `preAgendar` e `updatePacote` para remover a redundÃ¢ncia "Erro: " nas mensagens de retorno da API.
+- **Backend (AgendaService)**: Enriquecido o retorno de erro nos mÃ©todos de agendamento em sÃ©rie/recorrente (`createSeriePorQuantidade` e `create`), expondo os erros de validaÃ§Ã£o do modelo caso a inserÃ§Ã£o nÃ£o seja concluÃ­da.
+- **Versionamento**: VersÃ£o do sistema atualizada para `1.0.12` em `backend/composer.json`, `package.json` e `README.md`.
+---
+# RelatÃ³rio de EvoluÃ§Ã£o do Projeto â€” Petys
+## DB: Consolidaï¿½ï¿½o de Migrations (Julho 2026) [v3.4.31]
+
+Consolidaï¿½ï¿½o de todas as migraï¿½ï¿½es antigas do banco de dados em um ï¿½nico arquivo inicial utilizando um dump SQL estruturado, visando simplificar o histï¿½rico de migraï¿½ï¿½es e otimizar novas instalaï¿½ï¿½es.
 
 ---
 
@@ -1298,38 +1309,41 @@ Foi implementada a opï¿½ï¿½o de vincular usuï¿½rios do Shield que jï¿½ existem (
 
 ---
 
-## Correção de Layout Mobile (BS5 Grid) [v3.4.31] (Julho 2026)
+## Correï¿½ï¿½o de Layout Mobile (BS5 Grid) [v3.4.31] (Julho 2026)
 
-Correção do tamanho da tela e overflow horizontal em dispositivos móveis.
+Correï¿½ï¿½o do tamanho da tela e overflow horizontal em dispositivos mï¿½veis.
 
 ### Melhorias Implementadas:
 
-- **Prevenção de Overflow (.row)**: Adicionado `overflow-x: hidden` na classe `.content` para encapsular corretamente as margens negativas do sistema de grids do Bootstrap 5, evitando o surgimento de barra de rolagem horizontal.
-- **Limites de Flexbox (.main)**: Adicionado `min-width: 0` no container principal para impedir que elementos internos muito largos forcem a tela além de 100vw, garantindo que o layout mobile (celular) fique sempre contido dentro da área visível.
-- **Ajuste de Largura Mobile**: Definido explicitamente `width: 100%` e `max-width: 100vw` para a tag `.main` no media query de 768px, restaurando a experiência responsiva adequada após a transição para o BS5.
-- **Minificação de Assets**: Atualização e minificação do `style.css` para `style-min.css`.
+- **Prevenï¿½ï¿½o de Overflow (.row)**: Adicionado `overflow-x: hidden` na classe `.content` para encapsular corretamente as margens negativas do sistema de grids do Bootstrap 5, evitando o surgimento de barra de rolagem horizontal.
+- **Limites de Flexbox (.main)**: Adicionado `min-width: 0` no container principal para impedir que elementos internos muito largos forcem a tela alï¿½m de 100vw, garantindo que o layout mobile (celular) fique sempre contido dentro da ï¿½rea visï¿½vel.
+- **Ajuste de Largura Mobile**: Definido explicitamente `width: 100%` e `max-width: 100vw` para a tag `.main` no media query de 768px, restaurando a experiï¿½ncia responsiva adequada apï¿½s a transiï¿½ï¿½o para o BS5.
+- **Minificaï¿½ï¿½o de Assets**: Atualizaï¿½ï¿½o e minificaï¿½ï¿½o do `style.css` para `style-min.css`.
 
-## Iteração 2026-07-18
-- Problema resolvido: Prontuário não estava abrindo devido à falta da tabela 'prescricoes'. Executada a migração de banco de dados (php spark migrate) para criar as tabelas necessárias.
+## Iteraï¿½ï¿½o 2026-07-18
+- Problema resolvido: Prontuï¿½rio nï¿½o estava abrindo devido ï¿½ falta da tabela 'prescricoes'. Executada a migraï¿½ï¿½o de banco de dados (php spark migrate) para criar as tabelas necessï¿½rias.
 
 ## IteraÃ§Äo 2026-07-18
 - Problema resolvido: Adicionada opÃ§Ã£o de exibiÃ§Ã£o grÃ¡fica de partiÃ§Ã£o de comprimidos (1/2, 3/4, etc) na prescriÃ§Ã£o mÃ©dica. Inclui novos campos no banco, interface visual atualizada e representaÃ§Ã£o grÃ¡fica css na impressÃ£o. AtualizaÃ§Ã£o para v3.4.32.
 
- # #   2 0 2 6 - 0 7 - 2 6   -   C o n s o l i d a ç ã o   d e   M i g r a t i o n s 
- -   G e r a ç ã o   d e   1 5   n o v a s   m i g r a t i o n s   a g r u p a n d o   a s   t a b e l a s   p r i n c i p a i s   e   s e u s   p i v o t s .  
+ # #   2 0 2 6 - 0 7 - 2 6   -   C o n s o l i d a ï¿½ ï¿½ o   d e   M i g r a t i o n s 
+ -   G e r a ï¿½ ï¿½ o   d e   1 5   n o v a s   m i g r a t i o n s   a g r u p a n d o   a s   t a b e l a s   p r i n c i p a i s   e   s e u s   p i v o t s . 
  
- # #   2 0 2 6 - 0 7 - 2 7   -   C o r r e ç ã o   d e   N o m e n c l a t u r a 
- -   R e n o m e a d o   a s   v i n c u l a ç õ e s   d e   p e t _ i d   p a r a   p a c i e n t e _ i d   e m   t o d a s   a s   m i g r a t i o n s   d e   t a b e l a s   c r i a d a s .  
  
- # #   2 0 2 6 - 0 7 - 2 7   -   I n s e r ç ã o   d e   Í n d i c e s 
- -   I n s e r i d o s   o s   í n d i c e s   ( c h a v e s   p r i m á r i a s ,   c h a v e s   e s t r a n g e i r a s ,   A U T O _ I N C R E M E N T   e   í n d i c e s )   e x t r a í d o s   d o   a r q u i v o   p e t y s . s q l   n a s   n o v a s   m i g r a t i o n s ,   j á   r e f l e t i n d o   a s   m o d i f i c a ç õ e s   d e   n o m e n c l a t u r a   d e   p a c i e n t e s .  
+ # #   2 0 2 6 - 0 7 - 2 7   -   C o r r e ï¿½ ï¿½ o   d e   N o m e n c l a t u r a 
+ -   R e n o m e a d o   a s   v i n c u l a ï¿½ ï¿½ e s   d e   p e t _ i d   p a r a   p a c i e n t e _ i d   e m   t o d a s   a s   m i g r a t i o n s   d e   t a b e l a s   c r i a d a s . 
+ 
+ 
+ # #   2 0 2 6 - 0 7 - 2 7   -   I n s e r ï¿½ ï¿½ o   d e   ï¿½ n d i c e s 
+ -   I n s e r i d o s   o s   ï¿½ n d i c e s   ( c h a v e s   p r i m ï¿½ r i a s ,   c h a v e s   e s t r a n g e i r a s ,   A U T O _ I N C R E M E N T   e   ï¿½ n d i c e s )   e x t r a ï¿½ d o s   d o   a r q u i v o   p e t y s . s q l   n a s   n o v a s   m i g r a t i o n s ,   j ï¿½   r e f l e t i n d o   a s   m o d i f i c a ï¿½ ï¿½ e s   d e   n o m e n c l a t u r a   d e   p a c i e n t e s . 
+ 
  
 ## 2026-08-07 - ConfiguraÃ§Ã£o de Roteamento (htaccess)
 - CriaÃ§Ã£o do arquivo .htaccess na raiz do projeto para direcionar o trÃ¡fego adequadamente para o frontend (diretÃ³rio rontend/dist), ignorando as rotas da API/backend.
 
 ## [1.0.1] - 2026-08-08
-- Atualização do README.md para refletir a estrutura atual do projeto (React + CodeIgniter 4).
-- Versão atualizada no package.json e backend/composer.json.
+- Atualizaï¿½ï¿½o do README.md para refletir a estrutura atual do projeto (React + CodeIgniter 4).
+- Versï¿½o atualizada no package.json e backend/composer.json.
 
 ## [1.0.2] - 2026-08-08
 - AtualizaÃ§Ã£o do arquivo deploy.yml para incluir exclusÃµes baseadas na nova estrutura separada de frontend e backend (backend/vendor, backend/writable, backend/tests, frontend/src e frontend/node_modules).
@@ -1340,8 +1354,8 @@ Correção do tamanho da tela e overflow horizontal em dispositivos móveis.
 - VersÃ£o atualizada no package.json (root) e backend/composer.json.
 
 ## [1.0.4] - 2026-08-08
-- Criação de template global de impressão (ReportTemplate) e inclusão nas configurações de cabeçalho e rodapé.
-- Integração do template no Modal de Prescrições para possibilitar a impressão da Receita Simples.
+- Criaï¿½ï¿½o de template global de impressï¿½o (ReportTemplate) e inclusï¿½o nas configuraï¿½ï¿½es de cabeï¿½alho e rodapï¿½.
+- Integraï¿½ï¿½o do template no Modal de Prescriï¿½ï¿½es para possibilitar a impressï¿½o da Receita Simples.
 
 ## [1.0.5] - 2026-08-21
 - InclusÃ£o dos campos de endereÃ§o (rua, numero, complemento, bairro, cep) e documentos (rg, nascimento) no formulÃ¡rio de clientes React (ClienteFormModal.tsx).
@@ -1352,7 +1366,8 @@ Correção do tamanho da tela e overflow horizontal em dispositivos móveis.
 
  # #   [ 1 . 0 . 6 ]   -   2 0 2 6 - 0 8 - 2 1 
  -   D u p l i c a c a o   d a   e t a p a   d e   d e p l o y   v i a   F T P   n o   a r q u i v o   . g i t h u b / w o r k f l o w s / d e p l o y . y m l   p a r a   s u p o r t a r   s i n c r o n i z a c a o   e m   d u a s   p a s t a s   d e   d e s t i n o   n a   H o s t i n g e r . 
- -   V e r s a o   a t u a l i z a d a   n o   p a c k a g e . j s o n   e   b a c k e n d / c o m p o s e r . j s o n   p a r a   1 . 0 . 6 .  
+ -   V e r s a o   a t u a l i z a d a   n o   p a c k a g e . j s o n   e   b a c k e n d / c o m p o s e r . j s o n   p a r a   1 . 0 . 6 . 
+ 
  
 ## [1.0.7] - 2026-09-04
 - Inclusao de exibicao do endereco completo do paciente no modal de agendamento (AgendamentoFormModal.tsx) logo abaixo do campo de selecao de Paciente.
