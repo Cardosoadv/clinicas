@@ -31,9 +31,6 @@ Esta página mostra como colocar o sistema para rodar em três cenários: **dese
 | MySQL / MariaDB | MySQL 5.7+ / MariaDB 10.3+ | Charset `utf8mb4`. |
 | Git | qualquer | Para clonar o repositório. |
 
-{: .nota }
-O `README.md` e o `composer.json` citam PHP 8.1, mas as dependências travadas no `composer.lock` só instalam no PHP 8.2+.
-
 ## 2. Obter o código
 
 ```bash

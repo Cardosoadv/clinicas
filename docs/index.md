@@ -33,7 +33,7 @@ O **Clínicas** é um sistema de gestão para clínicas veterinárias (pet shops
 | Camada | Tecnologia |
 |:--|:--|
 | Frontend | React 19, TypeScript 6, Vite 8, React Router 7, ícones Lucide |
-| Backend | PHP 8.1+, CodeIgniter 4, padrão **MVCRS** (Model–View–Controller–Repository–Service) |
+| Backend | PHP 8.2+, CodeIgniter 4, padrão **MVCRS** (Model–View–Controller–Repository–Service) |
 | Autenticação | CodeIgniter Shield (sessão com cookie) |
 | Banco de dados | MySQL / MariaDB (driver MySQLi, `utf8mb4`) |
 | Outras bibliotecas | `chillerlan/php-qrcode` (QR Code dos recibos), `firebase/php-jwt` |

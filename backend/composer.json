@@ -15,7 +15,7 @@
         "source": "https://github.com/Cardosoadv/clinicas.git"
     },
     "require": {
-        "php": "^8.1",
+        "php": "^8.2",
         "chillerlan/php-qrcode": "^6.0",
         "codeigniter4/framework": "^4.0",
         "codeigniter4/shield": "^1.2",

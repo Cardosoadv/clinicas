@@ -20,7 +20,7 @@ Sistema de gestão para clínicas: agenda, prontuários, faturamento e relatóri
 
 Pré-requisitos:
 - Node.js e NPM
-- PHP 8.1+ e Composer
+- PHP 8.2+ e Composer
 
 1. Instale as dependências (frontend e backend):
 ```bash
