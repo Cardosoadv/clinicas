@@ -59,7 +59,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<ApiEnve
 /**
  * Envio multipart/form-data (upload de arquivo). Sempre via POST — PHP só
  * popula $_POST/$_FILES para multipart em requisições POST, então endpoints
- * que aceitam arquivo usam POST mesmo para atualizar (ver app/Config/Routes.php).
+ * que aceitam arquivo usam POST mesmo para atualizar (ver app/Routes/Routes.php).
  */
 async function requestForm<T>(path: string, formData: FormData): Promise<ApiEnvelope<T>> {
   let response: Response

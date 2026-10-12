@@ -89,7 +89,7 @@ No frontend, a verificação é `npm run lint` e `npm run build` (o `tsc -b` fal
 3. **Repository** em `app/Repositories/` estendendo `BaseRepository`.
 4. **Service** em `app/Services/` estendendo `BaseService`.
 5. **Controller** em `app/Controllers/V1/` estendendo `BaseController`.
-6. **Rotas** no grupo `api/v1` de `app/Config/Routes.php` (já protegido pelo filtro `apiauth`).
+6. **Rotas** no grupo `api/v1` de `app/Routes/Routes.php` (já protegido pelo filtro `apiauth`).
 7. **Teste** em `tests/unit/Services/`.
 8. No frontend: `src/features/<modulo>/` (api, types, página), rota em `App.tsx` e item de menu em `layouts/navConfig.ts`.
 9. Rode `npm run build` e **commite o `frontend/dist/`** — é ele que vai para o servidor.
@@ -125,7 +125,7 @@ Itens observados no código durante a elaboração desta documentação — bons
 | 3 | `EquipeService::create` | Adiciona o usuário ao grupo `equipe`, que não existe em `AuthGroups.php` — o Shield lança exceção. |
 | 4 | `package.json` (raiz) | `npm run dev` chama `dev:backend`, que não existe. |
 | 5 | `Publico::recibo` | O QR Code do recibo aponta para o endpoint JSON da API, não para a página `/recibo/{id}/{hash}`. |
-| 6 | `README.md` / `composer.json` | Pedem PHP 8.1, mas o `composer.lock` exige PHP 8.2. |
+| 6 | `README.md` / `composer.json` | ~~Pedem PHP 8.1, mas o `composer.lock` exige PHP 8.2.~~ **Corrigido** (#45): tudo alinhado em PHP 8.2. |
 | 7 | `EquipeService::create` | Senha padrão fixa (`Petys@2026`) para logins criados sem senha. |
 | 8 | Frontend | Funções que existem só na API: importação CSV, links automáticos de WhatsApp, troca de senha, odontograma, despesas parceladas/recorrentes, `mix-create`. |
-| 9 | `app/Config/Routes.php` + `app/Routes/Routes.php` | Rotas duplicadas em dois arquivos, com pequenas diferenças (veja [API](api#como-chamar)). |
+| 9 | `app/Config/Routes.php` + `app/Routes/Routes.php` | ~~Rotas duplicadas em dois arquivos, com pequenas diferenças.~~ **Corrigido** (#48): todas as rotas ficam só em `app/Routes/Routes.php`. |

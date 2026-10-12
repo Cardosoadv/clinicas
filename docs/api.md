@@ -34,7 +34,7 @@ curl -b cookies.txt $API/dashboard
 No navegador, use `fetch(url, { credentials: 'include' })` a partir de uma origem liberada em `cors.allowedOrigins`.
 
 {: .nota }
-As rotas são definidas em dois arquivos: `app/Config/Routes.php` (principal) e `app/Routes/Routes.php` (carregado via `Config/Routing::$routeFiles`). O segundo repete parte das rotas e acrescenta `GET lojas/principal`, `GET agendamentos/{id}/faturamento` e as versões `PUT` de `lojas/{id}` e `prontuarios/pacientes/{id}/anamnese`. Rode `php backend/spark routes` para ver a tabela final.
+Todas as rotas ficam em um único arquivo, `app/Routes/Routes.php` (carregado via `Config/Routing::$routeFiles`). `lojas/{id}` e `prontuarios/pacientes/{id}/anamnese` aceitam `POST` (usado pelo frontend, necessário para envio de arquivo em multipart) e `PUT` (só campos, sem arquivo). Rode `php backend/spark routes` para ver a tabela final.
 
 ## Autenticação (sem login)
 

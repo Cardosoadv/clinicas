@@ -60,7 +60,7 @@ Arquivos de apoio:
 | `app/Filters/ApiAuth.php` | Filtro que exige sessão. Responde **401** (não autenticado) ou **403** (banido ou não ativado) em JSON, em vez do redirect HTML padrão do Shield. |
 | `app/Validation/DocumentoRules.php` | Regras de validação `valid_cpf` e `valid_cnpj` (dígitos verificadores). |
 | `app/Config/Cors.php` | CORS com `supportsCredentials = true`. As origens vêm de `cors.allowedOrigins` no `.env`. |
-| `app/Config/Routes.php` e `app/Routes/Routes.php` | Definição das rotas (o segundo é carregado via `Config/Routing::$routeFiles`). |
+| `app/Routes/Routes.php` | Definição de todas as rotas (carregado via `Config/Routing::$routeFiles`). |
 | `app/Database/Migrations/` | Estrutura do banco. |
 
 ### Envelope de resposta
