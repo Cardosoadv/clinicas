@@ -80,9 +80,15 @@ class Auth extends BaseController
     private function serializeUser(User $user): array
     {
         return [
-            'id'       => $user->id,
-            'username' => $user->username,
-            'email'    => (string) $user->email,
+            'id'         => $user->id,
+            'username'   => $user->username,
+            'email'      => (string) $user->email,
+            // Permissões efetivas (grupos + diretas), para o frontend mostrar ou
+            // esconder telas como a edição da documentação.
+            'permissoes' => array_values(array_filter(
+                array_keys(setting('AuthGroups.permissions') ?? []),
+                static fn (string $permissao): bool => $user->can($permissao),
+            )),
         ];
     }
 }

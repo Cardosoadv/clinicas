@@ -1,4 +1,4 @@
-# Sistema de Gestão para Clínicas (Clinicas) - v1.0.12
+# Sistema de Gestão para Clínicas (Clinicas) - v1.1.0
 
 Sistema de gestão para clínicas: agenda, prontuários, faturamento e relatórios financeiros. Desenvolvido em CodeIgniter 4 com padrão MVCRS e frontend em React + TypeScript + Vite.
 
@@ -14,7 +14,8 @@ Sistema de gestão para clínicas: agenda, prontuários, faturamento e relatóri
 
 - `frontend/`: Aplicação React
 - `backend/`: API em CodeIgniter 4
-- `docs/`: Documentação publicada no [GitHub Pages](https://cardosoadv.github.io/clinicas/)
+- `docs/`: Documentação técnica publicada no [GitHub Pages](https://cardosoadv.github.io/clinicas/)
+- `backend/app/Docs/`: Manual do usuário, lido dentro do sistema (menu **Documentação** e botão **?** de cada tela) — veja [Documentação interna](https://cardosoadv.github.io/clinicas/documentacao-interna)
 
 ## Como rodar o projeto localmente
 

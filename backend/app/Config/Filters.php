@@ -3,6 +3,7 @@
 namespace Config;
 
 use App\Filters\ApiAuth;
+use App\Filters\ApiPermission;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
@@ -40,6 +41,8 @@ class Filters extends BaseFilters
         'session'       => SessionAuth::class,
         // Mesma checagem de sessão, mas responde com JSON 401/403 — usado pelas rotas api/v1/*.
         'apiauth'       => ApiAuth::class,
+        // Exige uma permissão do Shield e responde com JSON 403 (ex.: apipermission:documentacao.editar).
+        'apipermission' => ApiPermission::class,
     ];
 
     /**

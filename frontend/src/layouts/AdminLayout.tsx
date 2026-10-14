@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import fallbackLogo from '../assets/logo.png'
 import { useAuth } from '../features/auth/AuthContext'
+import { AjudaContextual } from '../features/documentacao/AjudaContextual'
 import { LojaPrincipalProvider, useLojaPrincipal, useLojaPrincipalLogoUrl } from '../features/lojas/LojaPrincipalContext'
 import { useClickOutside } from '../hooks/useClickOutside'
 import { useEscapeKey } from '../hooks/useEscapeKey'
@@ -32,7 +33,10 @@ function AdminLayoutContent() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useClickOutside<HTMLDivElement>(() => setUserMenuOpen(false))
 
-  const currentItem = allNavItems.find((item) => item.path === location.pathname)
+  const currentItem =
+    allNavItems.find((item) => item.path === location.pathname) ??
+    // Páginas da documentação (/documentacao/...) e a edição dela (/documentacao-admin/...).
+    allNavItems.find((item) => item.path === '/documentacao' && location.pathname.startsWith('/documentacao'))
 
   // Fecha o menu mobile ao trocar de rota.
   useEffect(() => {
@@ -92,6 +96,7 @@ function AdminLayoutContent() {
           <TopbarSearch />
 
           <div className="admin-topbar__actions">
+            <AjudaContextual />
             <button type="button" className="admin-icon-btn" aria-label="Notificações" title="Notificações">
               <Bell size={18} />
             </button>

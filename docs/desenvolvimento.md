@@ -60,6 +60,8 @@ vendor/bin/phpunit --filter NomeDoTeste         # um teste
 - `tests/database/ExampleDatabaseTest.php` usa banco: configure `database.tests.*` no `.env` ou no `phpunit.xml`.
 - A cobertura (`app/`, sem `app/Views`) é configurada em `phpunit.dist.xml`.
 
+- `php spark docs:verificar` confere as páginas do manual interno (`app/Docs`): cabeçalhos, links, âncoras, imagens e telas. Veja [Documentação interna](documentacao-interna).
+
 No frontend, a verificação é `npm run lint` e `npm run build` (o `tsc -b` falha com erro de tipo).
 
 ## Convenções
@@ -99,6 +101,7 @@ No frontend, a verificação é `npm run lint` e `npm run build` (o `tsc -b` fal
 - Push na `main` → GitHub Actions (`.github/workflows/deploy.yml`) → FTP para a Hostinger. Detalhes em [Instalação → Implantar em produção](instalacao#producao).
 - O `frontend/dist/` é versionado: sem rodar o build, mudanças no frontend não chegam à produção.
 - Migrations novas precisam ser aplicadas no servidor (`php spark migrate`).
+- A pasta `backend/vendor/` não vai pelo FTP: dependências novas no `composer.json` (como a `league/commonmark`, da documentação interna) exigem `composer install` no servidor.
 
 ## Agentes de manutenção (`.agents/`)
 

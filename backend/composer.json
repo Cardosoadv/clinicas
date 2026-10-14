@@ -1,6 +1,6 @@
 {
     "name": "clinicas/sistema-de-gestao-clinicas",
-    "version": "1.0.12",
+    "version": "1.1.0",
     "description": "Sistema de gestão para clínicas: agenda, prontuários, faturamento e relatórios financeiros. Desenvolvido em CodeIgniter 4 com padrão MVCRS.",
     "keywords": [
         "clinicas",
@@ -20,7 +20,8 @@
         "codeigniter4/framework": "^4.0",
         "codeigniter4/shield": "^1.2",
         "codeigniter4/translations": "^4.7",
-        "firebase/php-jwt": "^7.0"
+        "firebase/php-jwt": "^7.0",
+        "league/commonmark": "^2.7"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9",

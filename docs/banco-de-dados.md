@@ -88,6 +88,10 @@ Chave `equ_id`. `user_id` (→ `users` do Shield), `equ_pronome`, `equ_nome`, `e
 
 Chave/valor: `id`, `meta_key`, `meta_value`, `description`. Guarda os [modelos de mensagem e de impressão]({{ site.baseurl }}/modulos/comunicacao).
 
+### `documentacao_paginas`
+
+Páginas da [documentação interna](documentacao-interna) criadas pela interface: `id`, `slug` (único), `titulo`, `resumo`, `ordem`, `permissao`, `telas` e `palavras_chave` (listas em JSON), `markdown`, `status` (rascunho, publicado), `publicado_em`, `criado_por`, `atualizado_por`. Uma página publicada substitui o arquivo de `app/Docs` de mesmo slug.
+
 ## Operação
 
 ### `servicos`
@@ -194,6 +198,7 @@ Materiais do estoque usados no atendimento, lançados ao faturar o agendamento.
 | `2026-08-02-120000_FixLojasStatusColumn` | Ajusta a coluna `status` de `lojas` |
 | `2026-08-02-130000_CreateClienteExtrasTables` | Cria `cliente_notas` e `comunicacoes` |
 | `2026-08-14-090000_AddAgendamentoIdToFatCobrancas` | Acrescenta `agendamento_id` em `fat_cobrancas` |
+| `2026-10-14-120000_CreateDocumentacaoPaginas` | Cria `documentacao_paginas` (páginas da documentação interna editadas pela interface) |
 
 Comandos úteis:
 

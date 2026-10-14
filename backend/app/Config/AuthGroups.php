@@ -79,6 +79,8 @@ class AuthGroups extends ShieldAuthGroups
         'users.edit'          => 'Can edit existing non-admin users',
         'users.delete'        => 'Can delete existing non-admin users',
         'beta.access'         => 'Can access beta-level features',
+        // Documentação interna (manual do sistema). A leitura só exige login.
+        'documentacao.editar' => 'Pode criar e editar páginas da documentação',
     ];
 
     /**
@@ -94,6 +96,7 @@ class AuthGroups extends ShieldAuthGroups
             'admin.*',
             'users.*',
             'beta.*',
+            'documentacao.*',
         ],
         'admin' => [
             'admin.access',
@@ -101,6 +104,7 @@ class AuthGroups extends ShieldAuthGroups
             'users.edit',
             'users.delete',
             'beta.access',
+            'documentacao.*',
         ],
         'developer' => [
             'admin.access',
@@ -108,6 +112,7 @@ class AuthGroups extends ShieldAuthGroups
             'users.create',
             'users.edit',
             'beta.access',
+            'documentacao.*',
         ],
         'user' => [],
         'beta' => [

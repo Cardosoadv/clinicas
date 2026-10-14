@@ -8,6 +8,9 @@ import { ClienteDetailPage } from './features/clientes/ClienteDetailPage'
 import { ClientesListPage } from './features/clientes/ClientesListPage'
 import { ClientesDuplicadosPage } from './features/clientes/ClientesDuplicadosPage'
 import { ConfiguracoesPage } from './features/configuracoes/ConfiguracoesPage'
+import { DocumentacaoAdminPage } from './features/documentacao/DocumentacaoAdminPage'
+import { DocumentacaoEditorPage } from './features/documentacao/DocumentacaoEditorPage'
+import { DocumentacaoPage } from './features/documentacao/DocumentacaoPage'
 import { EquipeListPage } from './features/equipe/EquipeListPage'
 import { EstoqueListPage } from './features/estoque/EstoqueListPage'
 import { FaturamentoLayout } from './features/faturamento/FaturamentoLayout'
@@ -77,6 +80,9 @@ function App() {
             <Route path="/relatorios/dre" element={<RelatoriosPage />} />
             <Route path="/relatorios/livro-caixa" element={<RelatoriosPage />} />
             <Route path="/configuracoes" element={<ConfiguracoesPage />} />
+            <Route path="/documentacao/*" element={<DocumentacaoPage />} />
+            <Route path="/documentacao-admin" element={<DocumentacaoAdminPage />} />
+            <Route path="/documentacao-admin/:id" element={<DocumentacaoEditorPage />} />
           </Route>
         </Route>
 

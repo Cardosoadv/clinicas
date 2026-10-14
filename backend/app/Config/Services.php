@@ -29,4 +29,17 @@ class Services extends BaseService
      *     return new \CodeIgniter\Example();
      * }
      */
+
+    /**
+     * Leitura da documentação interna (manual do sistema). Registrado como
+     * serviço para os testes trocarem as dependências (permissões do usuário).
+     */
+    public static function documentacao($getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('documentacao');
+        }
+
+        return new \App\Services\Documentacao\DocumentacaoService();
+    }
 }

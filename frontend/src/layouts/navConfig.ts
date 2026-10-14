@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  BookMarked,
   BookOpen,
   Boxes,
   CalendarDays,
@@ -62,7 +63,10 @@ export const navSections: NavSection[] = [
   },
   {
     title: 'Sistema',
-    items: [{ label: 'Configurações', path: '/configuracoes', icon: Settings }],
+    items: [
+      { label: 'Configurações', path: '/configuracoes', icon: Settings },
+      { label: 'Documentação', path: '/documentacao', icon: BookMarked },
+    ],
   },
 ]
 
