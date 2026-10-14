@@ -1,0 +1,41 @@
+name: Testes da Documentação
+
+# Documentação interna (manual do sistema): formato das páginas, motor de renderização, API e as páginas de app/Docs.
+on:
+  pull_request:
+    paths:
+      - 'backend/app/**'
+      - 'backend/tests/**'
+      - 'backend/composer.*'
+      - '.github/workflows/tests-documentacao.yml'
+
+jobs:
+  phpunit-documentacao:
+    name: PHPUnit e docs:verificar
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Preparar PHP 8.3
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q php8.3-cli php8.3-intl php8.3-mbstring php8.3-sqlite3 php8.3-zip php8.3-gd php8.3-curl php8.3-xml
+          sudo update-alternatives --set php /usr/bin/php8.3
+          php -v
+
+      - name: Instalar dependências
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Testes da documentação
+        run: |
+          vendor/bin/phpunit --no-coverage \
+            tests/unit/Libraries/Documentacao \
+            tests/unit/Services/Documentacao \
+            tests/unit/Controllers/DocumentacaoControllerTest.php \
+            tests/unit/Controllers/DocumentacaoRotasTest.php
+
+      - name: Verificar as páginas (links, âncoras, imagens, cabeçalhos)
+        run: php spark docs:verificar

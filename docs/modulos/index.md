@@ -15,7 +15,7 @@ O menu lateral do sistema é dividido em quatro grupos. Cada módulo tem uma pá
 | **Principal** | [Dashboard](dashboard), [Agenda](agenda), [Pacientes](pacientes), [Clientes](clientes), [Prontuários](prontuarios) |
 | **Operação** | [Serviços](servicos), [Pacotes](pacotes), [Estoque](estoque), [Equipe](equipe), [Lojas](lojas) |
 | **Financeiro** | [Faturamento](faturamento), [Relatórios: Extrato, DRE e Livro Caixa](relatorios) |
-| **Sistema** | [Comunicação e Configurações](comunicacao) |
+| **Sistema** | [Comunicação e Configurações](comunicacao), [Documentação interna]({{ site.baseurl }}/documentacao-interna) |
 | **Transversais** | [Autenticação e Perfil](autenticacao), [Importação CSV](importacao), busca global da barra superior |
 
 ## Busca global

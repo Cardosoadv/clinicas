@@ -124,6 +124,10 @@ As rotas são definidas em dois arquivos: `app/Config/Routes.php` (principal) e 
 | GET | `/configuracoes/templates` | Modelos de mensagem e de impressão |
 | PUT | `/configuracoes/templates` | `{meta_key, meta_value}` (só chaves permitidas) |
 
+## Documentação interna
+
+Leitura (`GET /documentacao`, `/documentacao/paginas/{slug}`, `/documentacao/busca?q=`, `/documentacao/tela/{tela}`, `/documentacao/imagens/...`) e edição (`/documentacao/admin/*`, com a permissão `documentacao.editar`). Contrato completo em [API da documentação interna](api-documentacao).
+
 ## Equipe
 
 | Método | Rota | Descrição |

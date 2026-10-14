@@ -37,6 +37,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={{ user, isLoading, login, logout }}>{children}</AuthContext.Provider>
 }
 
+/** O usuário logado tem a permissão? */
+export function usePermissao(permissao: string): boolean {
+  const { user } = useAuth()
+  return Boolean(user?.permissoes?.includes(permissao))
+}
+
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext)
   if (!ctx) {

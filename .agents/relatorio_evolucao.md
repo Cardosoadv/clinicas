@@ -4,6 +4,20 @@ Este relatório documenta as principais evoluções e melhorias implementadas no
 
 ---
 
+## Feature: Documentação Interna (Manual do Sistema) (Outubro 2026) [v1.1.0]
+
+Implantação no Clínicas do mesmo sistema de documentação interna do Ordo Juris (backend `ordojuris`, telas em `sistema`), adaptado ao CodeIgniter 4 + React do projeto.
+
+### Ações Realizadas:
+- **Backend (Libraries/Services)**: Formato das páginas (`Frontmatter`), motor Markdown → HTML seguro com `league/commonmark` e lista branca de tags (`RenderizadorDocumentacao`), catálogo com cache e precedência das páginas do banco sobre os arquivos (`CatalogoDocumentacao`), leitura/busca/ajuda por tela (`DocumentacaoService`), edição pela interface (`EdicaoDocumentacaoService`) e verificação (`VerificadorDocumentacao`).
+- **API**: Rotas `api/v1/documentacao/*` (leitura, só login) e `api/v1/documentacao/admin/*` (edição, permissão `documentacao.editar` via novo filtro JSON `apipermission`). `auth/me` e `auth/login` passam a devolver `permissoes`.
+- **Banco**: Migration `2026-10-14-120000_CreateDocumentacaoPaginas` (páginas criadas pela interface, com rascunho e publicação).
+- **Comandos**: `php spark docs:verificar` (links, âncoras, imagens, cabeçalhos e telas) e `php spark docs:cache:clear`.
+- **Conteúdo**: Manual do usuário em `backend/app/Docs` (Primeiros passos, Agenda, Pacientes, Clientes, Prontuários, Serviços, Pacotes, Estoque, Equipe, Lojas, Faturamento, Relatórios, Configurações e Ajuda).
+- **Frontend**: Feature `features/documentacao` com leitor (índice, busca com atalho `/`, "Nesta página", anterior/próxima, impressão), ajuda contextual na barra superior (botão **?**, F1), lista de edição e editor Markdown com pré-visualização e envio de imagens. Item **Documentação** no menu Sistema.
+- **Testes/CI**: 111 testes PHPUnit novos e o workflow `tests-documentacao.yml`.
+- **Versionamento**: Versão do sistema atualizada para `1.1.0` em `backend/composer.json`, `package.json` e `README.md`.
+
 ## DB & Fix: Coluna pacote_id em Agendamentos e Pré-agendamento de Pacotes (Outubro 2026) [v1.0.12]
 
 Correção do erro na criação de pacotes com sessões pré-agendadas que falhava ao persistir agendamentos na tabela `agendamentos` devido à ausência da coluna `pacote_id`.

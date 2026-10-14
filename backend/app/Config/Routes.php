@@ -97,6 +97,27 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\V1', 'filter' => 'apia
     $routes->get('clientes/(:num)/comunicacoes', 'Clientes::getComunicacoes/$1');
     $routes->post('clientes/(:num)/comunicacoes', 'Clientes::createComunicacao/$1');
 
+    // Documentação interna (manual do sistema): leitura para todos os usuários
+    // logados; edição só com a permissão documentacao.editar. Contrato em
+    // docs/api-documentacao.md.
+    $routes->get('documentacao', 'Documentacao::index');
+    $routes->get('documentacao/busca', 'Documentacao::busca');
+    $routes->get('documentacao/paginas/(:any)', 'Documentacao::pagina/$1');
+    $routes->get('documentacao/tela/(:segment)', 'Documentacao::tela/$1');
+    $routes->get('documentacao/imagens/(:any)', 'Documentacao::imagem/$1');
+    $routes->group('documentacao/admin', ['filter' => 'apipermission:documentacao.editar'], static function (RouteCollection $routes) {
+        $routes->get('paginas', 'DocumentacaoAdmin::index');
+        $routes->post('paginas', 'DocumentacaoAdmin::create');
+        $routes->post('paginas/de-arquivo/(:any)', 'DocumentacaoAdmin::deArquivo/$1');
+        $routes->get('paginas/(:num)', 'DocumentacaoAdmin::show/$1');
+        $routes->put('paginas/(:num)', 'DocumentacaoAdmin::update/$1');
+        $routes->post('paginas/(:num)/publicar', 'DocumentacaoAdmin::publicar/$1');
+        $routes->post('paginas/(:num)/despublicar', 'DocumentacaoAdmin::despublicar/$1');
+        $routes->delete('paginas/(:num)', 'DocumentacaoAdmin::delete/$1');
+        $routes->post('preview', 'DocumentacaoAdmin::preview');
+        $routes->post('imagens', 'DocumentacaoAdmin::imagem');
+    });
+
     // Equipe
     $routes->get('equipe', 'Equipe::getAll');
     $routes->get('equipe/nao-vinculados', 'Equipe::getUnlinkedUsers');
