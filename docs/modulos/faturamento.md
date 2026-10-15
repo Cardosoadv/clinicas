@@ -77,7 +77,7 @@ Regras:
 
 ### Parceladas e recorrentes (API)
 
-O backend aceita dois modos extras em `POST faturamento/despesas`. Ainda **não há campos para eles na tela**.
+O backend aceita dois modos extras em `POST faturamento/despesas`. A tela de **Nova Despesa** já permite **parcelar** (checkbox "Parcelar esta despesa", com prévia editável das parcelas; só na criação). A despesa **recorrente** ainda **não tem campos na tela** — só pela API.
 
 | Modo | Como enviar | Resultado |
 |:--|:--|:--|
@@ -141,8 +141,11 @@ O QR Code aponta para o endpoint JSON da API (`/api/v1/publico/recibos/{id}/{has
 | GET | `/faturamento/lancamentos` | Cobranças e despesas para as abas |
 | POST | `/faturamento/cobrancas` | Cria cobrança |
 | PUT | `/faturamento/cobrancas/{id}` | Edita cobrança |
+| GET | `/faturamento/despesas` | Lista despesas por vencimento (`mes`, `status`, `page`, `per_page`) |
 | POST | `/faturamento/despesas` | Cria despesa (simples, parcelada ou recorrente) |
-| PUT | `/faturamento/despesas/{id}` | Edita despesa |
+| PUT | `/faturamento/despesas/{id}` | Edita despesa (`escopo` opcional para parcelas) |
+| POST | `/faturamento/despesas/{id}/cancelar` | Cancela despesa ou parcelas pendentes (`escopo`) |
+| GET | `/faturamento/despesas/grupo/{des_grupo_id}` | Parcelas de um grupo |
 | POST | `/faturamento/despesas/{id}/comprovante` | Envia comprovante (multipart, campo `comprovante`) |
 | GET | `/faturamento/despesas/{id}/comprovante/{arquivo}` | Baixa comprovante |
 | POST | `/faturamento/despesas/import` | [Importação CSV](importacao) de despesas |
