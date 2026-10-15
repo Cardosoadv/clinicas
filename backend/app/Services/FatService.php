@@ -68,6 +68,38 @@ class FatService extends BaseService
     }
 
     /**
+     * Mantém uma despesa por grupo (parcelas/recorrência), preservando a ordem de chegada.
+     * Dentro do grupo, fica a de menor número de parcela (ou a primeira encontrada).
+     *
+     * @param array $despesas
+     * @return array
+     */
+    protected function colapsarGrupos(array $despesas): array
+    {
+        $porGrupo = [];
+        $resultado = [];
+
+        foreach ($despesas as $d) {
+            $grupo = $d['des_grupo_id'] ?? null;
+            if ($grupo === null) {
+                $resultado[] = $d;
+                continue;
+            }
+            if (!isset($porGrupo[$grupo])) {
+                $porGrupo[$grupo] = count($resultado);
+                $resultado[] = $d;
+                continue;
+            }
+            $atual = $resultado[$porGrupo[$grupo]];
+            if (($d['des_parcela_num'] ?? PHP_INT_MAX) < ($atual['des_parcela_num'] ?? PHP_INT_MAX)) {
+                $resultado[$porGrupo[$grupo]] = $d;
+            }
+        }
+
+        return $resultado;
+    }
+
+    /**
      * Retorna dados para o dashboard financeiro
      *
      * @return array
@@ -86,7 +118,11 @@ class FatService extends BaseService
 
         // Recent shared transactions
         $recentCobrancas = $this->cobrancaRepo->getRecent(5);
-        $recentDespesas = $this->despesaRepo->getRecent(5);
+        // um parcelamento cria várias despesas de uma vez: mostra uma por grupo
+        $recentDespesas = array_slice($this->colapsarGrupos($this->despesaRepo->getRecent(30)), 0, 5);
+
+        $aPagar        = $this->despesaRepo->getResumoAPagar(date('Y-m-d'));
+        $aPagarPorMes  = array_slice($this->despesaRepo->getPendentesPorMes(date('Y-m-01')), 0, 6);
 
         $transacoes = array_merge($recentCobrancas, $recentDespesas);
         usort($transacoes, static function ($a, $b) {
@@ -100,6 +136,8 @@ class FatService extends BaseService
                 'saldo'    => $saldo,
                 'a_receber' => $cobrancaStats['a_receber'],
                 'vencidos'  => $cobrancaStats['vencidos'],
+                'a_pagar'   => $aPagar['a_pagar'] ?? 0.0,
+                'despesas_vencidas' => $aPagar['vencidas'] ?? 0.0,
             ],
             'transacoes' => array_slice($transacoes, 0, 5),
             'notas'      => $this->notaRepo->getRecent(5),
@@ -108,6 +146,7 @@ class FatService extends BaseService
                 'formas_pgto'    => $this->getFormasPagamento($month, $year),
                 'top_pets'       => $this->getTopPets($month, $year),
                 'chart_data'     => $this->getChartReceitaDespesa(),
+                'a_pagar_por_mes' => $aPagarPorMes,
             ],
             // Optimization: Fetch only ID and Name for dashboard lookups
             'pets'       => $this->petsRepo->findForLookup(),

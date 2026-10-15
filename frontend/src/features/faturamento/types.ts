@@ -79,6 +79,8 @@ export interface DashboardKpis {
   saldo: number
   a_receber: number
   vencidos: number
+  a_pagar: number
+  despesas_vencidas: number
 }
 
 export interface DashboardData {
@@ -90,6 +92,7 @@ export interface DashboardData {
     formas_pgto: { forma_pagamento: string; total: number }[]
     top_pets: { paciente_id: number; paciente_nome: string; paciente_avatar: string | null; qtd: number; total: number }[]
     chart_data: { points: { label: string; receita: number; despesa: number }[]; max_value: number }
+    a_pagar_por_mes: { mes: string; total: number }[]
   }
   recebiveis: Cobranca[]
 }

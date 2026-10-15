@@ -17,4 +17,8 @@ A [DRE](/relatorios/dre) mostra o resultado em **regime de caixa**: só entram o
   Margem líquida (%)         = Resultado Líquido ÷ Receita Bruta × 100
 ```
 
+Cada parcela de uma despesa parcelada conta **uma vez**, no mês do **seu** vencimento, e só depois de marcada
+como **Paga**. Parcelas pendentes ou canceladas ficam de fora. O sistema considera a data de vencimento como a
+data do pagamento: se você pagar uma parcela em outro mês, ela continua no mês do vencimento.
+
 Também mostra a variação da receita e da despesa em relação ao mês anterior ao início do período.

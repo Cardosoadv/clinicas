@@ -28,6 +28,8 @@ Os três relatórios usam os filtros `inicio` e `fim` (`AAAA-MM-DD`). Sem filtro
 | Cobrança (entrada) | `data_servico` |
 | Despesa (saída) | `data_vencimento` |
 
+> **Regime e despesas parceladas.** Os relatórios (e os totais do dashboard) usam **regime de caixa** e tratam `data_vencimento` como a data do pagamento, pois o sistema não guarda a data em que a despesa foi efetivamente paga. Cada parcela é uma despesa própria: entra **uma vez**, no mês do **seu** vencimento, e só quando está `Pago`; parcelas `Cancelado` ou `Pendente` não entram na DRE, no Livro Caixa nem nos totais do dashboard. Não há visão por competência (data da compra): para isso seria preciso guardar a data original da compra, o que não foi feito. Se uma parcela for paga em mês diferente do vencimento, ela continua no mês do vencimento.
+
 ## Extrato (`/relatorios/extrato`)
 
 Lista **todos** os lançamentos do período, de qualquer status, em ordem de data.
@@ -42,7 +44,7 @@ Lista **todos** os lançamentos do período, de qualquer status, em ordem de dat
 | Status | Pendente, Pago, Atrasado, Cancelado |
 | Valor | — |
 
-Na tela o filtro é o período; pela API também dá para filtrar por `tipo` (`todos`, `entrada`, `saida`) e `status`. Totais: entradas, saídas e saldo do período.
+Na tela o filtro é o período; pela API também dá para filtrar por `tipo` (`todos`, `entrada`, `saida`) e `status`. Totais: entradas, saídas e saldo do período — lançamentos **Cancelados** continuam listados, mas **não entram nos totais**. Despesas parceladas mostram o número da parcela no histórico, ex.: `Fornecedor — Equipamento (2/6)`.
 
 ## DRE (`/relatorios/dre`)
 

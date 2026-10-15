@@ -98,4 +98,49 @@ class FatDespesaRepository extends BaseRepository
 
         return ['items' => $items, 'total' => $total];
     }
+
+    /**
+     * Totais a pagar: despesas pendentes (todas) e, delas, as vencidas antes de $hoje.
+     *
+     * @param string $hoje Data AAAA-MM-DD
+     * @return array{a_pagar: float, vencidas: float}
+     */
+    public function getResumoAPagar(string $hoje): array
+    {
+        // normaliza a data antes de interpolar no SQL
+        $hoje = date('Y-m-d', strtotime($hoje));
+
+        $result = $this->model
+            ->select('SUM(valor) as a_pagar', false)
+            ->select("SUM(CASE WHEN data_vencimento < '{$hoje}' THEN valor ELSE 0 END) as vencidas", false)
+            ->where('status', 'Pendente')
+            ->first();
+
+        return [
+            'a_pagar'  => (float) ($result['a_pagar'] ?? 0.0),
+            'vencidas' => (float) ($result['vencidas'] ?? 0.0),
+        ];
+    }
+
+    /**
+     * Despesas pendentes por mês de vencimento, a partir de $aPartirDe.
+     *
+     * @param string $aPartirDe Data AAAA-MM-DD
+     * @return array<int, array{mes: string, total: float}>
+     */
+    public function getPendentesPorMes(string $aPartirDe): array
+    {
+        $rows = $this->model
+            ->select('SUBSTR(data_vencimento, 1, 7) as mes, SUM(valor) as total', false)
+            ->where('status', 'Pendente')
+            ->where('data_vencimento >=', $aPartirDe)
+            ->groupBy('mes')
+            ->orderBy('mes', 'ASC')
+            ->findAll();
+
+        return array_map(
+            static fn(array $r): array => ['mes' => (string) $r['mes'], 'total' => (float) $r['total']],
+            $rows
+        );
+    }
 }

@@ -30,13 +30,16 @@ O módulo fica em `/faturamento` e tem quatro abas: **Dashboard**, **Cobranças*
 | Saldo do mês | Receitas − despesas |
 | A receber | Cobranças **Pendentes** |
 | Vencidos | Cobranças **Atrasadas** |
+| A pagar | Despesas **Pendentes** (todas, inclusive vencidas) |
+| Despesas vencidas | Despesas **Pendentes** com vencimento anterior a hoje |
 
 Também mostra:
 
 - gráfico **Receita vs Despesa** dos últimos 7 meses;
 - receita por serviço e por **forma de pagamento** no mês;
 - **Top Pacientes** — os que mais faturaram no mês;
-- **Últimas transações** (cobranças e despesas misturadas, mais recentes primeiro);
+- **A pagar nos próximos meses** — despesas pendentes por mês de vencimento, do mês atual em diante (até 6 meses);
+- **Últimas transações** (cobranças e despesas misturadas, mais recentes primeiro). Uma despesa parcelada aparece **uma vez** (a menor parcela do grupo), com o rótulo `Parcela X/Y`;
 - últimas notas emitidas e a lista de recebíveis.
 
 ## Cobranças (contas a receber)

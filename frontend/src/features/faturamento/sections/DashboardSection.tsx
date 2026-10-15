@@ -1,10 +1,18 @@
-import { CreditCard, Receipt, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
+import { CalendarClock, CreditCard, Receipt, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
 import { PacienteAvatar } from '../../../components/PacienteAvatar'
+import { rotuloParcela } from '../despesas'
 import { useFaturamento } from '../FaturamentoContext'
 import type { Cobranca, Despesa } from '../types'
 
 function formatCurrency(value: number): string {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
+const nomesMeses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+
+function rotuloMes(mes: string): string {
+  const [ano, m] = mes.split('-').map(Number)
+  return `${nomesMeses[m - 1]}/${ano}`
 }
 
 function formatDate(value: string): string {
@@ -61,6 +69,20 @@ export function DashboardSection() {
             <span>Vencidos</span>
           </div>
         </div>
+        <div className="faturamento-stat-pill faturamento-stat-pill--despesa">
+          <CalendarClock size={24} />
+          <div>
+            <strong>{formatCurrency(kpis.a_pagar)}</strong>
+            <span>A pagar</span>
+          </div>
+        </div>
+        <div className="faturamento-stat-pill faturamento-stat-pill--vencidos">
+          <Receipt size={24} />
+          <div>
+            <strong>{formatCurrency(kpis.despesas_vencidas)}</strong>
+            <span>Despesas vencidas</span>
+          </div>
+        </div>
       </div>
 
       <div className="list-layout">
@@ -106,6 +128,7 @@ export function DashboardSection() {
                   <strong>{isDespesaItem ? (item as Despesa).descricao : (item as Cobranca).servico}</strong>
                   <span>
                     {formatDate(item.created_at)} · {formatCurrency(item.valor)} · {isDespesaItem ? 'Despesa' : 'Cobrança'}
+                    {isDespesaItem && rotuloParcela(item as Despesa) ? ` · ${rotuloParcela(item as Despesa)}` : ''}
                   </span>
                 </div>
               )
@@ -114,6 +137,17 @@ export function DashboardSection() {
         </div>
 
         <aside className="list-sidebar">
+          <div className="side-card">
+            <h3>A pagar nos próximos meses</h3>
+            {dashboard.stats.a_pagar_por_mes.length === 0 && <p className="empty-state">Nenhuma despesa pendente.</p>}
+            {dashboard.stats.a_pagar_por_mes.map((item) => (
+              <div className="side-list-item" key={item.mes}>
+                <strong>{rotuloMes(item.mes)}</strong>
+                <span>{formatCurrency(item.total)}</span>
+              </div>
+            ))}
+          </div>
+
           <div className="side-card">
             <h3>Top Pacientes</h3>
             {dashboard.stats.top_pets.length === 0 && <p className="empty-state">Sem dados no período.</p>}

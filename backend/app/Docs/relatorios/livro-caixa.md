@@ -14,3 +14,6 @@ linha a linha.
 | **Saldo inicial** | entradas pagas − saídas pagas **antes** do início do período |
 | **Movimentos** | entradas e saídas pagas, em ordem de data |
 | **Saldo final** | saldo inicial + entradas − saídas |
+
+Parcelas de despesas aparecem no mês do vencimento de cada uma, só quando **Pagas**, com o número da parcela
+no histórico (por exemplo, `(2/6)`).

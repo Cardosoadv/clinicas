@@ -634,6 +634,43 @@ final class FatServiceTest extends CIUnitTestCase
         $this->assertCount(7, $result['stats']['chart_data']['points']);
     }
 
+    public function testGetDashboardDataMostraUmaDespesaPorGrupoDeParcelas(): void
+    {
+        $this->cobrancaRepo->method('getSummaryStats')->willReturn(['a_receber' => 0.0, 'vencidos' => 0.0]);
+        $this->cobrancaRepo->method('getRecent')->willReturn([]);
+        $this->cobrancaRepo->method('getModel')->willReturn($this->mockCobrancaModelFindAll([]));
+        $this->despesaRepo->method('getRecent')->willReturn([
+            ['id' => 13, 'descricao' => 'Equipamento', 'des_grupo_id' => 'g', 'des_parcela_num' => 3, 'created_at' => '2026-10-15 10:00:00'],
+            ['id' => 11, 'descricao' => 'Equipamento', 'des_grupo_id' => 'g', 'des_parcela_num' => 1, 'created_at' => '2026-10-15 10:00:00'],
+            ['id' => 12, 'descricao' => 'Equipamento', 'des_grupo_id' => 'g', 'des_parcela_num' => 2, 'created_at' => '2026-10-15 10:00:00'],
+            ['id' => 20, 'descricao' => 'Água', 'des_grupo_id' => null, 'des_parcela_num' => null, 'created_at' => '2026-10-14 09:00:00'],
+        ]);
+
+        $result = $this->service->getDashboardData();
+
+        $ids = array_column($result['transacoes'], 'id');
+        $this->assertSame([11, 20], $ids);
+    }
+
+    public function testGetDashboardDataInformaValoresAPagar(): void
+    {
+        $this->cobrancaRepo->method('getSummaryStats')->willReturn(['a_receber' => 0.0, 'vencidos' => 0.0]);
+        $this->cobrancaRepo->method('getRecent')->willReturn([]);
+        $this->despesaRepo->method('getRecent')->willReturn([]);
+        $this->cobrancaRepo->method('getModel')->willReturn($this->mockCobrancaModelFindAll([]));
+        $this->despesaRepo->method('getResumoAPagar')->willReturn(['a_pagar' => 500.0, 'vencidas' => 100.0]);
+        $this->despesaRepo->method('getPendentesPorMes')->willReturn([
+            ['mes' => '2026-10', 'total' => 200.0],
+            ['mes' => '2026-11', 'total' => 300.0],
+        ]);
+
+        $result = $this->service->getDashboardData();
+
+        $this->assertSame(500.0, $result['kpis']['a_pagar']);
+        $this->assertSame(100.0, $result['kpis']['despesas_vencidas']);
+        $this->assertSame('2026-11', $result['stats']['a_pagar_por_mes'][1]['mes']);
+    }
+
     // -- generateQR ----------------------------------------------------------
 
     public function testGenerateQRReturnsBase64Image(): void
