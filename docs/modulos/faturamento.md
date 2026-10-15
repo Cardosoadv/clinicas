@@ -30,13 +30,16 @@ O módulo fica em `/faturamento` e tem quatro abas: **Dashboard**, **Cobranças*
 | Saldo do mês | Receitas − despesas |
 | A receber | Cobranças **Pendentes** |
 | Vencidos | Cobranças **Atrasadas** |
+| A pagar | Despesas **Pendentes** (todas, inclusive vencidas) |
+| Despesas vencidas | Despesas **Pendentes** com vencimento anterior a hoje |
 
 Também mostra:
 
 - gráfico **Receita vs Despesa** dos últimos 7 meses;
 - receita por serviço e por **forma de pagamento** no mês;
 - **Top Pacientes** — os que mais faturaram no mês;
-- **Últimas transações** (cobranças e despesas misturadas, mais recentes primeiro);
+- **A pagar nos próximos meses** — despesas pendentes por mês de vencimento, do mês atual em diante (até 6 meses);
+- **Últimas transações** (cobranças e despesas misturadas, mais recentes primeiro). Uma despesa parcelada aparece **uma vez** (a menor parcela do grupo), com o rótulo `Parcela X/Y`;
 - últimas notas emitidas e a lista de recebíveis.
 
 ## Cobranças (contas a receber)
@@ -74,12 +77,39 @@ Regras:
 
 ### Parceladas e recorrentes (API)
 
-O backend aceita dois modos extras em `POST faturamento/despesas`. Ainda **não há campos para eles na tela**.
+O backend aceita dois modos extras em `POST faturamento/despesas`. A tela de **Nova Despesa** já permite **parcelar** (checkbox "Parcelar esta despesa", com prévia editável das parcelas; só na criação). A despesa **recorrente** ainda **não tem campos na tela** — só pela API.
 
 | Modo | Como enviar | Resultado |
 |:--|:--|:--|
-| **Parcelada** | `is_parcelado: "true"` e `parcelas: [{valor, vencimento}, ...]` (array ou JSON) | Uma despesa por parcela, com o mesmo `des_grupo_id` e `des_parcela_num` / `des_parcela_total` |
+| **Parcelada** | `is_parcelado: "true"` + `valor` (total), `parcelas_qtd` (2 a 60), `data_vencimento` (1ª parcela) e `periodicidade` opcional (`mensal` padrão, `quinzenal`, `semanal`). Alternativa: `parcelas: [{valor, vencimento}, ...]` (array ou JSON) com parcelas prontas | Uma despesa por parcela, com o mesmo `des_grupo_id` (UUID) e `des_parcela_num` / `des_parcela_total`. Tudo em uma transação: se uma parcela falhar, nenhuma é gravada. A resposta traz `ids` e `des_grupo_id`. Veja as regras abaixo. |
 | **Recorrente (fixa)** | `is_recorrente: "true"`, `recorrencia` (`semanal`, `quinzenal`, `mensal`, `anual`) e `recorrencia_fim` opcional | Uma despesa por período até a data final (padrão: 1 ano; máximo de 60 ocorrências). A primeira mantém o status enviado; as futuras nascem Pendentes. |
+
+**Regras da despesa parcelada**
+
+- `valor` é o **total**; a divisão é feita em centavos e a **última parcela absorve a diferença** (100,00 em 3x → 33,33 / 33,33 / 33,34).
+- No modo mensal o dia é mantido, limitado ao último dia do mês (31/01 → 28/02 → 31/03).
+- A primeira parcela mantém o `status` enviado; as demais nascem `Pendente`.
+- Parcelas prontas (`parcelas[]`) são validadas: `valor` maior que zero e `vencimento` em `AAAA-MM-DD` válido.
+- `is_parcelado` e `is_recorrente` não podem ser usados juntos.
+
+**Listagem de despesas**
+
+A aba Despesas usa `GET /faturamento/despesas`, ordenada por `data_vencimento` (e `id`), com filtro por mês (`mes=AAAA-MM`; omitido = todos os meses) e por `status`, paginada (`page`, `per_page`, padrão 20, máximo 100). Assim as parcelas futuras aparecem ao navegar pelo mês de vencimento. O dashboard continua usando as despesas mais recentes. "Atrasado" não é um status do banco: a tela o exibe para despesas `Pendente` com vencimento anterior a hoje.
+
+**Editar e cancelar parcelas por grupo**
+
+`PUT /faturamento/despesas/{id}` e `POST /faturamento/despesas/{id}/cancelar` aceitam `escopo`:
+
+| Escopo | Atinge |
+|:--|:--|
+| `apenas_esta` (padrão) | só a despesa informada |
+| `esta_e_seguintes` | a despesa e as parcelas seguintes do grupo (por `des_parcela_num`; em recorrências, por `data_vencimento`) |
+| `todas` | todas as parcelas do grupo |
+
+- **Edição:** `descricao`, `categoria` e `fornecedor` propagam para todas as parcelas do escopo, inclusive as pagas (são dados cadastrais). `forma_pagamento` propaga apenas para parcelas **não pagas**. `valor`, `data_vencimento` e `status` valem **somente** para a parcela informada; os vencimentos das seguintes não são deslocados.
+- **Cancelamento:** muda para `Cancelado` apenas as parcelas `Pendente` do escopo; parcelas `Pago` nunca são alteradas. A resposta traz `canceladas` e `ignoradas_pagas`; se não houver parcela pendente, retorna erro.
+- Despesa sem `des_grupo_id` ignora o escopo e afeta só ela. Tudo roda em transação.
+- `GET /faturamento/despesas/grupo/{des_grupo_id}` lista as parcelas do grupo (404 se não existir).
 
 Despesas também são criadas pela **entrada de estoque** com "lançar no financeiro" ([Estoque](estoque)) e pela [importação CSV](importacao).
 
@@ -111,8 +141,11 @@ O QR Code aponta para o endpoint JSON da API (`/api/v1/publico/recibos/{id}/{has
 | GET | `/faturamento/lancamentos` | Cobranças e despesas para as abas |
 | POST | `/faturamento/cobrancas` | Cria cobrança |
 | PUT | `/faturamento/cobrancas/{id}` | Edita cobrança |
+| GET | `/faturamento/despesas` | Lista despesas por vencimento (`mes`, `status`, `page`, `per_page`) |
 | POST | `/faturamento/despesas` | Cria despesa (simples, parcelada ou recorrente) |
-| PUT | `/faturamento/despesas/{id}` | Edita despesa |
+| PUT | `/faturamento/despesas/{id}` | Edita despesa (`escopo` opcional para parcelas) |
+| POST | `/faturamento/despesas/{id}/cancelar` | Cancela despesa ou parcelas pendentes (`escopo`) |
+| GET | `/faturamento/despesas/grupo/{des_grupo_id}` | Parcelas de um grupo |
 | POST | `/faturamento/despesas/{id}/comprovante` | Envia comprovante (multipart, campo `comprovante`) |
 | GET | `/faturamento/despesas/{id}/comprovante/{arquivo}` | Baixa comprovante |
 | POST | `/faturamento/despesas/import` | [Importação CSV](importacao) de despesas |

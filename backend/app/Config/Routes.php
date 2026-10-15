@@ -141,9 +141,12 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\V1', 'filter' => 'apia
     $routes->get('faturamento/lancamentos', 'Faturamento::lancamentos');
     $routes->post('faturamento/cobrancas', 'Faturamento::createCobranca');
     $routes->put('faturamento/cobrancas/(:num)', 'Faturamento::updateCobranca/$1');
+    $routes->get('faturamento/despesas', 'Faturamento::despesas');
     $routes->post('faturamento/despesas', 'Faturamento::createDespesa');
     $routes->post('faturamento/despesas/import', 'DespesasImport::upload');
     $routes->put('faturamento/despesas/(:num)', 'Faturamento::updateDespesa/$1');
+    $routes->post('faturamento/despesas/(:num)/cancelar', 'Faturamento::cancelarDespesa/$1');
+    $routes->get('faturamento/despesas/grupo/(:segment)', 'Faturamento::grupoDespesas/$1');
     $routes->post('faturamento/despesas/(:num)/comprovante', 'Faturamento::uploadComprovantesDespesa/$1');
     $routes->get('faturamento/despesas/(:num)/comprovante/(:any)', 'Faturamento::viewComprovante/$1/$2');
     $routes->get('faturamento/notas', 'Faturamento::notas');

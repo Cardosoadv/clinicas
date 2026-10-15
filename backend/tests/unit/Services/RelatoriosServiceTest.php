@@ -100,6 +100,39 @@ final class RelatoriosServiceTest extends CIUnitTestCase
         $this->assertSame('Pago', $result['lancamentos'][0]['status']);
     }
 
+    public function testGetExtratoDataListaCanceladosMasNaoSomaNosTotais(): void
+    {
+        $this->repository->method('getCobrancasExtrato')->willReturn([
+            ['id' => 1, 'data_servico' => '2026-01-15', 'paciente_nome' => 'Rex', 'servico' => 'Banho', 'valor' => '100.00', 'status' => 'Pago', 'forma_pagamento' => 'Pix'],
+            ['id' => 3, 'data_servico' => '2026-01-16', 'paciente_nome' => 'Rex', 'servico' => 'Tosa', 'valor' => '70.00', 'status' => 'Cancelado', 'forma_pagamento' => 'Pix'],
+        ]);
+        $this->repository->method('getDespesasExtrato')->willReturn([
+            ['id' => 2, 'data_vencimento' => '2026-01-10', 'fornecedor' => 'Loja', 'descricao' => 'Equipamento', 'valor' => '40.00', 'status' => 'Pago', 'categoria' => 'Equipamentos', 'des_parcela_num' => 1, 'des_parcela_total' => 3],
+            ['id' => 4, 'data_vencimento' => '2026-01-20', 'fornecedor' => 'Loja', 'descricao' => 'Equipamento', 'valor' => '40.00', 'status' => 'Cancelado', 'categoria' => 'Equipamentos', 'des_parcela_num' => 2, 'des_parcela_total' => 3],
+        ]);
+
+        $result = $this->service->getExtratoData(['inicio' => '2026-01-01', 'fim' => '2026-01-31']);
+
+        $this->assertCount(4, $result['lancamentos']);
+        $this->assertSame(100.0, $result['total_entradas']);
+        $this->assertSame(40.0, $result['total_saidas']);
+        $this->assertSame(60.0, $result['saldo_periodo']);
+    }
+
+    public function testGetExtratoDataIndicaNumeroDaParcelaNoHistorico(): void
+    {
+        $this->repository->method('getCobrancasExtrato')->willReturn([]);
+        $this->repository->method('getDespesasExtrato')->willReturn([
+            ['id' => 2, 'data_vencimento' => '2026-01-10', 'fornecedor' => 'Loja', 'descricao' => 'Equipamento', 'valor' => '40.00', 'status' => 'Pendente', 'categoria' => 'Equipamentos', 'des_parcela_num' => 2, 'des_parcela_total' => 6],
+            ['id' => 3, 'data_vencimento' => '2026-01-11', 'fornecedor' => 'Loja', 'descricao' => 'Ração', 'valor' => '10.00', 'status' => 'Pendente', 'categoria' => 'Estoque', 'des_parcela_num' => null, 'des_parcela_total' => null],
+        ]);
+
+        $result = $this->service->getExtratoData(['inicio' => '2026-01-01', 'fim' => '2026-01-31']);
+
+        $this->assertSame('Loja — Equipamento (2/6)', $result['lancamentos'][0]['historico']);
+        $this->assertSame('Loja — Ração', $result['lancamentos'][1]['historico']);
+    }
+
     public function testGetDREDataComputesMarginsAndVariations(): void
     {
         $this->repository->expects($this->exactly(2))
@@ -123,6 +156,19 @@ final class RelatoriosServiceTest extends CIUnitTestCase
         $this->assertSame(100.0, $result['variacao_receita']);
         // Despesa variou de 200 para 400 => +100%
         $this->assertSame(100.0, $result['variacao_despesa']);
+    }
+
+    public function testGetLivroCaixaDataIndicaNumeroDaParcelaNasSaidas(): void
+    {
+        $this->repository->method('getSaldoAnterior')->willReturn(0.0);
+        $this->repository->method('getEntradasLivroCaixa')->willReturn([]);
+        $this->repository->method('getSaidasLivroCaixa')->willReturn([
+            ['data_vencimento' => '2026-01-10', 'fornecedor' => 'Loja', 'descricao' => 'Equipamento', 'valor' => '40.00', 'forma_pagamento' => 'Pix', 'des_parcela_num' => 1, 'des_parcela_total' => 3],
+        ]);
+
+        $result = $this->service->getLivroCaixaData(['inicio' => '2026-01-01', 'fim' => '2026-01-31']);
+
+        $this->assertSame('Loja — Equipamento (1/3)', $result['movimentos'][0]['historico']);
     }
 
     public function testGetDREDataHandlesZeroReceitaBrutaWithoutDivisionByZero(): void

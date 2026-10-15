@@ -1,3 +1,6 @@
+import type { Escopo } from './despesas'
+import type { ParcelaForm, Periodicidade } from './parcelas'
+
 export type CobrancaStatus = 'Pendente' | 'Pago' | 'Atrasado' | 'Cancelado'
 export type DespesaStatus = 'Pendente' | 'Pago' | 'Cancelado'
 
@@ -76,6 +79,8 @@ export interface DashboardKpis {
   saldo: number
   a_receber: number
   vencidos: number
+  a_pagar: number
+  despesas_vencidas: number
 }
 
 export interface DashboardData {
@@ -87,8 +92,18 @@ export interface DashboardData {
     formas_pgto: { forma_pagamento: string; total: number }[]
     top_pets: { paciente_id: number; paciente_nome: string; paciente_avatar: string | null; qtd: number; total: number }[]
     chart_data: { points: { label: string; receita: number; despesa: number }[]; max_value: number }
+    a_pagar_por_mes: { mes: string; total: number }[]
   }
   recebiveis: Cobranca[]
+}
+
+/** Página de despesas devolvida por GET /faturamento/despesas. */
+export interface DespesasPagina {
+  items: Despesa[]
+  total: number
+  page: number
+  per_page: number
+  total_pages: number
 }
 
 export interface LancamentosData {
@@ -178,6 +193,12 @@ export interface DespesaFormValues {
   data_vencimento: string
   forma_pagamento: string
   status: DespesaStatus
+  parcelar: boolean
+  parcelas_qtd: string
+  periodicidade: Periodicidade
+  parcelas: ParcelaForm[]
+  /** Em edição de parcela: a quais parcelas do grupo a alteração se aplica. */
+  escopo: Escopo
 }
 
 export function emptyDespesaForm(): DespesaFormValues {
@@ -189,6 +210,11 @@ export function emptyDespesaForm(): DespesaFormValues {
     data_vencimento: new Date().toISOString().slice(0, 10),
     forma_pagamento: 'Pix',
     status: 'Pendente',
+    parcelar: false,
+    parcelas_qtd: '2',
+    periodicidade: 'mensal',
+    parcelas: [],
+    escopo: 'apenas_esta',
   }
 }
 
@@ -201,6 +227,11 @@ export function despesaToFormValues(despesa: Despesa): DespesaFormValues {
     data_vencimento: despesa.data_vencimento,
     forma_pagamento: despesa.forma_pagamento ?? '',
     status: despesa.status,
+    parcelar: false,
+    parcelas_qtd: '2',
+    periodicidade: 'mensal',
+    parcelas: [],
+    escopo: 'apenas_esta',
   }
 }
 

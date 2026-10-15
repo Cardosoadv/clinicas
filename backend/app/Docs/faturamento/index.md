@@ -3,7 +3,7 @@ titulo: Faturamento
 resumo: Painel financeiro do mês, cobranças, despesas, recibos e notas.
 ordem: 100
 telas: [faturamento-dashboard]
-palavras_chave: [financeiro, receitas, despesas, saldo, a receber, vencidos]
+palavras_chave: [financeiro, receitas, despesas, saldo, a receber, vencidos, a pagar]
 ---
 
 O [Faturamento](/faturamento) tem quatro abas: **Dashboard**, [Cobranças](cobrancas.md),
@@ -18,8 +18,10 @@ O [Faturamento](/faturamento) tem quatro abas: **Dashboard**, [Cobranças](cobra
 | **Saldo do mês** | receitas − despesas |
 | **A receber** | cobranças pendentes |
 | **Vencidos** | cobranças atrasadas |
+| **A pagar** | despesas pendentes |
+| **Despesas vencidas** | despesas pendentes com vencimento passado |
 
 A aba mostra também o gráfico **Receita vs Despesa** dos últimos 7 meses, a receita por serviço e por forma
-de pagamento, os pacientes que mais faturaram no mês e as últimas transações.
+de pagamento, os pacientes que mais faturaram no mês, o valor **a pagar nos próximos meses** e as últimas transações.
 
 Para relatórios de um período, veja [Relatórios](../relatorios/index.md).

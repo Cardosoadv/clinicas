@@ -18,4 +18,6 @@ O [Extrato](/relatorios/extrato) lista **todos** os lançamentos do período, de
 | **Status** | Pendente, Pago, Atrasado ou Cancelado |
 | **Valor** | — |
 
-No fim, os totais de entradas, saídas e o saldo do período.
+No fim, os totais de entradas, saídas e o saldo do período. Lançamentos **Cancelados** aparecem na lista,
+mas **não são somados** nos totais. Em despesas parceladas, o histórico mostra a parcela, por exemplo
+`Fornecedor — Equipamento (2/6)`.

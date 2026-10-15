@@ -98,6 +98,8 @@ Na **entrada de estoque**, marque "Lançar no financeiro":
 
 Como o DRE e o Livro Caixa são em **regime de caixa**, mantenha o status das cobranças e despesas atualizado — uma cobrança paga e ainda marcada como Pendente não aparece no resultado.
 
+**Despesa parcelada.** Ao lançar uma despesa em N parcelas, cada parcela vira uma linha em `fat_despesas`, todas com o mesmo `des_grupo_id` (criadas numa só transação). No Extrato aparecem todas, com `(2/6)` no histórico; o DRE, o Livro Caixa e o Dashboard contam cada parcela **uma vez**, no mês do **seu** vencimento e **quando Paga** — parcelas Pendentes ou Canceladas ficam de fora. Cancelar "esta e seguintes" muda para `Cancelado` só as parcelas Pendentes, e as já pagas nunca são alteradas. Veja [Faturamento]({{ site.baseurl }}/modulos/faturamento#parceladas-e-recorrentes-api) e [Relatórios]({{ site.baseurl }}/modulos/relatorios).
+
 ## 6. Comunicação com o tutor
 
 | Momento | Mensagem | Onde está o gatilho |

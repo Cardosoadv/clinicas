@@ -39,6 +39,15 @@ class Faturamento extends BaseController
     }
 
     /**
+     * API: Lista despesas por vencimento (filtros: mes=AAAA-MM, status; paginação: page, per_page).
+     */
+    public function despesas(): ResponseInterface
+    {
+        $result = $this->service->getDespesas($this->request->getGet() ?? []);
+        return $this->apiResponse($result);
+    }
+
+    /**
      * API: Retorna todas as notas fiscais/recibos emitidos.
      */
     public function notas(): ResponseInterface
@@ -100,6 +109,8 @@ class Faturamento extends BaseController
             'valor'           => 'required|numeric',
             'data_vencimento' => 'required|valid_date',
             'status'          => 'permit_empty|in_list[Pendente,Pago,Cancelado]',
+            'parcelas_qtd'    => 'permit_empty|is_natural_no_zero|less_than_equal_to[' . FatService::MAX_PARCELAS . ']',
+            'periodicidade'   => 'permit_empty|in_list[mensal,quinzenal,semanal]',
         ])) {
             return $this->apiValidationError($this->validator->getErrors());
         }
@@ -118,12 +129,39 @@ class Faturamento extends BaseController
         if (!$this->validateData($data, [
             'valor'  => 'permit_empty|numeric',
             'status' => 'permit_empty|in_list[Pendente,Pago,Cancelado]',
+            'escopo' => 'permit_empty|in_list[' . implode(',', FatService::ESCOPOS) . ']',
         ])) {
             return $this->apiValidationError($this->validator->getErrors());
         }
 
         $result = $this->service->updateDespesa($id, $data);
         return $this->apiResponse($result);
+    }
+
+    /**
+     * API: Cancela uma despesa ou as parcelas pendentes do grupo, conforme o escopo.
+     */
+    public function cancelarDespesa(int $id): ResponseInterface
+    {
+        $data = $this->getRequestData();
+
+        if (!$this->validateData($data, [
+            'escopo' => 'permit_empty|in_list[' . implode(',', FatService::ESCOPOS) . ']',
+        ])) {
+            return $this->apiValidationError($this->validator->getErrors());
+        }
+
+        $result = $this->service->cancelarDespesa($id, $data['escopo'] ?? FatService::ESCOPO_APENAS_ESTA);
+        return $this->apiResponse($result);
+    }
+
+    /**
+     * API: Lista as parcelas de um grupo de despesas.
+     */
+    public function grupoDespesas(string $grupoId): ResponseInterface
+    {
+        $result = $this->service->getGrupoDespesas($grupoId);
+        return $this->apiResponse($result, 200, 404);
     }
 
     /**

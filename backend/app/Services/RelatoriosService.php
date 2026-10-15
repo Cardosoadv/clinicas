@@ -59,6 +59,20 @@ class RelatoriosService
     // ─────────────────────────────────────────────
 
     /**
+     * Sufixo " (2/6)" para despesas parceladas; vazio nas demais.
+     *
+     * @param array $despesa
+     * @return string
+     */
+    protected function sufixoParcela(array $despesa): string
+    {
+        $num   = $despesa['des_parcela_num'] ?? null;
+        $total = $despesa['des_parcela_total'] ?? null;
+
+        return ($num !== null && $total !== null) ? " ({$num}/{$total})" : '';
+    }
+
+    /**
      * Retorna todos os dados necessários para renderizar o Extrato.
      *
      * @param array $filters
@@ -93,7 +107,7 @@ class RelatoriosService
             $lancamentos[] = [
                 'id'          => $d['id'],
                 'data'        => $d['data_vencimento'],
-                'historico'   => ($d['fornecedor'] ?? 'Fornecedor') . ' — ' . ($d['descricao'] ?? 'Despesa'),
+                'historico'   => ($d['fornecedor'] ?? 'Fornecedor') . ' — ' . ($d['descricao'] ?? 'Despesa') . $this->sufixoParcela($d),
                 'tipo'        => 'despesa',
                 'natureza'    => 'Saída',
                 'valor'       => (float) $d['valor'],
@@ -123,14 +137,15 @@ class RelatoriosService
 
         $lancamentos = array_values($lancamentos);
 
-        // Totalização
+        // Totalização: lançamentos cancelados continuam listados, mas não entram nos totais
+        $ativos = array_filter($lancamentos, static fn($l) => strtolower((string) $l['status']) !== 'cancelado');
         $totalEntradas = array_sum(array_map(
             static fn($l) => $l['natureza'] === 'Entrada' ? $l['valor'] : 0,
-            $lancamentos
+            $ativos
         ));
         $totalSaidas = array_sum(array_map(
             static fn($l) => $l['natureza'] === 'Saída' ? $l['valor'] : 0,
-            $lancamentos
+            $ativos
         ));
 
         return [
@@ -246,7 +261,7 @@ class RelatoriosService
         foreach ($saidas as $s) {
             $movimentos[] = [
                 'data'       => $s['data_vencimento'],
-                'historico'  => ($s['fornecedor'] ?? 'Despesa') . ' — ' . ($s['descricao'] ?? ''),
+                'historico'  => ($s['fornecedor'] ?? 'Despesa') . ' — ' . ($s['descricao'] ?? '') . $this->sufixoParcela($s),
                 'entrada'    => 0.0,
                 'saida'      => (float) $s['valor'],
                 'forma_pgto' => $s['forma_pagamento'] ?? '',

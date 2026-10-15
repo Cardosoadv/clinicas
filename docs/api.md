@@ -160,9 +160,12 @@ Leitura (`GET /documentacao`, `/documentacao/paginas/{slug}`, `/documentacao/bus
 | GET | `/faturamento/lancamentos` | Cobranças e despesas |
 | POST | `/faturamento/cobrancas` | Cria cobrança |
 | PUT | `/faturamento/cobrancas/{id}` | Edita cobrança |
+| GET | `/faturamento/despesas` | Lista despesas por vencimento. Query: `mes` (`AAAA-MM`), `status`, `page`, `per_page` (máx. 100). Devolve `data: {items, total, page, per_page, total_pages}` |
 | POST | `/faturamento/despesas` | Cria despesa (simples, parcelada, recorrente) |
 | POST | `/faturamento/despesas/import` | CSV (`csv_file`) |
-| PUT | `/faturamento/despesas/{id}` | Edita despesa |
+| PUT | `/faturamento/despesas/{id}` | Edita despesa (aceita `escopo`, veja [Faturamento](modulos/faturamento)) |
+| POST | `/faturamento/despesas/{id}/cancelar` | Cancela despesa ou parcelas pendentes do grupo (`escopo`) |
+| GET | `/faturamento/despesas/grupo/{des_grupo_id}` | Parcelas de um grupo, por número de parcela |
 | POST | `/faturamento/despesas/{id}/comprovante` | Upload (`comprovante`) |
 | GET | `/faturamento/despesas/{id}/comprovante/{arquivo}` | Download |
 | GET | `/faturamento/notas` | Notas e recibos |
