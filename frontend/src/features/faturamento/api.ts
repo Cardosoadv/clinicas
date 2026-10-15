@@ -43,7 +43,7 @@ export function updateCobranca(id: number, values: CobrancaFormValues): Promise<
 }
 
 function despesaPayload(values: DespesaFormValues): Record<string, unknown> {
-  return {
+  const payload: Record<string, unknown> = {
     descricao: values.descricao,
     categoria: values.categoria,
     fornecedor: values.fornecedor || null,
@@ -52,6 +52,14 @@ function despesaPayload(values: DespesaFormValues): Record<string, unknown> {
     forma_pagamento: values.forma_pagamento || null,
     status: values.status,
   }
+
+  if (values.parcelar) {
+    // valor = total; as parcelas (já conferidas na prévia) vão prontas para o backend
+    payload.is_parcelado = 'true'
+    payload.parcelas = values.parcelas.map((p) => ({ valor: Number(p.valor), vencimento: p.vencimento }))
+  }
+
+  return payload
 }
 
 export function createDespesa(values: DespesaFormValues): Promise<ApiEnvelope> {

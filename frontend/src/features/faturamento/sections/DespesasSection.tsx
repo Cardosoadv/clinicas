@@ -39,7 +39,9 @@ export function DespesasSection() {
     const result = await createDespesa(values)
     setModal(null)
     refresh()
-    return typeof result.id === 'number' ? result.id : undefined
+    // despesa parcelada devolve `ids`; o comprovante é anexado à primeira parcela
+    if (typeof result.id === 'number') return result.id
+    return Array.isArray(result.ids) && typeof result.ids[0] === 'number' ? result.ids[0] : undefined
   }
 
   async function handleUpdate(id: number, values: DespesaFormValues) {
@@ -101,6 +103,7 @@ export function DespesasSection() {
       {modal && (
         <DespesaFormModal
           title={modal.mode === 'edit' ? 'Editar Despesa' : 'Nova Despesa'}
+          allowParcelar={modal.mode === 'create'}
           initialValues={modal.mode === 'edit' ? despesaToFormValues(modal.despesa) : emptyDespesaForm()}
           onClose={() => setModal(null)}
           onSubmit={(values) => (modal.mode === 'edit' ? handleUpdate(modal.despesa.id, values) : handleCreate(values))}

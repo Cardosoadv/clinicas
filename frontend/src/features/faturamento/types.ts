@@ -1,3 +1,5 @@
+import type { ParcelaForm, Periodicidade } from './parcelas'
+
 export type CobrancaStatus = 'Pendente' | 'Pago' | 'Atrasado' | 'Cancelado'
 export type DespesaStatus = 'Pendente' | 'Pago' | 'Cancelado'
 
@@ -178,6 +180,10 @@ export interface DespesaFormValues {
   data_vencimento: string
   forma_pagamento: string
   status: DespesaStatus
+  parcelar: boolean
+  parcelas_qtd: string
+  periodicidade: Periodicidade
+  parcelas: ParcelaForm[]
 }
 
 export function emptyDespesaForm(): DespesaFormValues {
@@ -189,6 +195,10 @@ export function emptyDespesaForm(): DespesaFormValues {
     data_vencimento: new Date().toISOString().slice(0, 10),
     forma_pagamento: 'Pix',
     status: 'Pendente',
+    parcelar: false,
+    parcelas_qtd: '2',
+    periodicidade: 'mensal',
+    parcelas: [],
   }
 }
 
@@ -201,6 +211,10 @@ export function despesaToFormValues(despesa: Despesa): DespesaFormValues {
     data_vencimento: despesa.data_vencimento,
     forma_pagamento: despesa.forma_pagamento ?? '',
     status: despesa.status,
+    parcelar: false,
+    parcelas_qtd: '2',
+    periodicidade: 'mensal',
+    parcelas: [],
   }
 }
 
