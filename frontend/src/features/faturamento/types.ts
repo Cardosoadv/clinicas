@@ -1,3 +1,4 @@
+import type { Escopo } from './despesas'
 import type { ParcelaForm, Periodicidade } from './parcelas'
 
 export type CobrancaStatus = 'Pendente' | 'Pago' | 'Atrasado' | 'Cancelado'
@@ -93,6 +94,15 @@ export interface DashboardData {
   recebiveis: Cobranca[]
 }
 
+/** Página de despesas devolvida por GET /faturamento/despesas. */
+export interface DespesasPagina {
+  items: Despesa[]
+  total: number
+  page: number
+  per_page: number
+  total_pages: number
+}
+
 export interface LancamentosData {
   cobrancas: Cobranca[]
   despesas: Despesa[]
@@ -184,6 +194,8 @@ export interface DespesaFormValues {
   parcelas_qtd: string
   periodicidade: Periodicidade
   parcelas: ParcelaForm[]
+  /** Em edição de parcela: a quais parcelas do grupo a alteração se aplica. */
+  escopo: Escopo
 }
 
 export function emptyDespesaForm(): DespesaFormValues {
@@ -199,6 +211,7 @@ export function emptyDespesaForm(): DespesaFormValues {
     parcelas_qtd: '2',
     periodicidade: 'mensal',
     parcelas: [],
+    escopo: 'apenas_esta',
   }
 }
 
@@ -215,6 +228,7 @@ export function despesaToFormValues(despesa: Despesa): DespesaFormValues {
     parcelas_qtd: '2',
     periodicidade: 'mensal',
     parcelas: [],
+    escopo: 'apenas_esta',
   }
 }
 

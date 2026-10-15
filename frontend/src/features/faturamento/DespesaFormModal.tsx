@@ -2,8 +2,9 @@ import { X } from 'lucide-react'
 import { useMemo, useState, type ChangeEvent } from 'react'
 import { ApiError } from '../../lib/api'
 import { uploadComprovante } from './api'
+import { escopoLabels, pluralParcelas, resumoEscopo, type Escopo } from './despesas'
 import { gerarParcelas, MAX_PARCELAS, paraCentavos, validarParcelamento, type Periodicidade } from './parcelas'
-import { categoriasDespesa, formasPagamentoDespesa, type DespesaFormValues } from './types'
+import { categoriasDespesa, formasPagamentoDespesa, type Despesa, type DespesaFormValues } from './types'
 import { useEscapeKey } from '../../hooks/useEscapeKey'
 
 /** Campos que, ao mudar, recalculam a prévia das parcelas. */
@@ -13,12 +14,14 @@ interface DespesaFormModalProps {
   title: string
   /** Exibe a opção "Parcelar" (apenas na criação). */
   allowParcelar?: boolean
+  /** Edição de parcela: despesa editada e demais parcelas do grupo, para escolher o escopo da alteração. */
+  grupo?: { atual: Despesa; parcelas: Despesa[] }
   initialValues: DespesaFormValues
   onClose: () => void
   onSubmit: (values: DespesaFormValues) => Promise<number | void>
 }
 
-export function DespesaFormModal({ title, allowParcelar = false, initialValues, onClose, onSubmit }: DespesaFormModalProps) {
+export function DespesaFormModal({ title, allowParcelar = false, grupo, initialValues, onClose, onSubmit }: DespesaFormModalProps) {
   const [values, setValues] = useState<DespesaFormValues>(initialValues)
   const [comprovante, setComprovante] = useState<File | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -232,6 +235,23 @@ export function DespesaFormModal({ title, allowParcelar = false, initialValues, 
                   </>
                 )}
               </div>
+            )}
+
+            {grupo && (
+              <label className="form-field form-field--full">
+                Aplicar a
+                <select value={values.escopo} onChange={(event) => update({ escopo: event.target.value as Escopo })}>
+                  {(Object.keys(escopoLabels) as Escopo[]).map((escopo) => (
+                    <option key={escopo} value={escopo}>
+                      {escopoLabels[escopo]} ({pluralParcelas(resumoEscopo(grupo.parcelas, grupo.atual, escopo).afetadas)})
+                    </option>
+                  ))}
+                </select>
+                <small className="form-hint">
+                  Valor, vencimento e status valem só para esta parcela. Descrição, categoria, fornecedor e forma de
+                  pagamento seguem o escopo (a forma de pagamento não muda em parcelas já pagas).
+                </small>
+              </label>
             )}
 
             <label className="form-field form-field--full">

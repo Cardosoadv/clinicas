@@ -141,6 +141,7 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\V1', 'filter' => 'apia
     $routes->get('faturamento/lancamentos', 'Faturamento::lancamentos');
     $routes->post('faturamento/cobrancas', 'Faturamento::createCobranca');
     $routes->put('faturamento/cobrancas/(:num)', 'Faturamento::updateCobranca/$1');
+    $routes->get('faturamento/despesas', 'Faturamento::despesas');
     $routes->post('faturamento/despesas', 'Faturamento::createDespesa');
     $routes->post('faturamento/despesas/import', 'DespesasImport::upload');
     $routes->put('faturamento/despesas/(:num)', 'Faturamento::updateDespesa/$1');

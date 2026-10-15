@@ -144,6 +144,45 @@ class FatService extends BaseService
     }
 
     /**
+     * Lista despesas ordenadas por vencimento, com filtro por mês/status e paginação.
+     *
+     * @param array $filtros mes (AAAA-MM), status, page, per_page
+     * @return array
+     */
+    public function getDespesas(array $filtros): array
+    {
+        $mes = $filtros['mes'] ?? null;
+        if ($mes === '' || $mes === null) {
+            $mes = null;
+        } elseif (!is_string($mes) || !preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $mes)) {
+            return $this->error('Mês inválido. Use o formato AAAA-MM.');
+        }
+
+        $status = $filtros['status'] ?? null;
+        if ($status === '' || $status === null) {
+            $status = null;
+        } elseif (!in_array($status, ['Pendente', 'Pago', 'Cancelado'], true)) {
+            return $this->error('Status inválido.');
+        }
+
+        $page    = max(1, (int) ($filtros['page'] ?? 1));
+        $perPage = min(100, max(1, (int) ($filtros['per_page'] ?? 20)));
+
+        $resultado = $this->despesaRepo->listar($mes, $status, $page, $perPage);
+
+        return [
+            'status' => 'success',
+            'data'   => [
+                'items'       => $resultado['items'],
+                'total'       => $resultado['total'],
+                'page'        => $page,
+                'per_page'    => $perPage,
+                'total_pages' => max(1, (int) ceil($resultado['total'] / $perPage)),
+            ],
+        ];
+    }
+
+    /**
      * Retorna todas as notas fiscais/recibos emitidos, mais recentes primeiro.
      *
      * @return array

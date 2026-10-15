@@ -89,6 +89,10 @@ O backend aceita dois modos extras em `POST faturamento/despesas`. Ainda **não 
 - Parcelas prontas (`parcelas[]`) são validadas: `valor` maior que zero e `vencimento` em `AAAA-MM-DD` válido.
 - `is_parcelado` e `is_recorrente` não podem ser usados juntos.
 
+**Listagem de despesas**
+
+A aba Despesas usa `GET /faturamento/despesas`, ordenada por `data_vencimento` (e `id`), com filtro por mês (`mes=AAAA-MM`; omitido = todos os meses) e por `status`, paginada (`page`, `per_page`, padrão 20, máximo 100). Assim as parcelas futuras aparecem ao navegar pelo mês de vencimento. O dashboard continua usando as despesas mais recentes. "Atrasado" não é um status do banco: a tela o exibe para despesas `Pendente` com vencimento anterior a hoje.
+
 **Editar e cancelar parcelas por grupo**
 
 `PUT /faturamento/despesas/{id}` e `POST /faturamento/despesas/{id}/cancelar` aceitam `escopo`:

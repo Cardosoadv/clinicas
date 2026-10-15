@@ -1,12 +1,16 @@
 import { api, BASE_URL, type ApiEnvelope } from '../../lib/api'
-import type {
-  CobrancaFormValues,
-  DashboardData,
-  DespesaFormValues,
-  LancamentosData,
-  Nota,
-  NotaFormValues,
-  ReciboPublicoData,
+import type { Escopo } from './despesas'
+import {
+  despesaToFormValues,
+  type CobrancaFormValues,
+  type DashboardData,
+  type Despesa,
+  type DespesaFormValues,
+  type DespesasPagina,
+  type LancamentosData,
+  type Nota,
+  type NotaFormValues,
+  type ReciboPublicoData,
 } from './types'
 
 export function fetchDashboard(): Promise<ApiEnvelope<DashboardData>> {
@@ -66,8 +70,47 @@ export function createDespesa(values: DespesaFormValues): Promise<ApiEnvelope> {
   return api.post('/faturamento/despesas', despesaPayload(values))
 }
 
-export function updateDespesa(id: number, values: DespesaFormValues): Promise<ApiEnvelope> {
-  return api.put(`/faturamento/despesas/${id}`, despesaPayload(values))
+/**
+ * Edita uma despesa. Com `escopo` diferente de `apenas_esta` (e a despesa original), envia só os campos
+ * alterados, para não sobrescrever nas demais parcelas dados que o usuário não mexeu.
+ */
+export function updateDespesa(
+  id: number,
+  values: DespesaFormValues,
+  escopo: Escopo = 'apenas_esta',
+  original?: Despesa,
+): Promise<ApiEnvelope> {
+  let payload = despesaPayload(values)
+  if (escopo === 'apenas_esta') {
+    return api.put(`/faturamento/despesas/${id}`, payload)
+  }
+
+  if (original) {
+    const antes = despesaPayload(despesaToFormValues(original))
+    payload = Object.fromEntries(Object.entries(payload).filter(([campo, valor]) => valor !== antes[campo]))
+  }
+  return api.put(`/faturamento/despesas/${id}`, { ...payload, escopo })
+}
+
+export function marcarDespesaPaga(id: number): Promise<ApiEnvelope> {
+  return api.put(`/faturamento/despesas/${id}`, { status: 'Pago' })
+}
+
+export function cancelarDespesa(id: number, escopo: Escopo): Promise<ApiEnvelope> {
+  return api.post(`/faturamento/despesas/${id}/cancelar`, { escopo })
+}
+
+export function fetchDespesas(filtros: { mes: string; status: string; page: number }): Promise<ApiEnvelope<DespesasPagina>> {
+  const params = new URLSearchParams({ page: String(filtros.page) })
+  if (filtros.mes) params.set('mes', filtros.mes)
+  if (filtros.status) params.set('status', filtros.status)
+  return api.get<DespesasPagina>(`/faturamento/despesas?${params.toString()}`)
+}
+
+/** Parcelas de um grupo, em ordem de parcela. */
+export async function fetchGrupoDespesas(grupoId: string): Promise<Despesa[]> {
+  const result = await api.get(`/faturamento/despesas/grupo/${encodeURIComponent(grupoId)}`)
+  return Array.isArray(result.parcelas) ? (result.parcelas as Despesa[]) : []
 }
 
 export function uploadComprovante(id: number, file: File): Promise<ApiEnvelope> {

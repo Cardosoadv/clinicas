@@ -39,6 +39,15 @@ class Faturamento extends BaseController
     }
 
     /**
+     * API: Lista despesas por vencimento (filtros: mes=AAAA-MM, status; paginação: page, per_page).
+     */
+    public function despesas(): ResponseInterface
+    {
+        $result = $this->service->getDespesas($this->request->getGet() ?? []);
+        return $this->apiResponse($result);
+    }
+
+    /**
      * API: Retorna todas as notas fiscais/recibos emitidos.
      */
     public function notas(): ResponseInterface

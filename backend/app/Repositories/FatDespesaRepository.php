@@ -68,4 +68,34 @@ class FatDespesaRepository extends BaseRepository
             ->orderBy('id', 'ASC')
             ->findAll();
     }
+
+    /**
+     * Lista despesas por vencimento, com filtros opcionais e paginação.
+     *
+     * @param string|null $mes Mês de vencimento (AAAA-MM)
+     * @param string|null $status
+     * @param int $page Página (a partir de 1)
+     * @param int $perPage
+     * @return array{items: array, total: int}
+     */
+    public function listar(?string $mes, ?string $status, int $page, int $perPage): array
+    {
+        if ($mes !== null) {
+            $inicio = "{$mes}-01";
+            $this->model
+                ->where('data_vencimento >=', $inicio)
+                ->where('data_vencimento <=', date('Y-m-t', strtotime($inicio)));
+        }
+        if ($status !== null) {
+            $this->model->where('status', $status);
+        }
+
+        $total = $this->model->countAllResults(false);
+        $items = $this->model
+            ->orderBy('data_vencimento', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->findAll($perPage, ($page - 1) * $perPage);
+
+        return ['items' => $items, 'total' => $total];
+    }
 }

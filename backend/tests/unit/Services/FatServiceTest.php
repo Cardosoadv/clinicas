@@ -873,4 +873,63 @@ final class FatServiceTest extends CIUnitTestCase
 
         $this->assertSame('error', $this->service->getGrupoDespesas('nao-existe')['status']);
     }
+
+    // -- listagem de despesas -------------------------------------------------
+
+    public function testGetDespesasRepassaFiltrosEPaginacao(): void
+    {
+        $this->despesaRepo->expects($this->once())
+            ->method('listar')
+            ->with('2026-10', 'Pendente', 2, 10)
+            ->willReturn(['items' => [['id' => 1]], 'total' => 25]);
+
+        $result = $this->service->getDespesas(['mes' => '2026-10', 'status' => 'Pendente', 'page' => '2', 'per_page' => '10']);
+
+        $this->assertSame('success', $result['status']);
+        $this->assertSame(3, $result['data']['total_pages']);
+        $this->assertSame(25, $result['data']['total']);
+        $this->assertSame(2, $result['data']['page']);
+    }
+
+    public function testGetDespesasUsaPadroesQuandoSemFiltros(): void
+    {
+        $this->despesaRepo->expects($this->once())
+            ->method('listar')
+            ->with(null, null, 1, 20)
+            ->willReturn(['items' => [], 'total' => 0]);
+
+        $result = $this->service->getDespesas(['mes' => '', 'status' => '']);
+
+        $this->assertSame(1, $result['data']['total_pages']);
+    }
+
+    public function testGetDespesasLimitaPorPaginaEPaginaMinima(): void
+    {
+        $this->despesaRepo->expects($this->once())
+            ->method('listar')
+            ->with(null, null, 1, 100)
+            ->willReturn(['items' => [], 'total' => 0]);
+
+        $this->service->getDespesas(['page' => '-3', 'per_page' => '5000']);
+    }
+
+    /**
+     * @dataProvider filtrosInvalidosProvider
+     */
+    public function testGetDespesasRejeitaFiltroInvalido(array $filtros): void
+    {
+        $this->despesaRepo->expects($this->never())->method('listar');
+
+        $this->assertSame('error', $this->service->getDespesas($filtros)['status']);
+    }
+
+    public static function filtrosInvalidosProvider(): array
+    {
+        return [
+            'mes sem zero'   => [['mes' => '2026-1']],
+            'mes 13'         => [['mes' => '2026-13']],
+            'mes com dia'    => [['mes' => '2026-10-01']],
+            'status inexistente' => [['status' => 'Atrasado']],
+        ];
+    }
 }
