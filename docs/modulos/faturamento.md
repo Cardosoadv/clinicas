@@ -89,6 +89,21 @@ O backend aceita dois modos extras em `POST faturamento/despesas`. Ainda **não 
 - Parcelas prontas (`parcelas[]`) são validadas: `valor` maior que zero e `vencimento` em `AAAA-MM-DD` válido.
 - `is_parcelado` e `is_recorrente` não podem ser usados juntos.
 
+**Editar e cancelar parcelas por grupo**
+
+`PUT /faturamento/despesas/{id}` e `POST /faturamento/despesas/{id}/cancelar` aceitam `escopo`:
+
+| Escopo | Atinge |
+|:--|:--|
+| `apenas_esta` (padrão) | só a despesa informada |
+| `esta_e_seguintes` | a despesa e as parcelas seguintes do grupo (por `des_parcela_num`; em recorrências, por `data_vencimento`) |
+| `todas` | todas as parcelas do grupo |
+
+- **Edição:** `descricao`, `categoria` e `fornecedor` propagam para todas as parcelas do escopo, inclusive as pagas (são dados cadastrais). `forma_pagamento` propaga apenas para parcelas **não pagas**. `valor`, `data_vencimento` e `status` valem **somente** para a parcela informada; os vencimentos das seguintes não são deslocados.
+- **Cancelamento:** muda para `Cancelado` apenas as parcelas `Pendente` do escopo; parcelas `Pago` nunca são alteradas. A resposta traz `canceladas` e `ignoradas_pagas`; se não houver parcela pendente, retorna erro.
+- Despesa sem `des_grupo_id` ignora o escopo e afeta só ela. Tudo roda em transação.
+- `GET /faturamento/despesas/grupo/{des_grupo_id}` lista as parcelas do grupo (404 se não existir).
+
 Despesas também são criadas pela **entrada de estoque** com "lançar no financeiro" ([Estoque](estoque)) e pela [importação CSV](importacao).
 
 ## Notas e recibos

@@ -642,4 +642,235 @@ final class FatServiceTest extends CIUnitTestCase
 
         $this->assertStringStartsWith('data:image/', $result);
     }
+
+    // -- despesas parceladas: escopo de edição/cancelamento -----------------
+
+    /** Parcelas 1..4 de um grupo: a 1ª já paga. */
+    private function grupoParcelas(array $status = ['Pago', 'Pendente', 'Pendente', 'Pendente']): array
+    {
+        $rows = [];
+        foreach ($status as $i => $st) {
+            $rows[] = [
+                'id'                => 101 + $i,
+                'des_grupo_id'      => 'g-1',
+                'des_parcela_num'   => $i + 1,
+                'des_parcela_total' => count($status),
+                'data_vencimento'   => sprintf('2026-%02d-10', 9 + $i),
+                'status'            => $st,
+            ];
+        }
+
+        return $rows;
+    }
+
+    /** Registra as chamadas a update() em $calls como [id => dados]. */
+    private function mockUpdateRecorder(array &$calls, bool $ok = true): FatDespesaModel
+    {
+        $model = $this->getMockBuilder(FatDespesaModel::class)->onlyMethods(['update'])->getMock();
+        $model->method('update')->willReturnCallback(
+            function ($id, $data = null) use (&$calls, $ok): bool {
+                $calls[(int) $id] = $data;
+                return $ok;
+            }
+        );
+        $this->despesaRepo->method('getModel')->willReturn($model);
+
+        return $model;
+    }
+
+    private function givenGrupo(int $idAtual, array $grupo): void
+    {
+        $atual = null;
+        foreach ($grupo as $d) {
+            if ($d['id'] === $idAtual) {
+                $atual = $d;
+            }
+        }
+        $this->despesaRepo->method('findById')->willReturn($atual);
+        $this->despesaRepo->method('getByGrupo')->willReturn($grupo);
+    }
+
+    public function testUpdateDespesaEscopoTodasPropagaCamposCadastraisInclusivePagas(): void
+    {
+        $calls = [];
+        $this->mockUpdateRecorder($calls);
+        $this->givenGrupo(102, $this->grupoParcelas());
+
+        $result = $this->service->updateDespesa(102, ['fornecedor' => 'Nova', 'escopo' => 'todas']);
+
+        $this->assertSame('success', $result['status']);
+        $this->assertSame(4, $result['atualizadas']);
+        $ids = array_keys($calls);
+        sort($ids);
+        $this->assertSame([101, 102, 103, 104], $ids);
+        $this->assertSame(['fornecedor' => 'Nova'], $calls[101]);
+    }
+
+    public function testUpdateDespesaEscopoNaoAlteraFormaDePagamentoDeParcelaPaga(): void
+    {
+        $calls = [];
+        $this->mockUpdateRecorder($calls);
+        $this->givenGrupo(102, $this->grupoParcelas());
+
+        $this->service->updateDespesa(102, ['forma_pagamento' => 'Boleto', 'escopo' => 'todas']);
+
+        $this->assertArrayNotHasKey(101, $calls);
+        $this->assertSame(['forma_pagamento' => 'Boleto'], $calls[103]);
+    }
+
+    public function testUpdateDespesaEstaESeguintesAtingeSoAPartirDaParcela(): void
+    {
+        $calls = [];
+        $this->mockUpdateRecorder($calls);
+        $this->givenGrupo(103, $this->grupoParcelas());
+
+        $result = $this->service->updateDespesa(103, ['descricao' => 'Novo nome', 'escopo' => 'esta_e_seguintes']);
+
+        $this->assertEqualsCanonicalizing([103, 104], array_keys($calls));
+        $this->assertSame(2, $result['atualizadas']);
+    }
+
+    public function testUpdateDespesaValorEVencimentoValemSoParaAPropriaParcela(): void
+    {
+        $calls = [];
+        $this->mockUpdateRecorder($calls);
+        $this->givenGrupo(102, $this->grupoParcelas());
+
+        $result = $this->service->updateDespesa(102, ['valor' => 50, 'escopo' => 'todas']);
+
+        $this->assertSame('success', $result['status']);
+        $this->assertSame([102], array_keys($calls));
+        $this->assertSame(['valor' => 50], $calls[102]);
+        $this->assertSame(1, $result['atualizadas']);
+    }
+
+    public function testUpdateDespesaEscopoEmDespesaSemGrupoAtualizaSoEla(): void
+    {
+        $calls = [];
+        $this->mockUpdateRecorder($calls);
+        $this->despesaRepo->method('findById')->willReturn(['id' => 7, 'des_grupo_id' => null, 'status' => 'Pendente']);
+        $this->despesaRepo->expects($this->never())->method('getByGrupo');
+
+        $result = $this->service->updateDespesa(7, ['descricao' => 'X', 'escopo' => 'todas']);
+
+        $this->assertSame('success', $result['status']);
+        $this->assertSame([7], array_keys($calls));
+    }
+
+    public function testUpdateDespesaEscopoUsaVencimentoEmRecorrencia(): void
+    {
+        $calls = [];
+        $this->mockUpdateRecorder($calls);
+        $grupo = [];
+        foreach ([1 => '2026-09-05', 2 => '2026-10-05', 3 => '2026-11-05'] as $i => $data) {
+            $grupo[] = ['id' => 200 + $i, 'des_grupo_id' => 'FIX_1', 'des_parcela_num' => null, 'data_vencimento' => $data, 'status' => 'Pendente'];
+        }
+        $this->givenGrupo(202, $grupo);
+
+        $this->service->updateDespesa(202, ['categoria' => 'Aluguel', 'escopo' => 'esta_e_seguintes']);
+
+        $this->assertEqualsCanonicalizing([202, 203], array_keys($calls));
+    }
+
+    public function testUpdateDespesaRejeitaEscopoInvalido(): void
+    {
+        $this->despesaRepo->expects($this->never())->method('getModel');
+
+        $result = $this->service->updateDespesa(1, ['descricao' => 'X', 'escopo' => 'tudo']);
+
+        $this->assertSame('error', $result['status']);
+    }
+
+    public function testUpdateDespesaEscopoRetornaErroQuandoDespesaNaoExiste(): void
+    {
+        $this->despesaRepo->method('findById')->willReturn(null);
+
+        $result = $this->service->updateDespesa(999, ['descricao' => 'X', 'escopo' => 'todas']);
+
+        $this->assertSame('error', $result['status']);
+    }
+
+    public function testUpdateDespesaEscopoFalhaNoMeioRetornaErro(): void
+    {
+        $calls = [];
+        $this->mockUpdateRecorder($calls, false);
+        $this->givenGrupo(102, $this->grupoParcelas());
+
+        $result = $this->service->updateDespesa(102, ['descricao' => 'X', 'escopo' => 'todas']);
+
+        $this->assertSame('error', $result['status']);
+    }
+
+    public function testCancelarDespesaTodasCancelaPendentesEPreservaPagas(): void
+    {
+        $calls = [];
+        $this->mockUpdateRecorder($calls);
+        $this->givenGrupo(102, $this->grupoParcelas(['Pago', 'Pendente', 'Pago', 'Pendente']));
+
+        $result = $this->service->cancelarDespesa(102, 'todas');
+
+        $this->assertSame('success', $result['status']);
+        $this->assertSame(2, $result['canceladas']);
+        $this->assertSame(2, $result['ignoradas_pagas']);
+        $this->assertSame([102 => ['status' => 'Cancelado'], 104 => ['status' => 'Cancelado']], $calls);
+    }
+
+    public function testCancelarDespesaEstaESeguintesNaParcela3(): void
+    {
+        $calls = [];
+        $this->mockUpdateRecorder($calls);
+        $this->givenGrupo(103, $this->grupoParcelas());
+
+        $result = $this->service->cancelarDespesa(103, 'esta_e_seguintes');
+
+        $this->assertSame([103, 104], array_keys($calls));
+        $this->assertSame(2, $result['canceladas']);
+        $this->assertSame(0, $result['ignoradas_pagas']);
+    }
+
+    public function testCancelarDespesaPagaIsoladaRetornaErro(): void
+    {
+        $calls = [];
+        $this->mockUpdateRecorder($calls);
+        $this->givenGrupo(101, $this->grupoParcelas());
+
+        $result = $this->service->cancelarDespesa(101);
+
+        $this->assertSame('error', $result['status']);
+        $this->assertSame([], $calls);
+    }
+
+    public function testCancelarDespesaSemGrupoCancelaSoEla(): void
+    {
+        $calls = [];
+        $this->mockUpdateRecorder($calls);
+        $this->despesaRepo->method('findById')->willReturn(['id' => 5, 'des_grupo_id' => null, 'status' => 'Pendente']);
+
+        $result = $this->service->cancelarDespesa(5, 'todas');
+
+        $this->assertSame('success', $result['status']);
+        $this->assertSame([5], array_keys($calls));
+    }
+
+    public function testCancelarDespesaRejeitaEscopoInvalidoEDespesaInexistente(): void
+    {
+        $this->despesaRepo->method('findById')->willReturn(null);
+
+        $this->assertSame('error', $this->service->cancelarDespesa(1, 'tudo')['status']);
+        $this->assertSame('error', $this->service->cancelarDespesa(999)['status']);
+    }
+
+    public function testGetGrupoDespesasRetornaParcelasOuErro(): void
+    {
+        $this->despesaRepo->method('getByGrupo')->willReturnMap([
+            ['g-1', $this->grupoParcelas()],
+            ['nao-existe', []],
+        ]);
+
+        $ok = $this->service->getGrupoDespesas('g-1');
+        $this->assertSame('success', $ok['status']);
+        $this->assertCount(4, $ok['parcelas']);
+
+        $this->assertSame('error', $this->service->getGrupoDespesas('nao-existe')['status']);
+    }
 }

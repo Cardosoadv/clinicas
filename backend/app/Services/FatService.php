@@ -19,6 +19,11 @@ class FatService extends BaseService
     /** Máximo de parcelas em uma despesa parcelada */
     public const MAX_PARCELAS = 60;
 
+    public const ESCOPO_APENAS_ESTA = 'apenas_esta';
+    public const ESCOPO_ESTA_E_SEGUINTES = 'esta_e_seguintes';
+    public const ESCOPO_TODAS = 'todas';
+    public const ESCOPOS = [self::ESCOPO_APENAS_ESTA, self::ESCOPO_ESTA_E_SEGUINTES, self::ESCOPO_TODAS];
+
     protected FatCobrancaRepository $cobrancaRepo;
     protected FatDespesaRepository $despesaRepo;
     protected FatNotaRepository $notaRepo;
@@ -696,12 +701,22 @@ class FatService extends BaseService
     /**
      * Atualiza os dados de uma despesa existente.
      *
+     * Com `escopo` (apenas_esta | esta_e_seguintes | todas) os campos cadastrais
+     * (descricao, categoria, fornecedor, forma_pagamento) também são aplicados às demais
+     * parcelas do grupo. `valor`, `data_vencimento` e `status` valem só para a própria parcela.
+     * Parcelas já pagas não têm a forma de pagamento alterada.
+     *
      * @param int $id
      * @param array $data
      * @return array
      */
     public function updateDespesa(int $id, array $data): array
     {
+        $escopo = $data['escopo'] ?? self::ESCOPO_APENAS_ESTA;
+        if (!in_array($escopo, self::ESCOPOS, true)) {
+            return $this->error('Escopo inválido. Use apenas_esta, esta_e_seguintes ou todas.');
+        }
+
         $allowed = ['descricao', 'categoria', 'fornecedor', 'valor', 'data_vencimento', 'forma_pagamento', 'status'];
         $clean   = array_intersect_key($data, array_flip($allowed));
 
@@ -709,11 +724,177 @@ class FatService extends BaseService
             return $this->error('Nenhum campo válido para atualizar.');
         }
 
-        $ok = $this->despesaRepo->getModel()->update($id, $clean);
-        if ($ok) {
-            return $this->success('Despesa atualizada com sucesso.', ['id' => $id]);
+        if ($escopo === self::ESCOPO_APENAS_ESTA) {
+            $ok = $this->despesaRepo->getModel()->update($id, $clean);
+            if ($ok) {
+                return $this->success('Despesa atualizada com sucesso.', ['id' => $id]);
+            }
+            return $this->error('Erro ao atualizar despesa.');
         }
-        return $this->error('Erro ao atualizar despesa.');
+
+        $despesa = $this->despesaRepo->findById($id);
+        if (!$despesa) {
+            return $this->error('Despesa não encontrada.');
+        }
+
+        $comuns  = array_intersect_key($clean, array_flip(['descricao', 'categoria', 'fornecedor', 'forma_pagamento']));
+        $demais  = array_filter(
+            $this->despesasDoEscopo($despesa, $escopo),
+            static fn(array $d): bool => (int) $d['id'] !== $id
+        );
+
+        return $this->emTransacao(function () use ($id, $clean, $comuns, $demais, $escopo): array {
+            $model       = $this->despesaRepo->getModel();
+            $atualizadas = 1;
+
+            if (!$model->update($id, $clean)) {
+                return $this->error('Erro ao atualizar despesa.');
+            }
+
+            foreach ($demais as $outra) {
+                $dados = $comuns;
+                if (($outra['status'] ?? null) === 'Pago') {
+                    unset($dados['forma_pagamento']);
+                }
+                if ($dados === []) {
+                    continue;
+                }
+                if (!$model->update((int) $outra['id'], $dados)) {
+                    return $this->error('Erro ao atualizar as parcelas do grupo.');
+                }
+                $atualizadas++;
+            }
+
+            return $this->success(
+                "Despesa atualizada com sucesso ({$atualizadas} parcela(s)).",
+                ['id' => $id, 'escopo' => $escopo, 'atualizadas' => $atualizadas]
+            );
+        });
+    }
+
+    /**
+     * Cancela uma despesa ou, conforme o escopo, as parcelas pendentes do grupo.
+     * Parcelas já pagas nunca são alteradas.
+     *
+     * @param int $id
+     * @param string $escopo apenas_esta | esta_e_seguintes | todas
+     * @return array
+     */
+    public function cancelarDespesa(int $id, string $escopo = self::ESCOPO_APENAS_ESTA): array
+    {
+        if (!in_array($escopo, self::ESCOPOS, true)) {
+            return $this->error('Escopo inválido. Use apenas_esta, esta_e_seguintes ou todas.');
+        }
+
+        $despesa = $this->despesaRepo->findById($id);
+        if (!$despesa) {
+            return $this->error('Despesa não encontrada.');
+        }
+
+        $alvo       = $this->despesasDoEscopo($despesa, $escopo);
+        $pendentes  = array_filter($alvo, static fn(array $d): bool => ($d['status'] ?? null) === 'Pendente');
+        $ignoradas  = count(array_filter($alvo, static fn(array $d): bool => ($d['status'] ?? null) === 'Pago'));
+
+        if ($pendentes === []) {
+            return $this->error('Nenhuma parcela pendente para cancelar.', ['ignoradas_pagas' => $ignoradas]);
+        }
+
+        return $this->emTransacao(function () use ($pendentes, $ignoradas): array {
+            $model = $this->despesaRepo->getModel();
+
+            foreach ($pendentes as $d) {
+                if (!$model->update((int) $d['id'], ['status' => 'Cancelado'])) {
+                    return $this->error('Erro ao cancelar as parcelas.');
+                }
+            }
+
+            $canceladas = count($pendentes);
+
+            return $this->success(
+                "{$canceladas} parcela(s) cancelada(s)" . ($ignoradas > 0 ? "; {$ignoradas} já paga(s) não alterada(s)" : '') . '.',
+                ['canceladas' => $canceladas, 'ignoradas_pagas' => $ignoradas]
+            );
+        });
+    }
+
+    /**
+     * Lista as parcelas de um grupo, ordenadas por número da parcela.
+     *
+     * @param string $grupoId
+     * @return array
+     */
+    public function getGrupoDespesas(string $grupoId): array
+    {
+        $parcelas = $this->despesaRepo->getByGrupo($grupoId);
+        if ($parcelas === []) {
+            return $this->error('Grupo de despesas não encontrado.');
+        }
+
+        return $this->success('Parcelas do grupo.', ['des_grupo_id' => $grupoId, 'parcelas' => $parcelas]);
+    }
+
+    /**
+     * Despesas afetadas pelo escopo a partir de uma despesa de referência.
+     * Sem grupo, o escopo sempre se resume à própria despesa. Em recorrências
+     * (sem número de parcela) "esta e seguintes" usa a data de vencimento.
+     *
+     * @param array $despesa
+     * @param string $escopo
+     * @return array
+     */
+    protected function despesasDoEscopo(array $despesa, string $escopo): array
+    {
+        if ($escopo === self::ESCOPO_APENAS_ESTA || empty($despesa['des_grupo_id'])) {
+            return [$despesa];
+        }
+
+        $grupo = $this->despesaRepo->getByGrupo((string) $despesa['des_grupo_id']);
+        if ($escopo === self::ESCOPO_TODAS) {
+            return $grupo;
+        }
+
+        $num = $despesa['des_parcela_num'] ?? null;
+
+        return array_values(array_filter($grupo, static function (array $d) use ($despesa, $num): bool {
+            if ($num !== null && ($d['des_parcela_num'] ?? null) !== null) {
+                return (int) $d['des_parcela_num'] >= (int) $num;
+            }
+            return (string) $d['data_vencimento'] >= (string) $despesa['data_vencimento'];
+        }));
+    }
+
+    /**
+     * Executa $fn dentro de uma transação. Qualquer resultado diferente de sucesso,
+     * exceção ou falha de query desfaz tudo.
+     *
+     * @param callable():array $fn
+     * @return array
+     */
+    protected function emTransacao(callable $fn): array
+    {
+        $db = \Config\Database::connect();
+        $db->resetTransStatus();
+        $db->transBegin();
+
+        try {
+            $result = $fn();
+        } catch (\Throwable $e) {
+            $db->transRollback();
+            return $this->error('Erro ao processar a operação: ' . $e->getMessage());
+        }
+
+        if (($result['status'] ?? null) !== 'success') {
+            $db->transRollback();
+            return $result;
+        }
+        if ($db->transStatus() === false) {
+            $db->transRollback();
+            return $this->error('Erro ao processar a operação. Nenhuma alteração foi gravada.');
+        }
+
+        $db->transCommit();
+
+        return $result;
     }
 
     /**

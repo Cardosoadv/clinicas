@@ -52,4 +52,20 @@ class FatDespesaRepository extends BaseRepository
 
         return (float) ($result['valor'] ?? 0.0);
     }
+
+    /**
+     * Busca todas as despesas de um grupo (parcelas ou recorrência), em ordem de parcela e vencimento.
+     *
+     * @param string $grupoId
+     * @return array
+     */
+    public function getByGrupo(string $grupoId): array
+    {
+        return $this->model
+            ->where('des_grupo_id', $grupoId)
+            ->orderBy('des_parcela_num', 'ASC')
+            ->orderBy('data_vencimento', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->findAll();
+    }
 }

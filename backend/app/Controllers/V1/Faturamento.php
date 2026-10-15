@@ -120,12 +120,39 @@ class Faturamento extends BaseController
         if (!$this->validateData($data, [
             'valor'  => 'permit_empty|numeric',
             'status' => 'permit_empty|in_list[Pendente,Pago,Cancelado]',
+            'escopo' => 'permit_empty|in_list[' . implode(',', FatService::ESCOPOS) . ']',
         ])) {
             return $this->apiValidationError($this->validator->getErrors());
         }
 
         $result = $this->service->updateDespesa($id, $data);
         return $this->apiResponse($result);
+    }
+
+    /**
+     * API: Cancela uma despesa ou as parcelas pendentes do grupo, conforme o escopo.
+     */
+    public function cancelarDespesa(int $id): ResponseInterface
+    {
+        $data = $this->getRequestData();
+
+        if (!$this->validateData($data, [
+            'escopo' => 'permit_empty|in_list[' . implode(',', FatService::ESCOPOS) . ']',
+        ])) {
+            return $this->apiValidationError($this->validator->getErrors());
+        }
+
+        $result = $this->service->cancelarDespesa($id, $data['escopo'] ?? FatService::ESCOPO_APENAS_ESTA);
+        return $this->apiResponse($result);
+    }
+
+    /**
+     * API: Lista as parcelas de um grupo de despesas.
+     */
+    public function grupoDespesas(string $grupoId): ResponseInterface
+    {
+        $result = $this->service->getGrupoDespesas($grupoId);
+        return $this->apiResponse($result, 200, 404);
     }
 
     /**
