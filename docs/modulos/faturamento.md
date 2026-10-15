@@ -78,8 +78,16 @@ O backend aceita dois modos extras em `POST faturamento/despesas`. Ainda **não 
 
 | Modo | Como enviar | Resultado |
 |:--|:--|:--|
-| **Parcelada** | `is_parcelado: "true"` e `parcelas: [{valor, vencimento}, ...]` (array ou JSON) | Uma despesa por parcela, com o mesmo `des_grupo_id` e `des_parcela_num` / `des_parcela_total` |
+| **Parcelada** | `is_parcelado: "true"` + `valor` (total), `parcelas_qtd` (2 a 60), `data_vencimento` (1ª parcela) e `periodicidade` opcional (`mensal` padrão, `quinzenal`, `semanal`). Alternativa: `parcelas: [{valor, vencimento}, ...]` (array ou JSON) com parcelas prontas | Uma despesa por parcela, com o mesmo `des_grupo_id` (UUID) e `des_parcela_num` / `des_parcela_total`. Tudo em uma transação: se uma parcela falhar, nenhuma é gravada. A resposta traz `ids` e `des_grupo_id`. Veja as regras abaixo. |
 | **Recorrente (fixa)** | `is_recorrente: "true"`, `recorrencia` (`semanal`, `quinzenal`, `mensal`, `anual`) e `recorrencia_fim` opcional | Uma despesa por período até a data final (padrão: 1 ano; máximo de 60 ocorrências). A primeira mantém o status enviado; as futuras nascem Pendentes. |
+
+**Regras da despesa parcelada**
+
+- `valor` é o **total**; a divisão é feita em centavos e a **última parcela absorve a diferença** (100,00 em 3x → 33,33 / 33,33 / 33,34).
+- No modo mensal o dia é mantido, limitado ao último dia do mês (31/01 → 28/02 → 31/03).
+- A primeira parcela mantém o `status` enviado; as demais nascem `Pendente`.
+- Parcelas prontas (`parcelas[]`) são validadas: `valor` maior que zero e `vencimento` em `AAAA-MM-DD` válido.
+- `is_parcelado` e `is_recorrente` não podem ser usados juntos.
 
 Despesas também são criadas pela **entrada de estoque** com "lançar no financeiro" ([Estoque](estoque)) e pela [importação CSV](importacao).
 

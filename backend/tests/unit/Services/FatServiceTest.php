@@ -286,6 +286,175 @@ final class FatServiceTest extends CIUnitTestCase
         $this->assertSame('success', $result['status']);
     }
 
+    public function testCreateDespesaParceladaRejectsInvalidLegacyParcelas(): void
+    {
+        $this->despesaRepo->expects($this->never())->method('create');
+
+        $result = $this->service->createDespesa([
+            'descricao'    => 'Equipamento',
+            'categoria'    => 'Compras',
+            'is_parcelado' => 'true',
+            'parcelas'     => [['valor' => 0, 'vencimento' => '2026-09-01']],
+        ]);
+
+        $this->assertSame('error', $result['status']);
+        $this->assertStringContainsString('parcela 1', $result['message']);
+    }
+
+    public function testCreateDespesaParceladaRejectsInvalidLegacyVencimento(): void
+    {
+        $this->despesaRepo->expects($this->never())->method('create');
+
+        $result = $this->service->createDespesa([
+            'descricao'    => 'Equipamento',
+            'categoria'    => 'Compras',
+            'is_parcelado' => 'true',
+            'parcelas'     => [['valor' => 10, 'vencimento' => '2026-02-31']],
+        ]);
+
+        $this->assertSame('error', $result['status']);
+    }
+
+    public function testCreateDespesaParceladaRejectsParceladaERecorrente(): void
+    {
+        $this->despesaRepo->expects($this->never())->method('create');
+
+        $result = $this->service->createDespesa([
+            'descricao'     => 'Equipamento',
+            'categoria'     => 'Compras',
+            'is_parcelado'  => 'true',
+            'is_recorrente' => 'true',
+            'recorrencia'   => 'mensal',
+            'parcelas_qtd'  => 3,
+            'valor'         => 100,
+        ]);
+
+        $this->assertSame('error', $result['status']);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>> Dados enviados a cada create()
+     */
+    private function capturarParcelasGeradas(array $payload): array
+    {
+        $capturado = [];
+        $this->despesaRepo->method('create')->willReturnCallback(
+            function (array $row) use (&$capturado): int {
+                $capturado[] = $row;
+                return count($capturado);
+            }
+        );
+
+        $result = $this->service->createDespesa($payload + [
+            'descricao'    => 'Equipamento',
+            'categoria'    => 'Compras',
+            'is_parcelado' => 'true',
+        ]);
+        $this->assertSame('success', $result['status'], $result['message']);
+
+        return $capturado;
+    }
+
+    public function testCreateDespesaParceladaGeraParcelasEDivideCentavos(): void
+    {
+        $rows = $this->capturarParcelasGeradas([
+            'valor'           => 100,
+            'parcelas_qtd'    => 3,
+            'data_vencimento' => '2026-09-10',
+        ]);
+
+        $this->assertSame([33.33, 33.33, 33.34], array_column($rows, 'valor'));
+        $this->assertEqualsWithDelta(100.0, array_sum(array_column($rows, 'valor')), 0.001);
+        $this->assertSame([1, 2, 3], array_column($rows, 'des_parcela_num'));
+        $this->assertSame([3, 3, 3], array_column($rows, 'des_parcela_total'));
+        $this->assertSame(['2026-09-10', '2026-10-10', '2026-11-10'], array_column($rows, 'data_vencimento'));
+        $this->assertCount(1, array_unique(array_column($rows, 'des_grupo_id')));
+        $this->assertMatchesRegularExpression(
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/',
+            $rows[0]['des_grupo_id']
+        );
+    }
+
+    public function testCreateDespesaParceladaMensalNaoPulaMesNoFimDoMes(): void
+    {
+        $rows = $this->capturarParcelasGeradas([
+            'valor'           => 300,
+            'parcelas_qtd'    => 4,
+            'data_vencimento' => '2026-01-31',
+        ]);
+
+        $this->assertSame(
+            ['2026-01-31', '2026-02-28', '2026-03-31', '2026-04-30'],
+            array_column($rows, 'data_vencimento')
+        );
+    }
+
+    public function testCreateDespesaParceladaSemanalEQuinzenal(): void
+    {
+        $semanal = $this->capturarParcelasGeradas([
+            'valor' => 30, 'parcelas_qtd' => 3, 'data_vencimento' => '2026-09-01', 'periodicidade' => 'semanal',
+        ]);
+        $this->assertSame(['2026-09-01', '2026-09-08', '2026-09-15'], array_column($semanal, 'data_vencimento'));
+    }
+
+    public function testCreateDespesaParceladaPrimeiraParcelaMantemStatusEnviado(): void
+    {
+        $rows = $this->capturarParcelasGeradas([
+            'valor' => 60, 'parcelas_qtd' => 3, 'data_vencimento' => '2026-09-01', 'status' => 'Pago',
+        ]);
+
+        $this->assertSame(['Pago', 'Pendente', 'Pendente'], array_column($rows, 'status'));
+    }
+
+    /**
+     * @dataProvider payloadsInvalidosProvider
+     */
+    public function testCreateDespesaParceladaRejeitaPayloadInvalido(array $payload): void
+    {
+        $this->despesaRepo->expects($this->never())->method('create');
+
+        $result = $this->service->createDespesa($payload + [
+            'descricao' => 'Equipamento', 'categoria' => 'Compras', 'is_parcelado' => 'true',
+        ]);
+
+        $this->assertSame('error', $result['status']);
+    }
+
+    public static function payloadsInvalidosProvider(): array
+    {
+        $ok = ['valor' => 100, 'parcelas_qtd' => 3, 'data_vencimento' => '2026-09-10'];
+
+        return [
+            'sem quantidade'       => [array_diff_key($ok, ['parcelas_qtd' => 1])],
+            'quantidade 1'         => [['parcelas_qtd' => 1] + $ok],
+            'acima do limite'      => [['parcelas_qtd' => 61] + $ok],
+            'quantidade fracionada' => [['parcelas_qtd' => 2.5] + $ok],
+            'valor zero'           => [['valor' => 0] + $ok],
+            'valor menor que qtd'  => [['valor' => 0.02] + $ok],
+            'data invalida'        => [['data_vencimento' => '10/09/2026'] + $ok],
+            'periodicidade'        => [['periodicidade' => 'anual'] + $ok],
+        ];
+    }
+
+    public function testCreateDespesaParceladaFalhaNaSegundaParcelaRetornaErro(): void
+    {
+        $this->despesaRepo->expects($this->exactly(2))
+            ->method('create')
+            ->willReturnOnConsecutiveCalls(10, 0);
+
+        $result = $this->service->createDespesa([
+            'descricao'       => 'Equipamento',
+            'categoria'       => 'Compras',
+            'is_parcelado'    => 'true',
+            'valor'           => 90,
+            'parcelas_qtd'    => 3,
+            'data_vencimento' => '2026-09-01',
+        ]);
+
+        $this->assertSame('error', $result['status']);
+        $this->assertArrayNotHasKey('ids', $result);
+    }
+
     public function testCreateDespesaRecorrenteCreatesInstancesUntilEndDate(): void
     {
         $this->despesaRepo->expects($this->exactly(3))

@@ -184,7 +184,7 @@ Materiais do estoque usados no atendimento, lançados ao faturar o agendamento.
 
 ### `fat_despesas` (contas a pagar)
 
-`id`, `descricao`, `categoria`, `fornecedor`, `valor`, `data_vencimento`, `forma_pagamento`, `status` (ENUM Pendente, Pago, Cancelado), `des_grupo_id` (agrupa parcelas/recorrências), `des_parcela_num`, `des_parcela_total`, `des_recorrencia`, `des_recorrencia_fim`, `comprovante` (caminho em `writable/`).
+`id`, `descricao`, `categoria`, `fornecedor`, `valor`, `data_vencimento`, `forma_pagamento`, `status` (ENUM Pendente, Pago, Cancelado), `des_grupo_id` (agrupa parcelas/recorrências; indexado em `idx_fat_despesas_grupo`), `des_parcela_num`, `des_parcela_total`, `des_recorrencia`, `des_recorrencia_fim`, `comprovante` (caminho em `writable/`).
 
 ### `fat_notas` (recibos e NFS-e)
 

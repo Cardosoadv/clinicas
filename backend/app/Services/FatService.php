@@ -16,6 +16,9 @@ use CodeIgniter\Events\Events;
  */
 class FatService extends BaseService
 {
+    /** Máximo de parcelas em uma despesa parcelada */
+    public const MAX_PARCELAS = 60;
+
     protected FatCobrancaRepository $cobrancaRepo;
     protected FatDespesaRepository $despesaRepo;
     protected FatNotaRepository $notaRepo;
@@ -397,11 +400,18 @@ class FatService extends BaseService
      */
     public function createDespesa(array $data): array
     {
-        // Se for uma despesa parcelada (presença de array de parcelas)
-        if (isset($data['is_parcelado']) && $data['is_parcelado'] == 'true' && !empty($data['parcelas'])) {
-            $parcelas = $data['parcelas'];
+        $isParcelado  = isset($data['is_parcelado']) && $data['is_parcelado'] == 'true';
+        $isRecorrente = isset($data['is_recorrente']) && $data['is_recorrente'] == 'true';
+
+        if ($isParcelado && $isRecorrente) {
+            return $this->error('Uma despesa não pode ser parcelada e recorrente ao mesmo tempo.');
+        }
+
+        // Despesa parcelada: parcelas enviadas prontas ou geradas a partir de valor total + quantidade
+        if ($isParcelado) {
+            $parcelas = $this->resolverParcelas($data);
             if (is_string($parcelas)) {
-                $parcelas = json_decode($parcelas, true);
+                return $this->error($parcelas);
             }
             return $this->createDespesaParcelada($data, $parcelas);
         }
@@ -419,7 +429,147 @@ class FatService extends BaseService
     }
 
     /**
-     * Cria múltiplas despesas vinculadas como parcelas de um grupo.
+     * Resolve a lista de parcelas de uma despesa parcelada.
+     *
+     * Aceita parcelas prontas (`parcelas`: array ou JSON de {valor, vencimento}) ou gera
+     * as parcelas a partir de `valor` (total), `parcelas_qtd`, `data_vencimento` e `periodicidade`.
+     *
+     * @param array $data
+     * @return array|string Lista de parcelas [{valor, vencimento}] ou mensagem de erro
+     */
+    protected function resolverParcelas(array $data): array|string
+    {
+        if (!empty($data['parcelas'])) {
+            $parcelas = $data['parcelas'];
+            if (is_string($parcelas)) {
+                $parcelas = json_decode($parcelas, true);
+            }
+            return $this->validarParcelas($parcelas);
+        }
+
+        $qtd = $data['parcelas_qtd'] ?? null;
+        if (!is_numeric($qtd) || (int) $qtd != $qtd || (int) $qtd < 2 || (int) $qtd > self::MAX_PARCELAS) {
+            return 'Informe a quantidade de parcelas (de 2 a ' . self::MAX_PARCELAS . ').';
+        }
+
+        $periodicidade = $data['periodicidade'] ?? 'mensal';
+        if (!in_array($periodicidade, ['mensal', 'quinzenal', 'semanal'], true)) {
+            return 'Periodicidade inválida. Use mensal, quinzenal ou semanal.';
+        }
+
+        $valor = $data['valor'] ?? null;
+        if (!is_numeric($valor) || (float) $valor <= 0) {
+            return 'O valor total da despesa deve ser maior que zero.';
+        }
+
+        $inicio = $this->parseData($data['data_vencimento'] ?? null);
+        if ($inicio === null) {
+            return 'Data de vencimento da primeira parcela inválida.';
+        }
+
+        $qtd        = (int) $qtd;
+        $totalCents = (int) round((float) $valor * 100);
+        if ($totalCents < $qtd) {
+            return 'O valor total é pequeno demais para dividir em ' . $qtd . ' parcelas.';
+        }
+
+        // Divisão em centavos; a última parcela absorve a diferença
+        $base     = intdiv($totalCents, $qtd);
+        $diferenca = $totalCents - ($base * $qtd);
+
+        $parcelas = [];
+        for ($i = 0; $i < $qtd; $i++) {
+            $cents = $base + ($i === $qtd - 1 ? $diferenca : 0);
+            $parcelas[] = [
+                'valor'      => $cents / 100,
+                'vencimento' => $this->vencimentoDaParcela($inicio, $periodicidade, $i)->format('Y-m-d'),
+            ];
+        }
+
+        return $parcelas;
+    }
+
+    /**
+     * Valida parcelas enviadas prontas pelo cliente.
+     *
+     * @param mixed $parcelas
+     * @return array|string Parcelas normalizadas ou mensagem de erro
+     */
+    protected function validarParcelas(mixed $parcelas): array|string
+    {
+        if (!is_array($parcelas) || $parcelas === []) {
+            return 'Lista de parcelas inválida.';
+        }
+        if (count($parcelas) > self::MAX_PARCELAS) {
+            return 'Máximo de ' . self::MAX_PARCELAS . ' parcelas.';
+        }
+
+        $normalizadas = [];
+        foreach (array_values($parcelas) as $idx => $p) {
+            $n = $idx + 1;
+            if (!is_array($p) || !isset($p['valor']) || !is_numeric($p['valor']) || (float) $p['valor'] <= 0) {
+                return "Valor inválido na parcela {$n}.";
+            }
+            $venc = $this->parseData($p['vencimento'] ?? null);
+            if ($venc === null) {
+                return "Vencimento inválido na parcela {$n}.";
+            }
+            $normalizadas[] = [
+                'valor'      => round((float) $p['valor'], 2),
+                'vencimento' => $venc->format('Y-m-d'),
+            ];
+        }
+
+        return $normalizadas;
+    }
+
+    /**
+     * Converte 'Y-m-d' em data, retornando null se inválida.
+     */
+    protected function parseData(mixed $valor): ?\DateTimeImmutable
+    {
+        if (!is_string($valor)) {
+            return null;
+        }
+        $dt = \DateTimeImmutable::createFromFormat('!Y-m-d', $valor);
+
+        return ($dt !== false && $dt->format('Y-m-d') === $valor) ? $dt : null;
+    }
+
+    /**
+     * Calcula o vencimento da parcela $indice (0-based) a partir da data base.
+     * Mensal: mantém o dia, limitado ao último dia do mês (31/01 → 28/02 → 31/03).
+     */
+    protected function vencimentoDaParcela(\DateTimeImmutable $inicio, string $periodicidade, int $indice): \DateTimeImmutable
+    {
+        if ($periodicidade === 'semanal') {
+            return $inicio->modify('+' . (7 * $indice) . ' days');
+        }
+        if ($periodicidade === 'quinzenal') {
+            return $inicio->modify('+' . (14 * $indice) . ' days');
+        }
+
+        $mes = $inicio->modify('first day of this month')->modify("+{$indice} months");
+        $dia = min((int) $inicio->format('j'), (int) $mes->format('t'));
+
+        return $mes->setDate((int) $mes->format('Y'), (int) $mes->format('n'), $dia);
+    }
+
+    /**
+     * Gera um UUID v4 para identificar o grupo de parcelas.
+     */
+    protected function novoGrupoId(): string
+    {
+        $bytes    = random_bytes(16);
+        $bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
+        $bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
+
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+    }
+
+    /**
+     * Cria múltiplas despesas vinculadas como parcelas de um grupo, em uma única transação.
+     * A primeira parcela mantém o status enviado; as demais nascem Pendentes.
      *
      * @param array $data Dados base da despesa
      * @param array $parcelas Lista de parcelas [{vencimento, valor}]
@@ -427,35 +577,50 @@ class FatService extends BaseService
      */
     protected function createDespesaParcelada(array $data, array $parcelas): array
     {
-        $grupoId = uniqid('GRP_', true);
+        $grupoId       = $this->novoGrupoId();
         $totalParcelas = count($parcelas);
-        $ids = [];
+        $ids           = [];
 
-        foreach ($parcelas as $idx => $p) {
-            $parcelaData = [
-                'descricao'         => $data['descricao'],
-                'categoria'         => $data['categoria'],
-                'fornecedor'        => $data['fornecedor'] ?? null,
-                'forma_pagamento'   => $data['forma_pagamento'] ?? null,
-                'status'            => $data['status'] ?? 'Pendente',
-                'valor'             => $p['valor'],
-                'data_vencimento'   => $p['vencimento'],
-                'des_grupo_id'      => $grupoId,
-                'des_parcela_num'   => $idx + 1,
-                'des_parcela_total' => $totalParcelas,
-            ];
+        $db = \Config\Database::connect();
+        $db->resetTransStatus();
+        $db->transBegin();
 
-            $id = $this->despesaRepo->create($parcelaData);
-            if ($id) {
+        try {
+            foreach ($parcelas as $idx => $p) {
+                $id = $this->despesaRepo->create([
+                    'descricao'         => $data['descricao'],
+                    'categoria'         => $data['categoria'],
+                    'fornecedor'        => $data['fornecedor'] ?? null,
+                    'forma_pagamento'   => $data['forma_pagamento'] ?? null,
+                    'status'            => $idx === 0 ? ($data['status'] ?? 'Pendente') : 'Pendente',
+                    'valor'             => $p['valor'],
+                    'data_vencimento'   => $p['vencimento'],
+                    'des_grupo_id'      => $grupoId,
+                    'des_parcela_num'   => $idx + 1,
+                    'des_parcela_total' => $totalParcelas,
+                ]);
+
+                if (!$id) {
+                    break;
+                }
                 $ids[] = $id;
             }
+        } catch (\Throwable $e) {
+            $db->transRollback();
+            return $this->error('Erro ao criar as parcelas: ' . $e->getMessage());
         }
 
-        if (count($ids) === $totalParcelas) {
-            return $this->success("Despesa parcelada em {$totalParcelas}x criada com sucesso", ['ids' => $ids]);
+        if (count($ids) !== $totalParcelas || $db->transStatus() === false) {
+            $db->transRollback();
+            return $this->error('Erro ao criar as parcelas. Nenhuma parcela foi registrada.');
         }
 
-        return $this->error('Erro ao criar algumas ou todas as parcelas');
+        $db->transCommit();
+
+        return $this->success(
+            "Despesa parcelada em {$totalParcelas}x criada com sucesso",
+            ['ids' => $ids, 'des_grupo_id' => $grupoId]
+        );
     }
 
     /**

@@ -100,6 +100,8 @@ class Faturamento extends BaseController
             'valor'           => 'required|numeric',
             'data_vencimento' => 'required|valid_date',
             'status'          => 'permit_empty|in_list[Pendente,Pago,Cancelado]',
+            'parcelas_qtd'    => 'permit_empty|is_natural_no_zero|less_than_equal_to[' . FatService::MAX_PARCELAS . ']',
+            'periodicidade'   => 'permit_empty|in_list[mensal,quinzenal,semanal]',
         ])) {
             return $this->apiValidationError($this->validator->getErrors());
         }
