@@ -1,0 +1,61 @@
+code,name,type,parent_code,contra,accepts_entries,is_cash_account
+1,ATIVO,asset,,false,false,false
+1.1,ATIVO CIRCULANTE,asset,1,false,false,false
+1.1.01,Caixa Geral,asset,1.1,false,true,true
+1.1.02,Banco Inter,asset,1.1,false,true,true
+1.1.03,Aplicação - CDB,asset,1.1,false,true,false
+1.1.04,Clientes - Honorários a Receber,asset,1.1,false,true,false
+1.1.05,Custas Adiantadas a Reembolsar,asset,1.1,false,true,false
+1.2,VALORES DE CLIENTES (CONTA SEGREGADA),asset,1,false,false,false
+1.2.01,Conta Bancária de Clientes,asset,1.2,false,true,true
+1.3,ATIVO NÃO CIRCULANTE,asset,1,false,false,false
+1.3.01,Direitos Creditórios,asset,1.3,false,true,false
+1.3.02,Móveis e Equipamentos,asset,1.3,false,true,false
+1.3.03,(-) Depreciação Acumulada,asset,1.3,true,true,false
+2,PASSIVO,liability,,false,false,false
+2.1,PASSIVO CIRCULANTE,liability,2,false,false,false
+2.1.01,Fornecedores a Pagar,liability,2.1,false,true,false
+2.1.02,INSS a Recolher,liability,2.1,false,true,false
+2.1.03,Pró-Labore a Pagar,liability,2.1,false,true,false
+2.1.04,Simples Nacional a Recolher,liability,2.1,false,true,false
+2.1.05,Empréstimos de Sócios,liability,2.1,false,true,false
+2.1.06,Honorários Recebidos Antecipadamente,liability,2.1,false,true,false
+2.2,VALORES DE CLIENTES (CONTA SEGREGADA),liability,2,false,false,false
+2.2.01,Valores de Clientes a Repassar,liability,2.2,false,true,false
+2.2.02,Depósitos de Clientes para Custas,liability,2.2,false,true,false
+3,PATRIMÔNIO LÍQUIDO,equity,,false,false,false
+3.1,CAPITAL SOCIAL,equity,3,false,false,false
+3.1.01,Capital Social,equity,3.1,false,true,false
+3.2,LUCROS/PREJUÍZOS ACUMULADOS,equity,3,false,false,false
+3.2.01,Lucros Acumulados,equity,3.2,false,true,false
+3.2.02,(-) Prejuízos Acumulados,equity,3.2,true,true,false
+3.3,(-) DISTRIBUIÇÃO DE LUCROS,equity,3,true,false,false
+3.3.01,Lucro Distribuído - Fabiano Dias,equity,3.3,true,true,false
+3.3.02,Lucro Distribuído - Rodrigo Dias,equity,3.3,true,true,false
+4,RECEITAS,revenue,,false,false,false
+4.1,RECEITA DE SERVIÇOS,revenue,4,false,false,false
+4.1.01,Honorários - Mercado Interno,revenue,4.1,false,true,false
+4.1.02,Honorários de Êxito,revenue,4.1,false,true,false
+4.2,(-) DEDUÇÕES DA RECEITA BRUTA,revenue,4,true,false,false
+4.2.01,(-) Simples Nacional,revenue,4.2,true,true,false
+4.3,RECEITAS FINANCEIRAS E OUTRAS,revenue,4,false,false,false
+4.3.01,Rendimentos de Renda Fixa,revenue,4.3,false,true,false
+4.3.02,Custas Reembolsadas,revenue,4.3,false,true,false
+5,DESPESAS,expense,,false,false,false
+5.1,DESPESAS COM PESSOAL,expense,5,false,false,false
+5.1.01,Pró-Labore,expense,5.1,false,true,false
+5.1.02,INSS,expense,5.1,false,true,false
+5.1.03,Bolsa Estágio,expense,5.1,false,true,false
+5.2,DESPESAS GERAIS E ADMINISTRATIVAS,expense,5,false,false,false
+5.2.01,Assistência Contábil,expense,5.2,false,true,false
+5.2.02,Serviços Prestados por Terceiros - PJ,expense,5.2,false,true,false
+5.2.03,Certificado Digital,expense,5.2,false,true,false
+5.2.04,Despesas Cartorárias,expense,5.2,false,true,false
+5.2.05,Custas Processuais,expense,5.2,false,true,false
+5.2.06,Taxas Municipais,expense,5.2,false,true,false
+5.2.07,Depreciação,expense,5.2,false,true,false
+5.3,DESPESAS COM VENDAS,expense,5,false,false,false
+5.3.01,Viagens e Hospedagem,expense,5.3,false,true,false
+5.4,DESPESAS FINANCEIRAS,expense,5,false,false,false
+5.4.01,Juros/Multas,expense,5.4,false,true,false
+5.4.02,Tarifas Bancárias,expense,5.4,false,true,false
