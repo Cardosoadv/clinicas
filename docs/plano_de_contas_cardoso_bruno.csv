@@ -56,6 +56,8 @@ code,name,type,parent_code,contra,accepts_entries,is_cash_account
 5.2.07,Depreciação,expense,5.2,false,true,false
 5.3,DESPESAS COM VENDAS,expense,5,false,false,false
 5.3.01,Viagens e Hospedagem,expense,5.3,false,true,false
+5.3.02,Comissões de Vendas,expense,5.3,false,true,false
+5.3.03,Marketing e Publicidade,expense,5.3,false,true,false
 5.4,DESPESAS FINANCEIRAS,expense,5,false,false,false
 5.4.01,Juros/Multas,expense,5.4,false,true,false
 5.4.02,Tarifas Bancárias,expense,5.4,false,true,false
