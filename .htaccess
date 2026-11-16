@@ -1,8 +1,16 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
     
-    # 1. Redireciona requisições da API para o entrypoint do backend
-    RewriteRule ^(api/.*)$ backend/public/index.php/$1 [L,QSA]
+    # 0. Hospedagens com PHP via CGI/FastCGI (ex.: Hostinger) descartam o header
+    # Authorization; o MCP (Bearer/OAuth) depende dele.
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # 1. Redireciona requisições da API para o entrypoint do backend.
+    # Além de api/*, o servidor MCP (mcp) e o OAuth que o protege (oauth/*,
+    # .well-known/oauth-*, .well-known/openid-configuration) são do backend —
+    # sem isto caem no fallback do SPA e devolvem HTML em vez de JSON.
+    RewriteRule ^(api/.*|mcp|oauth/.*|\.well-known/(oauth-.*|openid-configuration.*))$ backend/public/index.php/$1 [L,QSA]
     
     # 2. Redireciona acessos diretos à pasta backend para o seu public
     RewriteCond %{REQUEST_URI} /backend/ [NC]
@@ -17,6 +25,9 @@
     RewriteCond %{REQUEST_URI} !/frontend/dist/
     RewriteCond %{REQUEST_URI} !/backend/
     RewriteCond %{REQUEST_URI} !/api/
+    RewriteCond %{REQUEST_URI} !/mcp$
+    RewriteCond %{REQUEST_URI} !/oauth/
+    RewriteCond %{REQUEST_URI} !/\.well-known/
     RewriteRule ^(.*)$ frontend/dist/$1 [L]
     
     # 4. Tratamento para SPA (Vue/React Router):
