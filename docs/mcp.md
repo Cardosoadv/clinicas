@@ -48,6 +48,34 @@ O `.htaccess` da raiz encaminha ao backend `api/*`, `mcp`, `oauth/*` e `.well-kn
 - Teste sem token: `curl -i -X POST https://SEU-DOMINIO/biacardoso/mcp -H 'Content-Type: application/json' -d '{}'` deve dar **401 em JSON** com `WWW-Authenticate: Bearer resource_metadata=...`. Se vier HTML ou 404, o `.htaccess` não foi atualizado.
 - O deploy não instala o `vendor/` nem roda migrations: rode `composer install` e `php spark migrate` no servidor após atualizar.
 
+### Raiz do domínio (obrigatório para o Gemini)
+
+O Gemini monta as URLs de descoberta pela RFC 8414/9728, que inserem o subcaminho **depois** de `.well-known`:
+
+- `https://SEU-DOMINIO/.well-known/oauth-protected-resource/biacardoso/mcp`
+- `https://SEU-DOMINIO/.well-known/oauth-authorization-server/biacardoso`
+
+Elas ficam na **raiz do domínio**, fora da pasta `biacardoso/` que o deploy atualiza, então o app não as recebe por si só. Sem resposta ali, o Gemini recusa o servidor como "sem OAuth padrão". Crie/edite o `.htaccess` em `/public_html/` (raiz do domínio, fora do repositório) com:
+
+```apache
+RewriteEngine On
+# Repassa a descoberta OAuth/OIDC do subcaminho para o app em /biacardoso/
+RewriteRule ^\.well-known/(oauth-protected-resource|oauth-authorization-server|openid-configuration)/biacardoso(/.*)?$ biacardoso/.well-known/$1/biacardoso$2 [L,QSA]
+```
+
+Valide com `curl -i https://SEU-DOMINIO/.well-known/oauth-authorization-server/biacardoso` (deve ser JSON com `issuer` = `https://SEU-DOMINIO/biacardoso`).
+
+### Gemini com Client ID/Secret manuais
+
+Conectores que não fazem registro dinâmico (ex.: Gemini Enterprise) pedem Client ID, Client Secret, URL de autorização e URL de token. Gere o par com o redirect que o Gemini informar e use:
+
+- URL de autorização: `https://SEU-DOMINIO/biacardoso/oauth/authorize`
+- URL de token: `https://SEU-DOMINIO/biacardoso/oauth/token`
+
+```bash
+php spark mcp:cliente "Gemini" https://<redirect-uri-informado-pelo-gemini>
+```
+
 ## Ferramentas
 
 | Ferramenta | Descrição |
