@@ -55,12 +55,14 @@ O Gemini monta as URLs de descoberta pela RFC 8414/9728, que inserem o subcaminh
 - `https://SEU-DOMINIO/.well-known/oauth-protected-resource/biacardoso/mcp`
 - `https://SEU-DOMINIO/.well-known/oauth-authorization-server/biacardoso`
 
-Elas ficam na **raiz do domínio**, fora da pasta `biacardoso/` que o deploy atualiza, então o app não as recebe por si só. Sem resposta ali, o Gemini recusa o servidor como "sem OAuth padrão". Crie/edite o `.htaccess` em `/public_html/` (raiz do domínio, fora do repositório) com:
+Elas ficam na **raiz do domínio**, fora da pasta `biacardoso/` que o deploy atualiza, então o app não as recebe por si só. Sem resposta ali, o Gemini recusa o servidor como "sem OAuth padrão". Crie/edite o `.htaccess` em `/public_html/` (raiz do domínio, fora do repositório) com a regra abaixo. **Ela precisa vir ANTES de qualquer regra genérica** — em sites com WordPress, antes do bloco `# BEGIN WordPress`, cuja última regra (`RewriteRule . /index.php [L]`) captura tudo que não é arquivo e faria a descoberta cair no WordPress:
 
 ```apache
+<IfModule mod_rewrite.c>
 RewriteEngine On
 # Repassa a descoberta OAuth/OIDC do subcaminho para o app em /biacardoso/
-RewriteRule ^\.well-known/(oauth-protected-resource|oauth-authorization-server|openid-configuration)/biacardoso(/.*)?$ biacardoso/.well-known/$1/biacardoso$2 [L,QSA]
+RewriteRule ^\.well-known/(oauth-protected-resource|oauth-authorization-server|openid-configuration)/biacardoso(/.*)?$ /biacardoso/.well-known/$1/biacardoso$2 [L,QSA]
+</IfModule>
 ```
 
 Valide com `curl -i https://SEU-DOMINIO/.well-known/oauth-authorization-server/biacardoso` (deve ser JSON com `issuer` = `https://SEU-DOMINIO/biacardoso`).
