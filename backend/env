@@ -27,6 +27,15 @@
 # app.CSPEnabled = false
 
 #--------------------------------------------------------------------
+# MCP (Claude Chat / Gemini Chat) — veja docs/mcp.md
+#--------------------------------------------------------------------
+
+# OPCIONAL — token Bearer estático para clientes sem OAuth (mín. 32 caracteres).
+# O fluxo OAuth 2.1 (Claude/Gemini) funciona sem ele.
+# Gere com: php -r "echo bin2hex(random_bytes(32));"
+# mcp.apiToken =
+
+#--------------------------------------------------------------------
 # DATABASE
 #--------------------------------------------------------------------
 
