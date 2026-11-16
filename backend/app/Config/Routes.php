@@ -39,8 +39,17 @@ $routes->group('api/v1/publico', ['namespace' => 'App\Controllers\V1'], static f
 
 /*
  * Servidor MCP (Model Context Protocol) para Claude/Gemini — autenticado por
- * token Bearer (filtro 'mcpauth'), não por sessão. Veja docs/mcp.md.
+ * token Bearer (OAuth 2.1 ou token estático; filtro 'mcpauth'), não por sessão. Veja docs/mcp.md.
  */
+$routes->get('.well-known/oauth-protected-resource', 'OAuth::protectedResourceMetadata');
+$routes->get('.well-known/oauth-protected-resource/(:any)', 'OAuth::protectedResourceMetadata');
+$routes->get('.well-known/oauth-authorization-server', 'OAuth::authorizationServerMetadata');
+$routes->get('.well-known/oauth-authorization-server/(:any)', 'OAuth::authorizationServerMetadata');
+$routes->post('oauth/register', 'OAuth::register');
+$routes->get('oauth/authorize', 'OAuth::authorize');
+$routes->post('oauth/authorize', 'OAuth::consent');
+$routes->post('oauth/token', 'OAuth::token');
+
 $routes->group('', ['namespace' => 'App\Controllers\V1', 'filter' => 'mcpauth'], static function (RouteCollection $routes) {
     $routes->post('mcp', 'Mcp::handle');
     $routes->get('mcp', 'Mcp::notAllowed');

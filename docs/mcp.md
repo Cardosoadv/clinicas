@@ -13,21 +13,32 @@ Transporte: *Streamable HTTP* (JSON-RPC 2.0, uma resposta JSON por requisição)
 
 ## Ativação
 
-1. Gere um token e defina no `.env` do backend (mín. 32 caracteres):
+1. Publique o backend em **HTTPS** com URL pública (Claude e Gemini acessam a partir da nuvem deles) e rode as migrations (`php spark migrate`) — elas criam `mcp_oauth_clients` e `mcp_oauth_codes`.
+2. Pronto: a autenticação padrão é **OAuth 2.1** (veja abaixo). Não é preciso configurar nada no `.env`.
+3. *(Opcional)* Para clientes sem OAuth, defina um token estático (mín. 32 caracteres) em `mcp.apiToken` no `.env`:
 
    ```bash
    php -r "echo bin2hex(random_bytes(32));"
    ```
 
-   ```ini
-   mcp.apiToken = <token gerado>
-   ```
+> Qualquer token válido dá acesso às ferramentas abaixo. Trate o token estático como senha e rotacione-o se vazar.
 
-   Sem o token o endpoint responde **503** (desabilitado) — nunca fica aberto.
+## Autenticação OAuth 2.1
 
-2. Publique o backend em **HTTPS** com URL pública (Claude e Gemini acessam a partir da nuvem deles).
+Mesmo desenho do OrdoJuris: o backend é também o *Authorization Server* (`app/Controllers/OAuth.php`).
 
-> O token dá acesso total às ferramentas abaixo, sem login de usuário. Trate-o como senha, rotacione-o se vazar e restrinja o acesso por rede/WAF quando possível.
+| Endpoint | Função |
+|---|---|
+| `GET /.well-known/oauth-protected-resource` | Descoberta do recurso (RFC 9728) — apontado pelo `WWW-Authenticate` dos 401 |
+| `GET /.well-known/oauth-authorization-server` | Metadados do servidor de autorização (RFC 8414) |
+| `POST /oauth/register` | Registro dinâmico de cliente (RFC 7591) — o Claude usa sozinho |
+| `GET/POST /oauth/authorize` | Tela de login (e-mail e senha do sistema) + consentimento |
+| `POST /oauth/token` | Troca o código (PKCE S256) por um *Personal Access Token* do Shield com escopo `mcp` |
+
+- O usuário autoriza com o próprio login do sistema; o token emitido pertence a ele e pode ser revogado apagando-o em `auth_identities` (tipo `access_token`).
+- Códigos de autorização duram 5 minutos, são de uso único e só o hash é guardado. Tentativas de senha são limitadas (10/min por IP).
+- PKCE é obrigatório para clientes públicos; `redirect_uri` exige https (exceto localhost).
+- **Clientes que pedem Client ID/Secret prontos** (ex.: Gemini): `php spark mcp:cliente "Gemini" https://<redirect-uri-do-conector>` imprime o par. Guarde o secret: só o hash fica no banco.
 
 ## Ferramentas
 
@@ -44,29 +55,28 @@ Erros de validação voltam como resultado com `isError: true` e o detalhe por c
 
 ## Conectar no Claude
 
-Em **Configurações → Conectores → Adicionar conector personalizado** (claude.ai), informe `https://SEU-DOMINIO/mcp` e, nas opções avançadas, o cabeçalho `Authorization: Bearer <token>`. Se a sua conta/plano exigir OAuth para conectores remotos, use o Claude Code ou a API de MCP connectors, que aceitam token Bearer:
+Em **Configurações → Conectores → Adicionar conector personalizado** (claude.ai), informe só a URL `https://SEU-DOMINIO/mcp` e clique em conectar. O Claude se registra sozinho, abre a tela de login do sistema e, após **Permitir acesso**, passa a usar as ferramentas.
+
+No Claude Code, com OAuth (`/mcp` → autenticar) ou com o token estático:
 
 ```bash
 claude mcp add --transport http clinicas https://SEU-DOMINIO/mcp \
-  --header "Authorization: Bearer <token>"
+  --header "Authorization: Bearer <mcp.apiToken>"
 ```
 
 ## Conectar no Gemini
 
-No Gemini CLI, em `~/.gemini/settings.json`:
+No Gemini CLI, em `~/.gemini/settings.json`, com OAuth (o CLI faz a descoberta e abre o navegador):
 
 ```json
 {
   "mcpServers": {
-    "clinicas": {
-      "httpUrl": "https://SEU-DOMINIO/mcp",
-      "headers": { "Authorization": "Bearer <token>" }
-    }
+    "clinicas": { "httpUrl": "https://SEU-DOMINIO/mcp", "oauth": { "enabled": true } }
   }
 }
 ```
 
-Os SDKs do Gemini (Google Gen AI) também aceitam sessões MCP remotas com o mesmo cabeçalho.
+ou com o token estático: `"headers": { "Authorization": "Bearer <mcp.apiToken>" }` no lugar de `oauth`.
 
 ## Testando com curl
 
@@ -78,4 +88,4 @@ curl -s https://SEU-DOMINIO/mcp \
 
 ## Código
 
-`backend/app/Libraries/Mcp/` (protocolo em `McpServer`, ferramentas em `ClinicaTools`), `App\Filters\McpAuth` (token) e `App\Controllers\V1\Mcp`. Testes em `backend/tests/unit/Libraries/Mcp` e `tests/unit/Controllers/McpRotasTest.php`.
+`backend/app/Libraries/Mcp/` (protocolo em `McpServer`, ferramentas em `ClinicaTools`), `App\Controllers\OAuth` (servidor de autorização), `App\Filters\McpAuth` (token) e `App\Controllers\V1\Mcp`. Testes em `backend/tests/unit/Libraries/Mcp` e `tests/unit/Controllers/McpRotasTest.php`.

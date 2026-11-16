@@ -41,20 +41,34 @@ final class McpRotasTest extends CIUnitTestCase
         return $request;
     }
 
-    public function testSemTokenConfiguradoFicaDesabilitado(): void
+    public function testRotasOAuthSaoPublicas(): void
+    {
+        $routes = new RouteCollection(service('locator'), config('Modules'), config('Routing'));
+        require APPPATH . 'Config/Routes.php';
+
+        foreach (['oauth/register', 'oauth/authorize', 'oauth/token'] as $caminho) {
+            $this->assertArrayNotHasKey('filter', $routes->getRoutesOptions($caminho, $caminho === 'oauth/authorize' ? 'GET' : 'POST'));
+        }
+        $this->assertArrayHasKey('.well-known/oauth-protected-resource', $routes->getRoutes('GET'));
+        $this->assertArrayHasKey('.well-known/oauth-authorization-server', $routes->getRoutes('GET'));
+    }
+
+    public function testSemHeaderResponde401ComDescobertaOAuth(): void
     {
         putenv('mcp.apiToken');
 
-        $res = (new McpAuth())->before($this->request('Bearer ' . self::TOKEN));
+        $res = (new McpAuth())->before($this->request(null));
 
-        $this->assertSame(503, $res->getStatusCode());
+        $this->assertSame(401, $res->getStatusCode());
+        $this->assertStringContainsString('resource_metadata="', $res->getHeaderLine('WWW-Authenticate'));
+        $this->assertStringContainsString('/.well-known/oauth-protected-resource', $res->getHeaderLine('WWW-Authenticate'));
     }
 
-    public function testTokenCurtoDemaisNaoEhAceitoComoConfiguracao(): void
+    public function testTokenEstaticoCurtoDemaisNaoEhAceito(): void
     {
         putenv('mcp.apiToken=curto');
 
-        $this->assertSame(503, (new McpAuth())->before($this->request('Bearer curto'))->getStatusCode());
+        $this->assertSame(401, (new McpAuth())->before($this->request('Bearer curto'))->getStatusCode());
     }
 
     public function testRejeitaTokenAusenteOuErrado(): void
@@ -62,7 +76,6 @@ final class McpRotasTest extends CIUnitTestCase
         putenv('mcp.apiToken=' . self::TOKEN);
 
         $this->assertSame(401, (new McpAuth())->before($this->request(null))->getStatusCode());
-        $this->assertSame(401, (new McpAuth())->before($this->request('Bearer errado'))->getStatusCode());
         $this->assertSame(401, (new McpAuth())->before($this->request('Basic ' . self::TOKEN))->getStatusCode());
     }
 
