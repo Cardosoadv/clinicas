@@ -27,6 +27,14 @@
 # app.CSPEnabled = false
 
 #--------------------------------------------------------------------
+# MCP (Claude Chat / Gemini Chat) — veja docs/mcp.md
+#--------------------------------------------------------------------
+
+# Token Bearer do endpoint POST /mcp (mín. 32 caracteres). Sem ele o MCP fica desabilitado.
+# Gere com: php -r "echo bin2hex(random_bytes(32));"
+# mcp.apiToken =
+
+#--------------------------------------------------------------------
 # DATABASE
 #--------------------------------------------------------------------
 
