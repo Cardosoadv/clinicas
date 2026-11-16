@@ -45,6 +45,9 @@ $routes->get('.well-known/oauth-protected-resource', 'OAuth::protectedResourceMe
 $routes->get('.well-known/oauth-protected-resource/(:any)', 'OAuth::protectedResourceMetadata');
 $routes->get('.well-known/oauth-authorization-server', 'OAuth::authorizationServerMetadata');
 $routes->get('.well-known/oauth-authorization-server/(:any)', 'OAuth::authorizationServerMetadata');
+// Alguns clientes (fallback do MCP para issuer com subcaminho) procuram o OIDC discovery.
+$routes->get('.well-known/openid-configuration', 'OAuth::authorizationServerMetadata');
+$routes->get('.well-known/openid-configuration/(:any)', 'OAuth::authorizationServerMetadata');
 $routes->post('oauth/register', 'OAuth::register');
 $routes->get('oauth/authorize', 'OAuth::authorize');
 $routes->post('oauth/authorize', 'OAuth::consent');

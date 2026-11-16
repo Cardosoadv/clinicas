@@ -40,6 +40,14 @@ Mesmo desenho do OrdoJuris: o backend é também o *Authorization Server* (`app/
 - PKCE é obrigatório para clientes públicos; `redirect_uri` exige https (exceto localhost).
 - **Clientes que pedem Client ID/Secret prontos** (ex.: Gemini): `php spark mcp:cliente "Gemini" https://<redirect-uri-do-conector>` imprime o par. Guarde o secret: só o hash fica no banco.
 
+## Hospedagem em subcaminho (Hostinger)
+
+O `.htaccess` da raiz encaminha ao backend `api/*`, `mcp`, `oauth/*` e `.well-known/oauth-*`/`openid-configuration` (todo o resto vai para o SPA) e repassa o header `Authorization`. Confira também:
+
+- `app.baseURL` no `.env` do servidor deve ser a URL pública completa, ex.: `https://cognitiotecnologia.com/biacardoso/` — é dela que saem os endereços anunciados no OAuth.
+- Teste sem token: `curl -i -X POST https://SEU-DOMINIO/biacardoso/mcp -H 'Content-Type: application/json' -d '{}'` deve dar **401 em JSON** com `WWW-Authenticate: Bearer resource_metadata=...`. Se vier HTML ou 404, o `.htaccess` não foi atualizado.
+- O deploy não instala o `vendor/` nem roda migrations: rode `composer install` e `php spark migrate` no servidor após atualizar.
+
 ## Ferramentas
 
 | Ferramenta | Descrição |

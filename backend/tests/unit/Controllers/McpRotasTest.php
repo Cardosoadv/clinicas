@@ -51,6 +51,7 @@ final class McpRotasTest extends CIUnitTestCase
         }
         $this->assertArrayHasKey('.well-known/oauth-protected-resource', $routes->getRoutes('GET'));
         $this->assertArrayHasKey('.well-known/oauth-authorization-server', $routes->getRoutes('GET'));
+        $this->assertArrayHasKey('.well-known/openid-configuration', $routes->getRoutes('GET'));
     }
 
     public function testSemHeaderResponde401ComDescobertaOAuth(): void
