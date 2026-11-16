@@ -61,12 +61,11 @@ class OAuth extends BaseController
     /** RFC 7591 — o Claude chama sozinho na primeira conexão. */
     public function register(): ResponseInterface
     {
-        if (stripos($this->request->getHeaderLine('Content-Type'), 'application/json') !== 0) {
-            return $this->erro(400, 'invalid_client_metadata', 'Content-Type deve ser application/json.');
-        }
-
+        // Aceita qualquer Content-Type: alguns clientes enviam o JSON como text/plain ou com charset.
         $dados = json_decode((string) $this->request->getBody(), true);
         if (!is_array($dados)) {
+            log_message('warning', '[MCP] /oauth/register com corpo inválido (Content-Type: {ct})', ['ct' => $this->request->getHeaderLine('Content-Type')]);
+
             return $this->erro(400, 'invalid_client_metadata', 'Corpo da requisição deve ser um JSON válido.');
         }
 
@@ -76,6 +75,8 @@ class OAuth extends BaseController
         }
         foreach ($redirectUris as $uri) {
             if (!is_string($uri) || !OAuthSupport::redirectUriPermitida($uri)) {
+                log_message('warning', '[MCP] /oauth/register com redirect_uri recusado: {uri}', ['uri' => is_string($uri) ? $uri : gettype($uri)]);
+
                 return $this->erro(400, 'invalid_redirect_uri', 'redirect_uri inválido (exige https, exceto em localhost).');
             }
         }
@@ -88,7 +89,14 @@ class OAuth extends BaseController
 
         $name = isset($dados['client_name']) && is_string($dados['client_name']) ? substr(trim($dados['client_name']), 0, 255) : null;
 
-        [$clientId, $secret] = $this->criarCliente($name, $redirectUris, $method);
+        try {
+            [$clientId, $secret] = $this->criarCliente($name, $redirectUris, $method);
+        } catch (\Throwable $e) {
+            // Normalmente: migrations do MCP ainda não executadas (tabela mcp_oauth_clients ausente).
+            log_message('error', '[MCP] falha ao registrar cliente OAuth: ' . $e->getMessage());
+
+            return $this->erro(500, 'server_error', 'Não foi possível registrar o cliente. Verifique se as migrations foram executadas.');
+        }
 
         $resposta = [
             'client_id'                  => $clientId,
