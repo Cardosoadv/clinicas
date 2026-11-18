@@ -61,8 +61,8 @@ export function BomModal({ servico, onClose, onSaved }: BomModalProps) {
   useEscapeKey(onClose)
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
+    <div className="modal-backdrop">
+      <div className="modal" role="dialog" aria-modal="true">
         <div className="modal__header">
           <h2>
             <Package size={18} style={{ verticalAlign: 'middle', marginRight: 8 }} />

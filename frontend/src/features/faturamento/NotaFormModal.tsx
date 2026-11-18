@@ -42,8 +42,8 @@ export function NotaFormModal({ onClose, onSubmit }: NotaFormModalProps) {
   useEscapeKey(onClose)
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true">
+    <div className="modal-backdrop">
+      <div className="modal" role="dialog" aria-modal="true">
         <div className="modal__header">
           <h2>Nova Nota</h2>
           <button type="button" onClick={onClose} aria-label="Fechar">
